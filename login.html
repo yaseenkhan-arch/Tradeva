@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tradeva Login</title>
 
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f5f7fb;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.login-container{
+background:white;
+padding:40px;
+border-radius:16px;
+box-shadow:0 5px 20px rgba(0,0,0,0.08);
+width:90%;
+max-width:400px;
+}
+
+.logo{
+text-align:center;
+font-size:32px;
+font-weight:bold;
+margin-bottom:10px;
+color:#111827;
+}
+
+.subtitle{
+text-align:center;
+color:#6b7280;
+margin-bottom:30px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin-bottom:15px;
+border:1px solid #d1d5db;
+border-radius:10px;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:14px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:10px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.register{
+text-align:center;
+margin-top:20px;
+}
+
+.register a{
+color:#2563eb;
+text-decoration:none;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+<div class="logo">Tradeva</div>
+
+<div class="subtitle">
+Welcome Back Trader 📈
+</div>
+
+<form>
+
+<input type="email" placeholder="Email Address">
+
+<input type="password" placeholder="Password">
+
+<button type="submit">
+Login
+</button>
+
+</form>
+
+<div class="register">
+Don't have an account?
+<a href="register.html">Register</a>
+</div>
+
+</div>
+
+</body>
+</html>
