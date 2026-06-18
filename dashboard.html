@@ -1,6 +1,5 @@
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,113 +8,258 @@
 
 <style>
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
 body{
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
-padding:40px;
 }
 
-.container{
-max-width:1200px;
-margin:auto;
-}
-
-.header{
+.navbar{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:30px;
+padding:20px 30px;
+background:#111827;
+border-bottom:1px solid #1f2937;
 }
 
-button{
-padding:12px 20px;
-background:#2563eb;
-border:none;
-border-radius:10px;
+.logo{
+display:flex;
+align-items:center;
+gap:10px;
+font-size:22px;
+font-weight:bold;
+}
+
+.logo img{
+width:40px;
+}
+
+.logout-btn{
+background:#ef4444;
 color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
 cursor:pointer;
 font-weight:bold;
 }
 
+.dashboard{
+padding:30px;
+}
+
+.welcome{
+margin-bottom:30px;
+}
+
+.welcome h1{
+font-size:32px;
+margin-bottom:10px;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
 .card{
 background:#111827;
-padding:20px;
+padding:25px;
 border-radius:15px;
-margin-top:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.2);
+}
+
+.card h3{
+color:#94a3b8;
+font-size:14px;
+margin-bottom:10px;
+}
+
+.card p{
+font-size:30px;
+font-weight:bold;
+}
+
+.section{
+background:#111827;
+padding:25px;
+border-radius:15px;
+margin-bottom:25px;
+}
+
+.section h2{
+margin-bottom:20px;
+}
+
+.add-btn{
+background:#2563eb;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+margin-bottom:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+table th{
+text-align:left;
+padding:12px;
+border-bottom:1px solid #374151;
+color:#94a3b8;
+}
+
+table td{
+padding:12px;
+border-bottom:1px solid #1f2937;
+}
+
+.profit{
+color:#22c55e;
+font-weight:bold;
+}
+
+.loss{
+color:#ef4444;
+font-weight:bold;
+}
+
+@media(max-width:768px){
+
+.dashboard{
+padding:15px;
+}
+
+.welcome h1{
+font-size:24px;
+}
+
+.card p{
+font-size:24px;
+}
+
+table{
+font-size:13px;
+}
+
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div class="container">
+<div class="navbar">
 
-<div class="header">
+<div class="logo">
+<img src="logo-transparent.png">
+<span>Tradeva</span>
+</div>
 
-<h1 id="welcomeText">
-Loading...
-</h1>
-
-<button id="logoutBtn">
+<button class="logout-btn" onclick="logout()">
 Logout
 </button>
 
 </div>
 
+<div class="dashboard">
+
+<div class="welcome">
+<h1>Welcome Trader 👋</h1>
+<p>Your performance overview</p>
+</div>
+
+<div class="stats">
+
 <div class="card">
-<h2>Tradeva Dashboard</h2>
-<p>Your trading journal is being built 🚀</p>
+<h3>Total Trades</h3>
+<p>0</p>
+</div>
+
+<div class="card">
+<h3>Win Rate</h3>
+<p>0%</p>
+</div>
+
+<div class="card">
+<h3>Profit Factor</h3>
+<p>0.00</p>
+</div>
+
+<div class="card">
+<h3>Net PnL</h3>
+<p>$0</p>
 </div>
 
 </div>
-<script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+<div class="section">
 
-import {
-getAuth,
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+<h2>Recent Trades</h2>
 
-const firebaseConfig = {
-apiKey: "AIzaSyDsaMzX6_NlzwsD3ibeYghv3q8HTbytmmU",
-authDomain: "tradeva-app.firebaseapp.com",
-projectId: "tradeva-app",
-storageBucket: "tradeva-app.firebasestorage.app",
-messagingSenderId: "682302343296",
-appId: "1:682302343296:web:9643bf7b4b6664482e3e65"
-};
+<button class="add-btn">
++ Add Trade
+</button>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+<table>
 
-onAuthStateChanged(auth, (user) => {
+<tr>
+<th>Pair</th>
+<th>Result</th>
+<th>RR</th>
+</tr>
 
-if(!user){
+<tr>
+<td>EURUSD</td>
+<td class="profit">Win</td>
+<td>+2R</td>
+</tr>
 
-window.location.href = "login.html";
-return;
+<tr>
+<td>GBPUSD</td>
+<td class="loss">Loss</td>
+<td>-1R</td>
+</tr>
 
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>AI Review</h2>
+
+<p>
+No trades available yet.
+Add your first trade and Tradeva AI will review it.
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+function logout(){
+localStorage.clear();
+window.location.href="login.html";
 }
 
-document.getElementById("welcomeText").innerText =
-`Welcome, ${user.displayName || "Trader"} 👋`;
-
-});
-
-document.getElementById("logoutBtn")
-.addEventListener("click", async () => {
-
-await signOut(auth);
-
-window.location.href = "login.html";
-
-});
-
 </script>
+
 </body>
 </html>
