@@ -258,8 +258,34 @@ localStorage.clear();
 window.location.href="login.html";
 }
 
+function openTradeModal(){
+document.getElementById("tradeModal").style.display="flex";
+}
+
+function closeTradeModal(){
+document.getElementById("tradeModal").style.display="none";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+const form = document.getElementById("tradeForm");
+
+form.addEventListener("submit",(e)=>{
+
+e.preventDefault();
+
+alert("Trade Saved Successfully ✅");
+
+closeTradeModal();
+
+form.reset();
+
+});
+
+});
+
 </script>
-<!-- Add Trade Modal -->
+  <!-- Add Trade Modal -->
 
 <div id="tradeModal" class="modal">
 
