@@ -121,32 +121,42 @@ font-weight:600;
 @media (max-width:768px){
 
   .nav{
-    flex-direction:column;
-    gap:15px;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px;
   }
 
   .nav-links{
     display:none;
   }
 
-  .nav-buttons{
-    gap:10px;
+  .login-btn{
+    display:none;
+  }
+
+  .logo{
+    font-size:18px;
+  }
+
+  .logo img{
+    width:30px;
+  }
+
+  .hero{
+    padding:50px 20px;
   }
 
   .hero h1{
-    font-size:32px;
+    font-size:28px;
+    line-height:1.2;
   }
 
   .hero p{
     font-size:16px;
   }
 
-  .signup-btn{
-    padding:10px 15px;
-  }
-
-}
-  </style> 
+}  </style> 
  </head>
 
 <body>
