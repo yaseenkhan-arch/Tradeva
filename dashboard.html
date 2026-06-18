@@ -259,6 +259,70 @@ window.location.href="login.html";
 }
 
 </script>
+<!-- Add Trade Modal -->
 
+<div id="tradeModal" class="modal">
+
+  <div class="modal-content">
+
+    <span class="close" onclick="closeTradeModal()">&times;</span>
+
+    <h2>Add New Trade</h2>
+
+    <form id="tradeForm">
+
+      <input type="date" id="date" required>
+
+      <input type="text" id="pair" placeholder="Pair (EURUSD)" required>
+
+      <select id="direction">
+        <option>Buy</option>
+        <option>Sell</option>
+      </select>
+
+      <select id="session">
+        <option>Asia</option>
+        <option>London</option>
+        <option>New York</option>
+      </select>
+
+      <select id="tradeType">
+        <option>Scalp</option>
+        <option>Intraday</option>
+        <option>Swing</option>
+      </select>
+
+      <select id="htfBias">
+        <option>Bullish</option>
+        <option>Bearish</option>
+        <option>Neutral</option>
+      </select>
+
+      <input type="number" id="rr" placeholder="RR">
+
+      <input type="number" id="pips" placeholder="Pips">
+
+      <input type="text" id="timeInPosition" placeholder="Time in Position">
+
+      <select id="result">
+        <option>Win</option>
+        <option>Loss</option>
+        <option>Breakeven</option>
+      </select>
+
+      <textarea
+        id="notes"
+        placeholder="Trade Notes"
+        rows="4"></textarea>
+
+      <button type="submit">
+        Save Trade
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
 </body>
 </html>
