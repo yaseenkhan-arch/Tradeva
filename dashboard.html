@@ -1,1 +1,121 @@
 
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tradeva Dashboard</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+button{
+padding:12px 20px;
+background:#2563eb;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
+font-weight:bold;
+}
+
+.card{
+background:#111827;
+padding:20px;
+border-radius:15px;
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h1 id="welcomeText">
+Loading...
+</h1>
+
+<button id="logoutBtn">
+Logout
+</button>
+
+</div>
+
+<div class="card">
+<h2>Tradeva Dashboard</h2>
+<p>Your trading journal is being built 🚀</p>
+</div>
+
+</div>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signOut
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyDsaMzX6_NlzwsD3ibeYghv3q8HTbytmmU",
+authDomain: "tradeva-app.firebaseapp.com",
+projectId: "tradeva-app",
+storageBucket: "tradeva-app.firebasestorage.app",
+messagingSenderId: "682302343296",
+appId: "1:682302343296:web:9643bf7b4b6664482e3e65"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+
+if(!user){
+
+window.location.href = "login.html";
+return;
+
+}
+
+document.getElementById("welcomeText").innerText =
+`Welcome, ${user.displayName || "Trader"} 👋`;
+
+});
+
+document.getElementById("logoutBtn")
+.addEventListener("click", async () => {
+
+await signOut(auth);
+
+window.location.href = "login.html";
+
+});
+
+</script>
+</body>
+</html>
