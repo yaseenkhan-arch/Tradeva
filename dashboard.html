@@ -369,37 +369,18 @@ form.reset();
 
     <form id="tradeForm">
 
-      <label style="color:#94a3b8;font-size:14px;">
-Trade Date
-</label>
+    <label style="color:#94a3b8;font-size:14px;">Trade Details</label>
 
 <input type="date" id="date" required>
-      <input type="text" id="pair" placeholder="Pair (EURUSD)" required>
 
-      <select id="direction">
-        <option>Buy</option>
-        <option>Sell</option>
-      </select>
+<input type="text" id="pair" placeholder="Pair (EURUSD)" required>
 
-      <select id="session">
-        <option>Asia</option>
-        <option>London</option>
-        <option>New York</option>
-      </select>
+<select id="direction">
+<option>Buy</option>
+<option>Sell</option>
+</select>
 
-      <select id="tradeType">
-        <option>Scalp</option>
-        <option>Intraday</option>
-        <option>Swing</option>
-      </select>
-
-      <select id="htfBias">
-        <option>Bullish</option>
-        <option>Bearish</option>
-        <option>Neutral</option>
-      </select>
-
-     <input type="number" id="entry" placeholder="Entry Price" step="0.00001">
+<input type="number" id="entry" placeholder="Entry Price" step="0.00001">
 
 <input type="number" id="sl" placeholder="Stop Loss" step="0.00001">
 
@@ -407,26 +388,61 @@ Trade Date
 
 <input type="number" id="exit" placeholder="Exit Price" step="0.00001">
 
+<label style="color:#94a3b8;font-size:14px;">Analysis</label>
+
+<select id="session">
+<option>Asia</option>
+<option>London</option>
+<option>New York</option>
+</select>
+
+<select id="tradeType">
+<option>Scalp</option>
+<option>Day Trade</option>
+<option>Swing</option>
+</select>
+
+<select id="htfBias">
+<option>Bullish</option>
+<option>Bearish</option>
+<option>Neutral</option>
+</select>
+
+<label style="color:#94a3b8;font-size:14px;">Results</label>
+
 <input type="number" id="rr" placeholder="RR" step="0.01">
 
-<input type="number" id="pips" placeholder="Pips" step="0.1">   
-    
-      <input type="text" id="timeInPosition" placeholder="Time in Position">
+<input type="number" id="pips" placeholder="Pips" step="0.1">
 
-      <select id="result">
-        <option>Win</option>
-        <option>Loss</option>
-        <option>Breakeven</option>
-      </select>
+<input type="text" id="timeInPosition" placeholder="Time In Position">
 
-      <textarea
-        id="notes"
-        placeholder="Trade Notes"
-        rows="4"></textarea>
+<select id="result">
+<option>Win</option>
+<option>Loss</option>
+<option>Breakeven</option>
+<option>Partial Win</option>
+<option>Partial Loss</option>
+</select>
 
-      <button type="submit">
-        Save Trade
-      </button>
+<label style="color:#94a3b8;font-size:14px;">Evidence</label>
+
+<input type="file" id="entryChart" accept="image/*">
+
+<input
+type="url"
+id="tradingviewLink"
+placeholder="TradingView Entry Link">
+
+<label style="color:#94a3b8;font-size:14px;">Notes</label>
+
+<textarea
+id="notes"
+placeholder="Trade Notes"
+rows="4"></textarea>
+
+<button type="submit">
+Save Trade
+</button>
 
     </form>
 
