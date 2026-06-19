@@ -433,6 +433,41 @@ form.addEventListener("submit",(e)=>{
 
 e.preventDefault();
 
+const trade = {
+
+date: document.getElementById("date").value,
+pair: document.getElementById("pair").value,
+direction: document.getElementById("direction").value,
+
+entry: document.getElementById("entry").value,
+sl: document.getElementById("sl").value,
+tp: document.getElementById("tp").value,
+exit: document.getElementById("exit").value,
+
+session: document.getElementById("session").value,
+tradeType: document.getElementById("tradeType").value,
+htfBias: document.getElementById("htfBias").value,
+
+rr: parseFloat(document.getElementById("rr").value) || 0,
+pips: parseFloat(document.getElementById("pips").value) || 0,
+
+timeInPosition: document.getElementById("timeInPosition").value,
+result: document.getElementById("result").value,
+
+notes: document.getElementById("notes").value
+
+};
+
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+trades.push(trade);
+
+localStorage.setItem(
+"trades",
+JSON.stringify(trades)
+);
+
 alert("Trade Saved Successfully ✅");
 
 closeTradeModal();
@@ -440,7 +475,7 @@ closeTradeModal();
 form.reset();
 
 });
-
+  
 });
 function generateCard(){
 
