@@ -424,8 +424,15 @@ document.getElementById("tradeModal").style.display="flex";
 function closeTradeModal(){
 document.getElementById("tradeModal").style.display="none";
 }
+function loadTrades(){
 
-document.addEventListener("DOMContentLoaded", () => {
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+console.log(trades);
+
+}
+  document.addEventListener("DOMContentLoaded", () => {
 
 const form = document.getElementById("tradeForm");
 
