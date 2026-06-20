@@ -282,7 +282,49 @@ message.innerText = error.message;
 }
 
 });
+function togglePassword(){
 
+const password =
+document.getElementById("password");
+
+const button =
+document.getElementById("showPassword");
+
+if(password.type === "password"){
+
+password.type = "text";
+button.innerText = "Hide";
+
+}else{
+
+password.type = "password";
+button.innerText = "Show";
+
+}
+
+}
+
+function toggleConfirmPassword(){
+
+const password =
+document.getElementById("confirmPassword");
+
+const button =
+document.getElementById("showConfirmPassword");
+
+if(password.type === "password"){
+
+password.type = "text";
+button.innerText = "Hide";
+
+}else{
+
+password.type = "password";
+button.innerText = "Show";
+
+}
+
+}
 </script>
 </body>
 </html>
