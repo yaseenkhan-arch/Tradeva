@@ -141,8 +141,27 @@ Login to your Tradeva account.
 
 <input id="email" type="email" placeholder="Email Address" required>
 
-<input id="password" type="password" placeholder="Password" required>
+<div style="position:relative;">
 
+<input
+id="password"
+type="password"
+placeholder="Password"
+required>
+
+<span
+onclick="togglePassword()"
+style="
+position:absolute;
+right:15px;
+top:15px;
+cursor:pointer;
+font-size:18px;">
+👁️
+</span>
+
+</div>
+  
 <button type="submit">
 Login
 </button>
