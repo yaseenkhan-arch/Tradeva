@@ -168,12 +168,30 @@ Show
 </span>
 
 </div>
+
+<div style="position:relative;">
+
 <input
 id="confirmPassword"
 type="password"
 placeholder="Confirm Password"
 required>
 
+<span
+id="showConfirmPassword"
+onclick="toggleConfirmPassword()"
+style="
+position:absolute;
+right:15px;
+top:16px;
+cursor:pointer;
+font-size:13px;
+font-weight:600;
+color:#64748b;">
+Show
+</span>
+
+</div>  
 <button type="submit">
 Create Account
 </button>
