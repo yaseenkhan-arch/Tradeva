@@ -412,7 +412,7 @@ Add your first trade and Tradeva AI will review it.
 </div>
 
 <script>
-
+  
 function logout(){
 localStorage.clear();
 window.location.href="login.html";
@@ -425,6 +425,7 @@ document.getElementById("tradeModal").style.display="flex";
 function closeTradeModal(){
 document.getElementById("tradeModal").style.display="none";
 }
+
 function loadTrades(){
 
 let trades =
@@ -433,11 +434,13 @@ JSON.parse(localStorage.getItem("trades")) || [];
 const tableBody =
 document.getElementById("tradesBody");
 
-tableBody.innerHTML = "";
+if(!tableBody) return;
 
-if(trades.length === 0){
+tableBody.innerHTML="";
 
-tableBody.innerHTML = `
+if(trades.length===0){
+
+tableBody.innerHTML=`
 <tr>
 <td colspan="6" style="text-align:center;">
 No trades yet. Add your first trade.
@@ -446,10 +449,9 @@ No trades yet. Add your first trade.
 `;
 
 return;
-
 }
 
-trades.forEach(trade => {
+trades.forEach(trade=>{
 
 tableBody.innerHTML += `
 <tr>
@@ -458,39 +460,33 @@ tableBody.innerHTML += `
 <td>${trade.session}</td>
 <td>${trade.direction}</td>
 <td>${trade.rr}R</td>
-<td class="${
-trade.result==="Win"
-? "profit"
-: "loss"
-}">
-${trade.result}
-</td>
+<td>${trade.result}</td>
 </tr>
 `;
 
 });
 
 }
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+loadTrades();
+
+const form =
+document.getElementById("tradeForm");
+
+form.addEventListener("submit",(e)=>{
+
+e.preventDefault();
+
+const trade = {
+
 date: document.getElementById("date").value,
 pair: document.getElementById("pair").value,
 direction: document.getElementById("direction").value,
-
-entry: document.getElementById("entry").value,
-sl: document.getElementById("sl").value,
-tp: document.getElementById("tp").value,
-exit: document.getElementById("exit").value,
-
 session: document.getElementById("session").value,
-tradeType: document.getElementById("tradeType").value,
-htfBias: document.getElementById("htfBias").value,
-
-rr: parseFloat(document.getElementById("rr").value) || 0,
-pips: parseFloat(document.getElementById("pips").value) || 0,
-
-timeInPosition: document.getElementById("timeInPosition").value,
-result: document.getElementById("result").value,
-
-notes: document.getElementById("notes").value
+rr: parseFloat(document.getElementById("rr").value)||0,
+result: document.getElementById("result").value
 
 };
 
@@ -503,23 +499,27 @@ localStorage.setItem(
 "trades",
 JSON.stringify(trades)
 );
+
 loadTrades();
-  
-  alert("Trade Saved Successfully ✅");
+
+alert("Trade Saved Successfully ✅");
 
 closeTradeModal();
 
 form.reset();
 
 });
-  
+
 });
+
 function generateCard(){
 
 document.getElementById("pnlCard").style.display="block";
 
-}  
+}
+
 </script>
+
   <!-- Add Trade Modal -->
 
 <div id="tradeModal" class="modal">
