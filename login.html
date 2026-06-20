@@ -290,22 +290,25 @@ message.innerText = error.message;
 });
 
 </script>
-<script>
-
 function togglePassword(){
 
 const password =
 document.getElementById("password");
 
+const button =
+document.getElementById("showPassword");
+
 if(password.type === "password"){
+
 password.type = "text";
-}
-else{
+button.innerText = "Hide";
+
+}else{
+
 password.type = "password";
-}
+button.innerText = "Show";
 
 }
 
-</script>
-  </body>
+}  </body>
 </html>
