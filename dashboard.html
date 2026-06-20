@@ -516,8 +516,45 @@ loadTrades();
 alert("Trade Saved Successfully ✅");
 
 closeTradeModal();
+function deleteTrade(index){
 
-form.reset();
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+if(confirm("Delete this trade?")){
+
+trades.splice(index,1);
+
+localStorage.setItem(
+"trades",
+JSON.stringify(trades)
+);
+
+loadTrades();
+
+}
+
+}
+ function editTrade(index){
+
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+const trade = trades[index];
+
+document.getElementById("date").value = trade.date;
+document.getElementById("pair").value = trade.pair;
+document.getElementById("direction").value = trade.direction;
+document.getElementById("session").value = trade.session;
+document.getElementById("rr").value = trade.rr;
+document.getElementById("result").value = trade.result;
+
+deleteTrade(index);
+
+openTradeModal();
+
+}
+  form.reset();
 
 });
 
