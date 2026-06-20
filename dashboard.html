@@ -413,7 +413,7 @@ Add your first trade and Tradeva AI will review it.
 </div>
 
 <script>
-  
+
 function logout(){
 localStorage.clear();
 window.location.href="login.html";
@@ -437,13 +437,13 @@ document.getElementById("tradesBody");
 
 if(!tableBody) return;
 
-tableBody.innerHTML="";
+tableBody.innerHTML = "";
 
-if(trades.length===0){
+if(trades.length === 0){
 
-tableBody.innerHTML=`
+tableBody.innerHTML = `
 <tr>
-<td colspan="6" style="text-align:center;">
+<td colspan="7" style="text-align:center;">
 No trades yet. Add your first trade.
 </td>
 </tr>
@@ -452,8 +452,8 @@ No trades yet. Add your first trade.
 return;
 }
 
-trades.forEach((trade,index) => {
-  
+trades.forEach((trade,index)=>{
+
 tableBody.innerHTML += `
 <tr>
 <td>${trade.date}</td>
@@ -465,17 +465,64 @@ tableBody.innerHTML += `
 
 <td>
 <button onclick="editTrade(${index})">
-✏️
+Edit
 </button>
 
 <button onclick="deleteTrade(${index})">
-🗑️
+Delete
 </button>
-</td> 
+</td>
 </tr>
 `;
 
 });
+
+}
+
+function deleteTrade(index){
+
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+if(confirm("Delete this trade?")){
+
+trades.splice(index,1);
+
+localStorage.setItem(
+"trades",
+JSON.stringify(trades)
+);
+
+loadTrades();
+
+}
+
+}
+
+function editTrade(index){
+
+let trades =
+JSON.parse(localStorage.getItem("trades")) || [];
+
+const trade = trades[index];
+
+document.getElementById("date").value = trade.date;
+document.getElementById("pair").value = trade.pair;
+document.getElementById("direction").value = trade.direction;
+document.getElementById("session").value = trade.session;
+document.getElementById("rr").value = trade.rr;
+document.getElementById("result").value = trade.result;
+
+trades.splice(index,1);
+
+localStorage.setItem(
+"trades",
+JSON.stringify(trades)
+);
+
+loadTrades();
+
+openTradeModal();
 
 }
 
@@ -496,7 +543,7 @@ date: document.getElementById("date").value,
 pair: document.getElementById("pair").value,
 direction: document.getElementById("direction").value,
 session: document.getElementById("session").value,
-rr: parseFloat(document.getElementById("rr").value)||0,
+rr: parseFloat(document.getElementById("rr").value) || 0,
 result: document.getElementById("result").value
 
 };
@@ -515,46 +562,9 @@ loadTrades();
 
 alert("Trade Saved Successfully ✅");
 
+form.reset();
+
 closeTradeModal();
-function deleteTrade(index){
-
-let trades =
-JSON.parse(localStorage.getItem("trades")) || [];
-
-if(confirm("Delete this trade?")){
-
-trades.splice(index,1);
-
-localStorage.setItem(
-"trades",
-JSON.stringify(trades)
-);
-
-loadTrades();
-
-}
-
-}
- function editTrade(index){
-
-let trades =
-JSON.parse(localStorage.getItem("trades")) || [];
-
-const trade = trades[index];
-
-document.getElementById("date").value = trade.date;
-document.getElementById("pair").value = trade.pair;
-document.getElementById("direction").value = trade.direction;
-document.getElementById("session").value = trade.session;
-document.getElementById("rr").value = trade.rr;
-document.getElementById("result").value = trade.result;
-
-deleteTrade(index);
-
-openTradeModal();
-
-}
-  form.reset();
 
 });
 
@@ -567,7 +577,6 @@ document.getElementById("pnlCard").style.display="block";
 }
 
 </script>
-
   <!-- Add Trade Modal -->
 
 <div id="tradeModal" class="modal">
