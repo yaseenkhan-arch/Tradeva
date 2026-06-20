@@ -429,19 +429,47 @@ function loadTrades(){
 let trades =
 JSON.parse(localStorage.getItem("trades")) || [];
 
-console.log(trades);
+const tableBody =
+document.getElementById("tradesBody");
+
+tableBody.innerHTML = "";
+
+if(trades.length === 0){
+
+tableBody.innerHTML = `
+<tr>
+<td colspan="6" style="text-align:center;">
+No trades yet. Add your first trade.
+</td>
+</tr>
+`;
+
+return;
 
 }
-  document.addEventListener("DOMContentLoaded", () => {
-loadTrades();
-    const form = document.getElementById("tradeForm");
 
-form.addEventListener("submit",(e)=>{
+trades.forEach(trade => {
 
-e.preventDefault();
+tableBody.innerHTML += `
+<tr>
+<td>${trade.date}</td>
+<td>${trade.pair}</td>
+<td>${trade.session}</td>
+<td>${trade.direction}</td>
+<td>${trade.rr}R</td>
+<td class="${
+trade.result==="Win"
+? "profit"
+: "loss"
+}">
+${trade.result}
+</td>
+</tr>
+`;
 
-const trade = {
+});
 
+}
 date: document.getElementById("date").value,
 pair: document.getElementById("pair").value,
 direction: document.getElementById("direction").value,
