@@ -462,6 +462,16 @@ tableBody.innerHTML += `
 <td>${trade.direction}</td>
 <td>${trade.rr}R</td>
 <td>${trade.result}</td>
+
+<td>
+<button onclick="editTrade(${index})">
+✏️
+</button>
+
+<button onclick="deleteTrade(${index})">
+🗑️
+</button>
+</td> 
 </tr>
 `;
 
