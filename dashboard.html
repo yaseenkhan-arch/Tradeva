@@ -314,11 +314,39 @@ Logout
 
 </div>
 
-<div class="dashboard">
+<div class="app-layout">
 
-<div class="welcome">
-<h1>Welcome Trader 👋</h1>
-<p>Your performance overview</p>
+<div class="sidebar">
+
+<div class="sidebar-logo">
+🚀 Tradeva
+</div>
+
+<ul class="menu">
+<li>🏠 Dashboard</li>
+<li>📊 Analytics</li>
+<li>📖 Journal</li>
+<li>🤖 AI Review</li>
+<li>🖼️ PnL Cards</li>
+<li>⚙️ Settings</li>
+</ul>
+
+</div>
+
+<div class="main-content">
+
+<div class="topbar">
+
+<div>
+<h1>Welcome Back 👋</h1>
+<p>Track. Review. Improve.</p>
+</div>
+
+<button class="add-btn"
+onclick="openTradeModal()">
++ Add Trade
+</button>
+
 </div>
 
 <div class="stats">
@@ -357,7 +385,7 @@ Logout
 <h3>Largest Loss</h3>
 <p id="largestLoss">$0</p>
 </div>
-  
+
 <div class="card">
 <h3>Winning Streak</h3>
 <p id="winningStreak">0</p>
@@ -366,6 +394,30 @@ Logout
 <div class="card">
 <h3>Losing Streak</h3>
 <p id="losingStreak">0</p>
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>Recent Trades</h2>
+
+<div id="tradeCards">
+
+<p>No trades yet.</p>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>AI Review</h2>
+
+<p>
+Tradeva AI insights will appear here.
+</p>
+
 </div>
 
 </div>
