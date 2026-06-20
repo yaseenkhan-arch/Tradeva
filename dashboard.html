@@ -452,8 +452,8 @@ No trades yet. Add your first trade.
 return;
 }
 
-trades.forEach(trade=>{
-
+trades.forEach((trade,index) => {
+  
 tableBody.innerHTML += `
 <tr>
 <td>${trade.date}</td>
