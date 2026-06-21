@@ -147,7 +147,191 @@ grid-template-columns:1fr;
 </head>
 
 <body>
+<div class="main">
+<div class="page-header">
+<h1 class="page-title">Add Trade</h1>
+<p class="subtitle">Record and analyze your trades.</p>
+</div>
 
+<!-- TRADE DETAILS -->
 
+<div class="card">
+
+<div class="section-title">
+📈 TRADE DETAILS
+</div>
+
+<div class="grid">
+
+<div>
+<label>Date</label>
+<input type="date">
+</div>
+
+<div>
+<label>Pair</label>
+<input type="text" placeholder="EURUSD">
+</div>
+
+</div>
+
+<label>Direction</label>
+
+<div class="direction-buttons">
+
+<button class="long-btn">
+▲ Buy / Long
+</button>
+
+<button class="short-btn">
+▼ Sell / Short
+</button>
+
+</div>
+
+<div class="grid">
+
+<div>
+<label>Entry</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Exit</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Stop Loss</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Take Profit</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+</div>
+
+</div>
+
+<!-- ANALYSIS -->
+
+<div class="card">
+
+<div class="section-title">
+📊 ANALYSIS
+</div>
+
+<label>Session</label>
+<select>
+<option>London</option>
+<option>New York</option>
+<option>Asia</option>
+</select>
+
+<br><br>
+
+<label>Trade Type</label>
+<select>
+<option>Select type</option>
+<option>Breaker</option>
+<option>FVG</option>
+<option>Liquidity Sweep</option>
+</select>
+
+<br><br>
+
+<label>HTF Bias</label>
+<select>
+<option>Select bias</option>
+<option>Bullish</option>
+<option>Bearish</option>
+</select>
+
+</div>
+
+<!-- RESULTS -->
+
+<div class="card">
+
+<div class="section-title">
+📈 RESULTS
+</div>
+
+<div class="grid">
+
+<div>
+<label>R:R</label>
+<input type="number" placeholder="2.5">
+</div>
+
+<div>
+<label>Pips</label>
+<input type="number" placeholder="42">
+</div>
+
+</div>
+
+<label>Time in Position</label>
+<input type="text" placeholder="2h 30m">
+
+<br><br>
+
+<label>Outcome</label>
+
+<div class="outcome-buttons">
+
+<button>✓ Win</button>
+<button>✕ Loss</button>
+<button>— B/E</button>
+
+</div>
+
+<br>
+
+<label>P&L ($)</label>
+<input type="number" placeholder="250">
+
+</div>
+
+<!-- EVIDENCE -->
+
+<div class="card">
+
+<div class="section-title">
+📷 EVIDENCE
+</div>
+
+<label>Entry Screenshot</label>
+<input type="file">
+
+<br><br>
+
+<label>TradingView Link</label>
+<input type="text">
+
+</div>
+
+<!-- NOTES -->
+
+<div class="card">
+
+<div class="section-title">
+📝 NOTES
+</div>
+
+<label>Trade Notes</label>
+
+<textarea
+placeholder="Describe your setup, psychology, execution and lessons..."
+></textarea>
+
+</div>
+
+<button class="save-btn">
+Save Trade
+</button>
+</div>
 </body>
 </html>
