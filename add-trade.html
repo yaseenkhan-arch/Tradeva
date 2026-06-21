@@ -107,13 +107,11 @@ background:#ecfdf5;
 border:2px solid #10b981;
 color:#047857;
 }
-
 .short-btn{
-background:white;
-border:2px solid #e5e7eb;
+background:#ffffff;
+border:1px solid #d1d5db;
 color:#6b7280;
 }
-
 .mt{
 margin-top:18px;
 }
@@ -202,6 +200,31 @@ TRADE DETAILS
 </div>
 
 </div>
+<script>
 
+const longBtn = document.querySelector('.long-btn');
+const shortBtn = document.querySelector('.short-btn');
+
+longBtn.addEventListener('click', () => {
+
+longBtn.style.background = '#ecfdf5';
+longBtn.style.border = '2px solid #10b981';
+
+shortBtn.style.background = '#fff';
+shortBtn.style.border = '1px solid #d1d5db';
+
+});
+
+shortBtn.addEventListener('click', () => {
+
+shortBtn.style.background = '#fee2e2';
+shortBtn.style.border = '2px solid #ef4444';
+
+longBtn.style.background = '#fff';
+longBtn.style.border = '1px solid #d1d5db';
+
+});
+
+</script>
 </body>
 </html>
