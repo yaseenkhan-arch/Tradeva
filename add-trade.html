@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,160 +7,142 @@
 
 <style>
 
-body{
+*{
 margin:0;
-font-family:Arial,sans-serif;
-background:#f8fafc;
-display:flex;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,Arial,sans-serif;
 }
 
-.sidebar{
-width:280px;
-background:white;
-height:100vh;
-border-right:1px solid #e5e7eb;
+body{
+background:#f5f5f5;
+padding:24px 16px;
 }
 
-.main{
-flex:1;
-padding:40px;
-}
-.page-header{
-margin-bottom:30px;
+.container{
+max-width:680px;
+margin:auto;
 }
 
 .page-title{
-font-size:36px;
+font-size:42px;
 font-weight:700;
 margin-bottom:8px;
-color:#111827;
 }
 
-.subtitle{
+.page-subtitle{
 color:#6b7280;
-font-size:15px;
-}.page-title{
-font-size:40px;
-font-weight:700;
-margin-bottom:10px;
-}
-
-.subtitle{
-color:#6b7280;
-margin-bottom:30px;
+margin-bottom:24px;
 }
 
 .card{
-background:white;
-padding:25px;
-border-radius:16px;
-box-shadow:0 2px 10px rgba(0,0,0,0.05);
-margin-bottom:25px;
-}
-
-.card h2{
-margin-top:0;
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:14px;
+padding:22px;
 margin-bottom:20px;
 }
 
-.grid{
+.section-title{
+display:flex;
+align-items:center;
+gap:10px;
+font-size:14px;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:.5px;
+color:#6b7280;
+margin-bottom:20px;
+}
+
+.section-title::after{
+content:"";
+height:1px;
+background:#e5e7eb;
+flex:1;
+}
+
+.grid-2{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:20px;
+gap:14px;
+}
+
+label{
+display:block;
+font-size:14px;
+font-weight:600;
+margin-bottom:6px;
 }
 
 input,
-select,
-textarea{
+select{
 width:100%;
-padding:14px;
+height:44px;
+padding:0 14px;
 border:1px solid #d1d5db;
-border-radius:10px;
-font-size:15px;
-box-sizing:border-box;
+border-radius:8px;
+font-size:14px;
+background:white;
 }
 
-textarea{
-height:120px;
-resize:none;
-}
-
-.save-btn{
-width:100%;
-padding:16px;
-background:#111827;
-color:white;
-border:none;
-border-radius:12px;
-font-size:16px;
-font-weight:600;
-cursor:pointer;
-}
-
-.save-btn:hover{
-opacity:0.9;
-}
 .direction-buttons{
-display:flex;
-gap:15px;
-margin-top:20px;
-margin-bottom:20px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
 }
 
 .long-btn,
 .short-btn{
-flex:1;
-padding:14px;
-border:none;
-border-radius:12px;
-font-weight:600;
+height:44px;
+border-radius:8px;
+font-weight:700;
+font-size:14px;
 cursor:pointer;
 }
 
 .long-btn{
-background:#dcfce7;
-color:#15803d;
+background:#ecfdf5;
+border:2px solid #10b981;
+color:#047857;
 }
 
 .short-btn{
-background:#fee2e2;
-color:#dc2626;
-}
-  @media(max-width:768px){
-
-.sidebar{
-display:none;
+background:white;
+border:2px solid #e5e7eb;
+color:#6b7280;
 }
 
-.main{
-padding:20px;
+.mt{
+margin-top:18px;
 }
 
-.grid{
-grid-template-columns:1fr;
+@media(max-width:640px){
+
+.grid-2{
+grid-template-columns:1fr 1fr;
 }
 
 }
 
 </style>
 </head>
-
 <body>
-<div class="main">
-<div class="page-header">
-<h1 class="page-title">Add Trade</h1>
-<p class="subtitle">Record and analyze your trades.</p>
-</div>
 
-<!-- TRADE DETAILS -->
+<div class="container">
+
+<h1 class="page-title">Add Trade</h1>
+<p class="page-subtitle">
+Manage and review your trading history.
+</p>
 
 <div class="card">
 
 <div class="section-title">
-📈 TRADE DETAILS
+📈 Trade Details
 </div>
 
-<div class="grid">
+<div class="grid-2">
 
 <div>
 <label>Date</label>
@@ -174,6 +155,8 @@ grid-template-columns:1fr;
 </div>
 
 </div>
+
+<div class="mt">
 
 <label>Direction</label>
 
@@ -189,7 +172,9 @@ grid-template-columns:1fr;
 
 </div>
 
-<div class="grid">
+</div>
+
+<div class="grid-2 mt">
 
 <div>
 <label>Entry</label>
@@ -215,123 +200,7 @@ grid-template-columns:1fr;
 
 </div>
 
-<!-- ANALYSIS -->
-
-<div class="card">
-
-<div class="section-title">
-📊 ANALYSIS
 </div>
 
-<label>Session</label>
-<select>
-<option>London</option>
-<option>New York</option>
-<option>Asia</option>
-</select>
-
-<br><br>
-
-<label>Trade Type</label>
-<select>
-<option>Select type</option>
-<option>Breaker</option>
-<option>FVG</option>
-<option>Liquidity Sweep</option>
-</select>
-
-<br><br>
-
-<label>HTF Bias</label>
-<select>
-<option>Select bias</option>
-<option>Bullish</option>
-<option>Bearish</option>
-</select>
-
-</div>
-
-<!-- RESULTS -->
-
-<div class="card">
-
-<div class="section-title">
-📈 RESULTS
-</div>
-
-<div class="grid">
-
-<div>
-<label>R:R</label>
-<input type="number" placeholder="2.5">
-</div>
-
-<div>
-<label>Pips</label>
-<input type="number" placeholder="42">
-</div>
-
-</div>
-
-<label>Time in Position</label>
-<input type="text" placeholder="2h 30m">
-
-<br><br>
-
-<label>Outcome</label>
-
-<div class="outcome-buttons">
-
-<button>✓ Win</button>
-<button>✕ Loss</button>
-<button>— B/E</button>
-
-</div>
-
-<br>
-
-<label>P&L ($)</label>
-<input type="number" placeholder="250">
-
-</div>
-
-<!-- EVIDENCE -->
-
-<div class="card">
-
-<div class="section-title">
-📷 EVIDENCE
-</div>
-
-<label>Entry Screenshot</label>
-<input type="file">
-
-<br><br>
-
-<label>TradingView Link</label>
-<input type="text">
-
-</div>
-
-<!-- NOTES -->
-
-<div class="card">
-
-<div class="section-title">
-📝 NOTES
-</div>
-
-<label>Trade Notes</label>
-
-<textarea
-placeholder="Describe your setup, psychology, execution and lessons..."
-></textarea>
-
-</div>
-
-<button class="save-btn">
-Save Trade
-</button>
-</div>
 </body>
 </html>
