@@ -169,7 +169,233 @@ grid-template-columns:1fr;
 </head>
 <body>
 
-<!-- We will paste HTML here -->
+<div class="main">
 
+<div class="page-header">
+<h1>Add Trade</h1>
+<p>Manage and review your trading history.</p>
+</div>
+
+<div class="card">
+
+<div class="section-title">
+📁 Account
+</div>
+
+<select>
+<option>Select account</option>
+<option>FTMO 100K</option>
+<option>FundingPips</option>
+<option>Personal</option>
+</select>
+
+</div>
+
+<!-- TRADE DETAILS -->
+
+<div class="card">
+
+<div class="section-title">
+📈 Trade Details
+</div>
+
+<div class="grid-2">
+
+<div>
+<label>Date</label>
+<input type="date">
+</div>
+
+<div>
+<label>Pair</label>
+<input type="text" placeholder="EURUSD">
+</div>
+
+</div>
+
+<br>
+
+<label>Direction</label>
+
+<div class="direction-buttons">
+
+<button class="long-btn">
+▲ Buy / Long
+</button>
+
+<button class="short-btn">
+▼ Sell / Short
+</button>
+
+</div>
+
+<br>
+
+<div class="grid-2">
+
+<div>
+<label>Entry</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Exit</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Stop Loss</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+<div>
+<label>Take Profit</label>
+<input type="number" placeholder="0.00000">
+</div>
+
+</div>
+
+</div>
+
+<!-- ANALYSIS -->
+
+<div class="card">
+
+<div class="section-title">
+📊 Analysis
+</div>
+
+<div>
+<label>Session</label>
+<select>
+<option>London</option>
+<option>New York</option>
+<option>Asian</option>
+</select>
+</div>
+
+<br>
+
+<div>
+<label>Trade Type</label>
+<select>
+<option>Select type</option>
+<option>ICT</option>
+<option>Scalp</option>
+<option>Swing</option>
+</select>
+</div>
+
+<br>
+
+<div>
+<label>HTF Bias</label>
+<select>
+<option>Select bias</option>
+<option>Bullish</option>
+<option>Bearish</option>
+</select>
+</div>
+
+</div>
+
+<!-- RESULTS -->
+
+<div class="card">
+
+<div class="section-title">
+📈 Results
+</div>
+
+<div class="grid-2">
+
+<div>
+<label>R:R</label>
+<input type="number" placeholder="e.g. 2.5">
+</div>
+
+<div>
+<label>Pips</label>
+<input type="number" placeholder="e.g. 42">
+</div>
+
+</div>
+
+<br>
+
+<div>
+<label>Time in Position</label>
+<input type="text" placeholder="e.g. 2h 30m">
+</div>
+
+<br>
+
+<label>Outcome</label>
+
+<div class="outcome-buttons">
+
+<button>✔ Win</button>
+
+<button>✖ Loss</button>
+
+<button>➖ B/E</button>
+
+</div>
+
+<br>
+
+<div>
+<label>P&L ($)</label>
+<input type="number" placeholder="250">
+</div>
+
+</div>
+
+<!-- EVIDENCE -->
+
+<div class="card">
+
+<div class="section-title">
+📷 Evidence
+</div>
+
+<div>
+<label>Entry Screenshot</label>
+<input type="file">
+</div>
+
+<br>
+
+<div>
+<label>TradingView Link</label>
+<input type="text">
+</div>
+
+</div>
+
+<!-- NOTES -->
+
+<div class="card">
+
+<div class="section-title">
+📝 Notes
+</div>
+
+<div>
+<label>Trade Notes</label>
+
+<textarea placeholder="Describe your setup, psychology, execution and lessons..."></textarea>
+
+</div>
+
+</div>
+
+<button class="save-btn">
+Save Trade
+</button>
+
+<br><br>
+
+</div>
 </body>
 </html>
