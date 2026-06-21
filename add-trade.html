@@ -1,1 +1,192 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Trade - Tradeva</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f8fafc;
+display:flex;
+}
+
+.sidebar{
+width:280px;
+background:white;
+height:100vh;
+border-right:1px solid #e5e7eb;
+}
+
+.main{
+flex:1;
+padding:40px;
+}
+
+.page-title{
+font-size:40px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+.subtitle{
+color:#6b7280;
+margin-bottom:30px;
+}
+
+.card{
+background:white;
+padding:25px;
+border-radius:16px;
+box-shadow:0 2px 10px rgba(0,0,0,0.05);
+margin-bottom:25px;
+}
+
+.card h2{
+margin-top:0;
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+input,
+select,
+textarea{
+width:100%;
+padding:14px;
+border:1px solid #d1d5db;
+border-radius:10px;
+font-size:15px;
+box-sizing:border-box;
+}
+
+textarea{
+height:120px;
+resize:none;
+}
+
+.save-btn{
+width:100%;
+padding:16px;
+background:#111827;
+color:white;
+border:none;
+border-radius:12px;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+}
+
+.save-btn:hover{
+opacity:0.9;
+}
+
+@media(max-width:768px){
+
+.sidebar{
+display:none;
+}
+
+.main{
+padding:20px;
+}
+
+.grid{
+grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+</div>
+
+<div class="main">
+
+<h1 class="page-title">Add Trade</h1>
+
+<p class="subtitle">
+Record and analyze your trade.
+</p>
+
+<div class="card">
+
+<h2>Trade Details</h2>
+
+<div class="grid">
+
+<input type="date" id="date">
+
+<input type="text" id="pair" placeholder="Pair">
+
+<select id="direction">
+<option>Long</option>
+<option>Short</option>
+</select>
+
+<input type="number" id="rr" placeholder="R:R">
+
+<input type="number" id="entry" placeholder="Entry Price">
+
+<input type="number" id="exit" placeholder="Exit Price">
+
+<input type="number" id="sl" placeholder="Stop Loss">
+
+<input type="number" id="tp" placeholder="Take Profit">
+
+<input type="number" id="pnl" placeholder="PnL ($)">
+
+<input type="text" id="session" placeholder="Session">
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Analysis</h2>
+
+<textarea
+id="notes"
+placeholder="Trade notes, psychology, mistakes, lessons..."></textarea>
+
+</div>
+
+<div class="card">
+
+<h2>Evidence</h2>
+
+<input
+type="text"
+id="tradingview"
+placeholder="TradingView Link">
+
+<br><br>
+
+<input
+type="text"
+id="imageurl"
+placeholder="Entry Screenshot URL (optional)">
+
+</div>
+
+<button class="save-btn">
+Save Trade
+</button>
+
+</div>
+
+</body>
+</html>
