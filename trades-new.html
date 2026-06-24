@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tradeva – Add Trade</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0ee;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      color: #1a1a1a;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 230px;
+      background: #fff;
+      border-right: 0.5px solid rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-profile {
+      padding: 20px 16px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .avatar-sm {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #7F77DD;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+
+    .sidebar-name { font-size: 13px; font-weight: 700; color: #111; }
+    .sidebar-role { font-size: 11px; color: #999; margin-top: 1px; }
+    .sidebar-profile .chevron { margin-left: auto; color: #ccc; font-size: 16px; }
+
+    .nav-group { padding: 6px 0; }
+
+    .nav-section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      color: #bbb; padding: 10px 18px 4px; text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 18px; font-size: 13px; color: #444;
+      cursor: pointer; text-decoration: none; transition: background 0.1s;
+    }
+
+    .nav-item:hover { background: #f5f5f5; }
+
+    .nav-item.active {
+      background: #EEEDFE; color: #534AB7; font-weight: 600;
+      border-radius: 10px; margin: 2px 8px; padding: 9px 10px;
+    }
+
+    .nav-item i { font-size: 17px; }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 36px 40px 80px;
+    }
+
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 28px;
+    }
+
+    .page-header h1 { font-size: 26px; font-weight: 700; color: #111; }
+    .page-header p  { font-size: 13px; color: #777; margin-top: 4px; }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 16px;
+      border: 0.5px solid rgba(0,0,0,0.18);
+      border-radius: 9px;
+      background: transparent; color: #444;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      text-decoration: none; transition: background 0.1s;
+    }
+    .back-btn:hover { background: #f0f0f0; }
+
+    /* ── SECTION CARDS ── */
+    .section-card {
+      background: #fff;
+      border: 0.5px solid rgba(0,0,0,0.08);
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      color: #888; margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.07);
+    }
+
+    .section-title i { font-size: 16px; color: #aaa; }
+
+    /* ── FORM ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-row.three  { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group { display: flex; flex-direction: column; gap: 7px; }
+
+    .form-group label {
+      font-size: 13px; font-weight: 600; color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 11px 14px;
+      border: 0.5px solid rgba(0,0,0,0.14);
+      border-radius: 9px;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #bbb; }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1a9e6b;
+      box-shadow: 0 0 0 3px rgba(26,158,107,0.08);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+    /* select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap select { width: 100%; padding-right: 36px; }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-top-color: #aaa;
+      pointer-events: none;
+    }
+
+    /* ── DIRECTION TOGGLE ── */
+    .dir-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .dir-btn {
+      padding: 12px;
+      border: 1.5px solid rgba(0,0,0,0.14);
+      border-radius: 9px;
+      background: #fff;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      color: #555;
+    }
+
+    .dir-btn:hover { background: #f5f5f5; }
+
+    .dir-btn.long-active {
+      border-color: #1a9e6b;
+      background: rgba(26,158,107,0.06);
+      color: #1a9e6b;
+    }
+
+    .dir-btn.short-active {
+      border-color: #d63a3a;
+      background: rgba(214,58,58,0.06);
+      color: #d63a3a;
+    }
+
+    /* ── OUTCOME TOGGLE ── */
+    .outcome-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    .outcome-btn {
+      padding: 11px;
+      border: 1.5px solid rgba(0,0,0,0.12);
+      border-radius: 9px;
+      background: #fff;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; color: #555;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    .outcome-btn:hover { background: #f5f5f5; }
+    .outcome-btn.win-active   { border-color: #1a9e6b; background: rgba(26,158,107,0.07); color: #1a9e6b; }
+    .outcome-btn.loss-active  { border-color: #d63a3a; background: rgba(214,58,58,0.07);  color: #d63a3a; }
+    .outcome-btn.be-active    { border-color: #888;    background: rgba(0,0,0,0.05);       color: #444; }
+
+    /* ── IMAGE UPLOAD ── */
+    .img-upload-area {
+      border: 1.5px dashed rgba(0,0,0,0.15);
+      border-radius: 9px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: #fafaf8;
+      position: relative;
+    }
+
+    .img-upload-area:hover { border-color: #1a9e6b; background: rgba(26,158,107,0.03); }
+
+    .img-upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .img-upload-area i { font-size: 28px; color: #ccc; display: block; margin-bottom: 8px; }
+    .img-upload-area p { font-size: 13px; color: #aaa; }
+    .img-upload-area p span { color: #1a9e6b; font-weight: 600; }
+
+    .img-preview-wrap {
+      display: none;
+      position: relative;
+      border-radius: 9px;
+      overflow: hidden;
+      border: 0.5px solid rgba(0,0,0,0.1);
+    }
+
+    .img-preview-wrap img {
+      width: 100%; max-height: 220px;
+      object-fit: cover; display: block;
+    }
+
+    .img-remove-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px;
+      background: rgba(0,0,0,0.55); border: none;
+      border-radius: 50%; color: #fff; font-size: 13px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── SAVE BUTTON ── */
+    .save-btn {
+      width: 100%;
+      padding: 15px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .save-btn:hover { background: #333; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #111; color: #fff;
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 700px) {
+      body { flex-direction: column; }
+      .sidebar { display: none; }
+      .main { padding: 24px 16px 100px; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-row.three { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LEFT SIDEBAR ── -->
+<nav class="sidebar">
+  <a href="profile.html" class="sidebar-profile">
+    <div class="avatar-sm">RF</div>
+    <div>
+      <p class="sidebar-name">Alberuni Trades</p>
+      <p class="sidebar-role">Funded Trader</p>
+    </div>
+    <i class="ti ti-chevron-right chevron"></i>
+  </a>
+
+  <div class="nav-group">
+    <p class="nav-section-label">Command Center</p>
+    <a href="dashboard.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+    <a href="trades.html"    class="nav-item active"><i class="ti ti-activity"></i> Trades</a>
+    <a href="analytics.html" class="nav-item"><i class="ti ti-chart-bar"></i> Analytics</a>
+    <a href="profit-calendar.html" class="nav-item"><i class="ti ti-calendar"></i> Profit Calendar</a>
+    <a href="#"              class="nav-item"><i class="ti ti-chart-dots-3"></i> Charts &amp; News</a>
+    <a href="mood-correlation.html" class="nav-item"><i class="ti ti-mood-happy"></i> Mood Correlation</a>
+  </div>
+
+  <div class="nav-group">
+    <p class="nav-section-label">Planning</p>
+    <a href="weekly-planner.html" class="nav-item"><i class="ti ti-notebook"></i> Weekly Planner</a>
+    <a href="mood-tracker.html"   class="nav-item"><i class="ti ti-heart-rate-monitor"></i> Mood Tracker</a>
+  </div>
+
+  <div class="nav-group">
+    <p class="nav-section-label">Growth</p>
+    <a href="reviews.html"        class="nav-item"><i class="ti ti-book"></i> Reviews</a>
+    <a href="milestones.html"     class="nav-item"><i class="ti ti-award"></i> Milestones</a>
+    <a href="knowledge-base.html" class="nav-item"><i class="ti ti-library"></i> Knowledge Base</a>
+  </div>
+
+  <div style="margin-top:auto; border-top:0.5px solid rgba(0,0,0,0.08); padding:14px 8px;">
+    <a href="settings.html" class="nav-item"><i class="ti ti-settings"></i> Settings</a>
+  </div>
+</nav>
+
+<!-- ── MAIN CONTENT ── -->
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <h1>Add New Trade</h1>
+      <p>Log your trade details, analysis and results.</p>
+    </div>
+    <a href="trades.html" class="back-btn">
+      <i class="ti ti-arrow-left" style="font-size:15px"></i> Back to Trades
+    </a>
+  </div>
+
+  <!-- ── TRADE DETAILS ── -->
+  <div class="section-card">
+    <div class="section-title">
+      <i class="ti ti-trending-up"></i> Trade Details
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="f-date"/>
+      </div>
+      <div class="form-group">
+        <label>Pair</label>
+        <input type="text" id="f-pair" placeholder="EURUSD"/>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Direction</label>
+      <div class="dir-toggle">
+        <button class="dir-btn long-active" id="btn-long" onclick="setDir('Long')">
+          ▲ Buy / Long
+        </button>
+        <button class="dir-btn" id="btn-short" onclick="setDir('Short')">
+          ▼ Sell / Short
+        </button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Entry</label>
+        <input type="number" id="f-entry" placeholder="0.00000" step="0.00001"/>
+      </div>
+      <div class="form-group">
+        <label>Exit</label>
+        <input type="number" id="f-exit" placeholder="0.00000" step="0.00001"/>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-bottom:0;">
+      <div class="form-group">
+        <label>Stop Loss</label>
+        <input type="number" id="f-sl" placeholder="0.00000" step="0.00001"/>
+      </div>
+      <div class="form-group">
+        <label>Take Profit</label>
+        <input type="number" id="f-tp" placeholder="0.00000" step="0.00001"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ANALYSIS ── -->
+  <div class="section-card">
+    <div class="section-title">
+      <i class="ti ti-chart-bar"></i> Analysis
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Session</label>
+      <div class="select-wrap">
+        <select id="f-session">
+          <option value="">Select session</option>
+          <option>London</option>
+          <option>New York</option>
+          <option>Asian</option>
+          <option>Sydney</option>
+          <option>London / New York Overlap</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Trade Type</label>
+      <div class="select-wrap">
+        <select id="f-type">
+          <option value="">Select type</option>
+          <option>Trend Following</option>
+          <option>Reversal</option>
+          <option>Breakout</option>
+          <option>Retest / Reentry</option>
+          <option>News Play</option>
+          <option>Scalp</option>
+          <option>Swing</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:0;">
+      <label>HTF Bias</label>
+      <div class="select-wrap">
+        <select id="f-bias">
+          <option value="">Select bias</option>
+          <option>Bullish</option>
+          <option>Bearish</option>
+          <option>Neutral / Ranging</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div class="section-card">
+    <div class="section-title">
+      <i class="ti ti-trending-up"></i> Results
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>R:R</label>
+        <input type="number" id="f-rr" placeholder="e.g. 2.5" step="0.1"/>
+      </div>
+      <div class="form-group">
+        <label>Pips</label>
+        <input type="number" id="f-pips" placeholder="e.g. 42"/>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Time in Position</label>
+      <input type="text" id="f-time" placeholder="e.g. 2h 30m"/>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Outcome</label>
+      <div class="outcome-row">
+        <button class="outcome-btn" id="btn-win"  onclick="setOutcome('Win')">✓ Win</button>
+        <button class="outcome-btn" id="btn-loss" onclick="setOutcome('Loss')">✗ Loss</button>
+        <button class="outcome-btn" id="btn-be"   onclick="setOutcome('B/E')">— B/E</button>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:0;">
+      <label>P&amp;L ($)</label>
+      <input type="number" id="f-pnl" placeholder="e.g. 250.00 or -120.00 (auto-calculated if blank)"/>
+    </div>
+  </div>
+
+  <!-- ── EVIDENCE ── -->
+  <div class="section-card">
+    <div class="section-title">
+      <i class="ti ti-photo"></i> Evidence
+    </div>
+
+    <!-- Entry Screenshot -->
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Entry Screenshot</label>
+      <div class="img-upload-area" id="entry-upload-area" onclick="document.getElementById('entry-file').click()">
+        <input type="file" id="entry-file" accept="image/*" onchange="previewImage('entry-file','entry-preview-wrap','entry-upload-area','entry-img')" onclick="event.stopPropagation()"/>
+        <i class="ti ti-photo-up"></i>
+        <p><span>Choose from gallery</span> or drag &amp; drop</p>
+        <p style="margin-top:4px; font-size:11px;">PNG, JPG, WEBP up to 20MB</p>
+      </div>
+      <div class="img-preview-wrap" id="entry-preview-wrap">
+        <img id="entry-img" src="" alt="Entry screenshot"/>
+        <button class="img-remove-btn" onclick="removeImage('entry-file','entry-preview-wrap','entry-upload-area','entry-img')">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Exit Screenshot -->
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Exit Screenshot</label>
+      <div class="img-upload-area" id="exit-upload-area" onclick="document.getElementById('exit-file').click()">
+        <input type="file" id="exit-file" accept="image/*" onchange="previewImage('exit-file','exit-preview-wrap','exit-upload-area','exit-img')" onclick="event.stopPropagation()"/>
+        <i class="ti ti-photo-up"></i>
+        <p><span>Choose from gallery</span> or drag &amp; drop</p>
+        <p style="margin-top:4px; font-size:11px;">PNG, JPG, WEBP up to 20MB</p>
+      </div>
+      <div class="img-preview-wrap" id="exit-preview-wrap">
+        <img id="exit-img" src="" alt="Exit screenshot"/>
+        <button class="img-remove-btn" onclick="removeImage('exit-file','exit-preview-wrap','exit-upload-area','exit-img')">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- TradingView link still available -->
+    <div class="form-group" style="margin-top:18px; margin-bottom:0;">
+      <label>TradingView Link <span style="color:#bbb; font-weight:400;">(optional)</span></label>
+      <input type="url" id="f-tv" placeholder="https://www.tradingview.com/chart/..."/>
+    </div>
+  </div>
+
+  <!-- ── NOTES ── -->
+  <div class="section-card">
+    <div class="section-title">
+      <i class="ti ti-file-text"></i> Notes
+    </div>
+
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Trade Notes</label>
+      <textarea id="f-notes" placeholder="Describe your setup, what you saw, what happened..."></textarea>
+    </div>
+  </div>
+
+  <!-- SAVE -->
+  <button class="save-btn" onclick="saveTrade()">Save Trade</button>
+
+</main>
+
+<div class="toast" id="toast">✓ Trade saved successfully!</div>
+
+<script>
+  // ── Set today's date ──
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  // ── Direction ──
+  let selectedDir = 'Long';
+  function setDir(dir) {
+    selectedDir = dir;
+    document.getElementById('btn-long').className  = 'dir-btn' + (dir==='Long'  ? ' long-active'  : '');
+    document.getElementById('btn-short').className = 'dir-btn' + (dir==='Short' ? ' short-active' : '');
+  }
+
+  // ── Outcome ──
+  let selectedOutcome = '';
+  function setOutcome(o) {
+    selectedOutcome = o;
+    document.getElementById('btn-win').className  = 'outcome-btn' + (o==='Win'  ? ' win-active'  : '');
+    document.getElementById('btn-loss').className = 'outcome-btn' + (o==='Loss' ? ' loss-active' : '');
+    document.getElementById('btn-be').className   = 'outcome-btn' + (o==='B/E'  ? ' be-active'   : '');
+  }
+
+  // ── Image preview ──
+  function previewImage(fileId, wrapId, areaId, imgId) {
+    const file = document.getElementById(fileId).files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById(imgId).src = e.target.result;
+      document.getElementById(wrapId).style.display = 'block';
+      document.getElementById(areaId).style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage(fileId, wrapId, areaId, imgId) {
+    document.getElementById(fileId).value = '';
+    document.getElementById(imgId).src = '';
+    document.getElementById(wrapId).style.display = 'none';
+    document.getElementById(areaId).style.display = 'block';
+  }
+
+  // Drag & drop support
+  ['entry-upload-area','exit-upload-area'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    const isEntry = areaId.startsWith('entry');
+    const fileId  = isEntry ? 'entry-file'        : 'exit-file';
+    const wrapId  = isEntry ? 'entry-preview-wrap' : 'exit-preview-wrap';
+    const imgId   = isEntry ? 'entry-img'          : 'exit-img';
+
+    area.addEventListener('dragover',  e => { e.preventDefault(); area.style.borderColor='#1a9e6b'; });
+    area.addEventListener('dragleave', () => { area.style.borderColor=''; });
+    area.addEventListener('drop', e => {
+      e.preventDefault();
+      area.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById(fileId).files = dt.files;
+      previewImage(fileId, wrapId, areaId, imgId);
+    });
+  });
+
+  // ── SAVE ──
+  const KEY = 'tradeva_trades';
+  const getTrades = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+  const saveTrades = arr => localStorage.setItem(KEY, JSON.stringify(arr));
+
+  function toBase64(fileId) {
+    return new Promise(res => {
+      const file = document.getElementById(fileId).files[0];
+      if (!file) return res(null);
+      const reader = new FileReader();
+      reader.onload = e => res(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function saveTrade() {
+    const pair = document.getElementById('f-pair').value.trim().toUpperCase();
+    const date = document.getElementById('f-date').value;
+
+    if (!pair || !date) {
+      alert('Please fill in at least Date and Pair.');
+      return;
+    }
+
+    const entryImg = await toBase64('entry-file');
+    const exitImg  = await toBase64('exit-file');
+
+    const trades  = getTrades();
+    const newId   = trades.length ? Math.max(...trades.map(t=>t.id||0))+1 : 1;
+
+    trades.push({
+      id: newId,
+      date,
+      pair,
+      dir:      selectedDir,
+      entry:    parseFloat(document.getElementById('f-entry').value) || 0,
+      exit:     parseFloat(document.getElementById('f-exit').value)  || 0,
+      sl:       parseFloat(document.getElementById('f-sl').value)    || 0,
+      tp:       parseFloat(document.getElementById('f-tp').value)    || 0,
+      session:  document.getElementById('f-session').value,
+      tradeType:document.getElementById('f-type').value,
+      htfBias:  document.getElementById('f-bias').value,
+      rr:       parseFloat(document.getElementById('f-rr').value)    || 0,
+      pips:     parseFloat(document.getElementById('f-pips').value)  || 0,
+      timeInPos:document.getElementById('f-time').value,
+      outcome:  selectedOutcome,
+      pnl:      parseFloat(document.getElementById('f-pnl').value)  || 0,
+      entryImg,
+      exitImg,
+      tvLink:   document.getElementById('f-tv').value.trim(),
+      notes:    document.getElementById('f-notes').value.trim(),
+    });
+
+    saveTrades(trades);
+
+    // Show toast then redirect
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => { window.location.href = 'trades.html'; }, 1200);
+  }
+</script>
+</body>
+</html>
