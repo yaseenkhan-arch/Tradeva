@@ -1,1 +1,844 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tradeva — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  /* ── RESET & BASE ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+
+  /* ── THEME TOKENS ─────────────────────────────────────── */
+  :root {
+    --bg-page:      #F8FAFC;
+    --bg-card:      #FFFFFF;
+    --bg-sidebar:   #FFFFFF;
+    --border:       #E2E8F0;
+    --border-light: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-muted:   #64748B;
+    --text-faint:   #94A3B8;
+    --accent:       #3B82F6;
+    --accent-bg:    #EFF6FF;
+    --green:        #10B981;
+    --green-bg:     #ECFDF5;
+    --red:          #EF4444;
+    --red-bg:       #FEF2F2;
+    --sidebar-w:    240px;
+    --nav-h:        64px;
+    --radius-card:  16px;
+    --radius-btn:   10px;
+    --radius-input: 10px;
+    --shadow-card:  0 1px 4px rgba(0,0,0,0.05);
+    --transition:   0.2s ease;
+  }
+
+  [data-theme="dark"] {
+    --bg-page:      #0B0F19;
+    --bg-card:      #131929;
+    --bg-sidebar:   #0F1623;
+    --border:       #1E2A3D;
+    --border-light: #172034;
+    --text-primary: #F1F5F9;
+    --text-muted:   #94A3B8;
+    --text-faint:   #475569;
+    --accent-bg:    #1E3A5F;
+    --green-bg:     #052E1C;
+    --red-bg:       #2D0A0A;
+    --shadow-card:  0 1px 6px rgba(0,0,0,0.3);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ── SIDEBAR ──────────────────────────────────────────── */
+  .sidebar {
+    position: fixed;
+    top: 0; right: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transition: background var(--transition), border-color var(--transition);
+  }
+
+  .sidebar-top {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 20px;
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.2; }
+  .logo-name { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+  .logo-name span { color: var(--accent); }
+
+  /* Profile pill */
+  .profile-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background var(--transition);
+    text-decoration: none;
+  }
+  .profile-pill:hover { background: var(--border-light); }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-role { font-size: 11px; color: var(--text-muted); }
+
+  /* Nav section */
+  .sidebar-nav { flex: 1; padding: 16px 8px; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-faint);
+    padding: 0 8px; margin: 16px 0 6px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    text-decoration: none;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .nav-item:hover { background: var(--border-light); color: var(--text-primary); }
+  .nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  [data-theme="dark"] .nav-item.active { background: #1a3a6e; }
+
+  /* Sidebar bottom */
+  .sidebar-bottom {
+    padding: 12px 8px 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* Account switcher */
+  .account-switcher {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-page);
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .account-switcher:hover { border-color: var(--accent); }
+  .account-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); }
+  .account-chevron { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .theme-toggle:hover { background: var(--border-light); }
+  .theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; }
+  .theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .toggle-switch {
+    width: 36px; height: 20px;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--accent); }
+  .toggle-knob {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle-switch.on .toggle-knob { transform: translateX(16px); }
+
+  /* ── MAIN CONTENT ─────────────────────────────────────── */
+  .main {
+    flex: 1;
+    margin-right: var(--sidebar-w);
+    padding: 28px 28px 80px;
+    max-width: 100%;
+    min-height: 100vh;
+  }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px; font-weight: 600;
+    padding: 9px 18px;
+    border-radius: var(--radius-btn);
+    border: none; cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+    white-space: nowrap;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary:hover { background: #2563EB; transform: translateY(-1px); }
+  .btn-primary svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+  /* ── STAT CARDS ───────────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .stats-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+  }
+  .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  [data-theme="dark"] .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+  .stat-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 24px; font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-sub { font-size: 11px; color: var(--text-muted); }
+
+  /* ── CHARTS ROW ───────────────────────────────────────── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 22px;
+    box-shadow: var(--shadow-card);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .chart-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+  .chart-wrap { position: relative; height: 200px; }
+
+  /* ── RECENT TRADES ────────────────────────────────────── */
+  .trades-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .trades-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .trades-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .view-all {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    text-decoration: none;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+  .view-all:hover { background: var(--accent-bg); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-faint);
+    padding: 10px 22px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-page);
+  }
+  thead th:last-child { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition);
+    cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-page); }
+
+  td {
+    padding: 13px 22px;
+    font-size: 13px;
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+  td:last-child { text-align: right; }
+
+  .td-date { color: var(--text-muted); font-size: 12px; }
+  .td-pair { font-weight: 700; font-size: 13px; letter-spacing: 0.02em; }
+  .td-session { color: var(--text-muted); font-size: 12px; }
+
+  .dir-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .dir-long { background: var(--green-bg); color: var(--green); border: 1px solid #6EE7B7; }
+  .dir-short { background: var(--red-bg); color: var(--red); border: 1px solid #FCA5A5; }
+  [data-theme="dark"] .dir-long { border-color: #065F46; }
+  [data-theme="dark"] .dir-short { border-color: #7F1D1D; }
+
+  .pnl-pos { color: var(--green); font-weight: 700; font-size: 13px; }
+  .pnl-neg { color: var(--red); font-weight: 700; font-size: 13px; }
+
+  /* ── MOBILE NAV BAR ───────────────────────────────────── */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 200;
+    justify-content: space-around;
+  }
+  .mob-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 16px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition);
+    text-decoration: none;
+  }
+  .mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .mob-item.active { color: var(--accent); }
+
+  /* ── RESPONSIVE ───────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .stats-grid, .stats-grid-2 { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-right: 0; padding: 20px 16px 90px; }
+    .stats-grid, .stats-grid-2 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .charts-row { grid-template-columns: 1fr; }
+    .mobile-nav { display: flex; }
+    .page-title { font-size: 22px; }
+    .stat-value { font-size: 20px; }
+    thead th:nth-child(4), td:nth-child(4) { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid, .stats-grid-2 { grid-template-columns: 1fr 1fr; }
+    .stat-value { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ────────────────────────────────────────────── -->
+<aside class="sidebar">
+
+  <div class="sidebar-top">
+    <!-- Logo -->
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 17 17"><polyline points="1,13 5,8 8,11 13,4"/><circle cx="14.5" cy="3" r="1.5" fill="#fff" stroke="none"/></svg>
+      </div>
+      <span class="logo-name">Trade<span>va</span></span>
+    </a>
+
+    <!-- Profile -->
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name">Kham</div>
+        <div class="profile-role">Pro Trader</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--text-faint)" stroke-width="2"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+
+    <a href="dashboard.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="14" y1="1" x2="14" y2="5"/><line x1="12" y1="3" x2="16" y2="3" transform="translate(-1,0)"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6" y="5" width="3" height="10" rx="1"/><rect x="11" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M5 8h6M8 5v6"/></svg>
+      Charts & News
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/><path d="M8 6a2 2 0 100 4 2 2 0 000-4z"/></svg>
+      Mood Correlation
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="7" r="3"/><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>
+      Mood Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-6"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M14 8H9V3H7v5H2v2h5v5h2v-5h5z"/></svg>
+      Knowledge Base
+    </a>
+  </nav>
+
+  <!-- Bottom: Account + Theme -->
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-chevron" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/><line x1="2.9" y1="2.9" x2="3.95" y2="3.95"/><line x1="10.05" y1="10.05" x2="11.1" y2="11.1"/><line x1="11.1" y1="2.9" x2="10.05" y2="3.95"/><line x1="3.95" y1="10.05" x2="2.9" y2="11.1"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-switch" id="themeSwitch">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Settings
+    </a>
+  </div>
+
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">All stats update automatically when a trade is added.</p>
+    </div>
+    <a href="trades-new.html" class="btn-primary">
+      <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+      New Trade
+    </a>
+  </div>
+
+  <!-- Stats Row 1 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Trades</div>
+      <div class="stat-value" id="totalTrades">17</div>
+      <div class="stat-sub" id="profitableDays">15 profitable days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-value green" id="winRate">88.2%</div>
+      <div class="stat-sub" id="winLoss">15 wins · 2 losses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Profit Factor</div>
+      <div class="stat-value green" id="profitFactor">14.69</div>
+      <div class="stat-sub">Excellent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average RR</div>
+      <div class="stat-value green" id="avgRR">2.08</div>
+      <div class="stat-sub">per trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net RR</div>
+      <div class="stat-value green" id="netRR">35.38</div>
+      <div class="stat-sub">cumulative RR earned</div>
+    </div>
+  </div>
+
+  <!-- Stats Row 2 -->
+  <div class="stats-grid-2">
+    <div class="stat-card">
+      <div class="stat-label">Net PnL</div>
+      <div class="stat-value green" id="netPnl">+$14,370</div>
+      <div class="stat-sub" id="maxDrawdownSub">Max drawdown: $750</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Largest Win</div>
+      <div class="stat-value green" id="largestWin">+$2,250</div>
+      <div class="stat-sub">best single trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Largest Loss</div>
+      <div class="stat-value red" id="largestLoss">$−750</div>
+      <div class="stat-sub">worst single trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Winning Streak</div>
+      <div class="stat-value green" id="winStreak">12</div>
+      <div class="stat-sub" id="winStreakSub">Current: 12 in a row</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Losing Streak</div>
+      <div class="stat-value" id="loseStreak">1</div>
+      <div class="stat-sub">max consecutive losses</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Account Growth</div>
+      <div class="chart-sub">Cumulative equity over time</div>
+      <div class="chart-wrap">
+        <canvas id="growthChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Drawdown</div>
+      <div class="chart-sub">Peak-to-trough losses</div>
+      <div class="chart-wrap">
+        <canvas id="drawdownChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Trades -->
+  <div class="trades-card">
+    <div class="trades-header">
+      <div class="trades-title">Recent Trades</div>
+      <a href="trades.html" class="view-all">View All</a>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Pair</th>
+            <th>Direction</th>
+            <th>Session</th>
+            <th>PnL</th>
+          </tr>
+        </thead>
+        <tbody id="recentTradesBody">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── MOBILE BOTTOM NAV ───────────────────────────────────── -->
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6" y="5" width="3" height="10" rx="1"/><rect x="11" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<script>
+/* ── THEME ──────────────────────────────────────────────── */
+const html = document.documentElement;
+const saved = localStorage.getItem('tradeva_theme') || 'light';
+if (saved === 'dark') applyDark();
+
+function applyDark() {
+  html.setAttribute('data-theme', 'dark');
+  document.getElementById('themeSwitch').classList.add('on');
+  document.getElementById('themeLabel').innerHTML = `
+    <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 7A5 5 0 112 7a5 5 0 0110 0z"/></svg>
+    Dark mode`;
+}
+
+function applyLight() {
+  html.removeAttribute('data-theme');
+  document.getElementById('themeSwitch').classList.remove('on');
+  document.getElementById('themeLabel').innerHTML = `
+    <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+    Light mode`;
+}
+
+function toggleTheme() {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  if (isDark) { applyLight(); localStorage.setItem('tradeva_theme', 'light'); }
+  else { applyDark(); localStorage.setItem('tradeva_theme', 'dark'); }
+  setTimeout(renderCharts, 50);
+}
+
+/* ── SAMPLE DATA (replace with localStorage reads) ────── */
+const SAMPLE_TRADES = [
+  { date: 'Jun 20, 2026', pair: 'EURUSD',  dir: 'Short', session: 'London',   pnl:  800  },
+  { date: 'Jun 18, 2026', pair: 'GBPJPY',  dir: 'Long',  session: 'London',   pnl:  560  },
+  { date: 'Jun 16, 2026', pair: 'XAUUSD',  dir: 'Long',  session: 'New York', pnl:  2250 },
+  { date: 'Jun 10, 2026', pair: 'GBPUSD',  dir: 'Short', session: 'London',   pnl:  750  },
+  { date: 'Jun 05, 2026', pair: 'XAUUSD',  dir: 'Short', session: 'New York', pnl:  1750 },
+  { date: 'Jun 02, 2026', pair: 'EURUSD',  dir: 'Long',  session: 'London',   pnl:  800  },
+  { date: 'May 29, 2026', pair: 'GBPUSD',  dir: 'Long',  session: 'London',   pnl:  900  },
+  { date: 'May 22, 2026', pair: 'XAUUSD',  dir: 'Long',  session: 'New York', pnl:  1500 },
+  { date: 'May 14, 2026', pair: 'EURUSD',  dir: 'Short', session: 'London',   pnl: -750  },
+  { date: 'May 08, 2026', pair: 'GBPJPY',  dir: 'Short', session: 'London',   pnl: -260  },
+];
+
+/* ── RENDER TRADE ROWS ──────────────────────────────────── */
+function renderTrades() {
+  const tbody = document.getElementById('recentTradesBody');
+  const trades = JSON.parse(localStorage.getItem('tradeva_trades') || 'null') || SAMPLE_TRADES;
+  const recent = trades.slice(0, 10);
+  tbody.innerHTML = recent.map(t => {
+    const isLong = t.dir === 'Long';
+    const pos = t.pnl >= 0;
+    const fmt = v => (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return `<tr>
+      <td class="td-date">${t.date}</td>
+      <td class="td-pair">${t.pair}</td>
+      <td><span class="dir-badge ${isLong ? 'dir-long' : 'dir-short'}">${isLong ? '▲' : '▼'} ${t.dir}</span></td>
+      <td class="td-session">${t.session}</td>
+      <td class="${pos ? 'pnl-pos' : 'pnl-neg'}">${fmt(t.pnl)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── CHARTS ─────────────────────────────────────────────── */
+let growthInst, drawdownInst;
+
+function getColor(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+
+function renderCharts() {
+  if (growthInst) growthInst.destroy();
+  if (drawdownInst) drawdownInst.destroy();
+
+  const gridColor = isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const textColor = isDark() ? '#64748B' : '#94A3B8';
+
+  const growthLabels = ['May 2','May 6','May 12','May 19','May 22','Jun 2','Jun 10','Jun 20'];
+  const growthData   = [1200, 1800, 3200, 5400, 6100, 8900, 12400, 15700];
+
+  const growthCtx = document.getElementById('growthChart').getContext('2d');
+  const grad = growthCtx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, 'rgba(16,185,129,0.18)');
+  grad.addColorStop(1, 'rgba(16,185,129,0)');
+
+  growthInst = new Chart(growthCtx, {
+    type: 'line',
+    data: {
+      labels: growthLabels,
+      datasets: [{
+        data: growthData,
+        borderColor: '#10B981',
+        borderWidth: 2.5,
+        backgroundColor: grad,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#10B981',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: isDark() ? '#1E293B' : '#0F172A',
+        titleColor: '#94A3B8', bodyColor: '#F1F5F9',
+        padding: 10, cornerRadius: 8,
+        callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString() }
+      }},
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 },
+          callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v) } }
+      }
+    }
+  });
+
+  const ddLabels = ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'];
+  const ddData   = [0, 6.5, 3.8, 1.2, 0, 0, 0, 0, 0];
+
+  const ddCtx = document.getElementById('drawdownChart').getContext('2d');
+  drawdownInst = new Chart(ddCtx, {
+    type: 'bar',
+    data: {
+      labels: ddLabels,
+      datasets: [{
+        data: ddData,
+        backgroundColor: 'rgba(239,68,68,0.75)',
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: isDark() ? '#1E293B' : '#0F172A',
+        titleColor: '#94A3B8', bodyColor: '#F1F5F9',
+        padding: 10, cornerRadius: 8,
+        callbacks: { label: ctx => ' ' + ctx.raw.toFixed(1) + '%' }
+      }},
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 },
+          callback: v => v + '%' }, max: 9 }
+      }
+    }
+  });
+}
+
+/* ── STATS FROM LOCALSTORAGE (with sample fallback) ─────── */
+function computeStats() {
+  const raw = localStorage.getItem('tradeva_trades');
+  if (!raw) return;
+  const trades = JSON.parse(raw);
+  if (!trades.length) return;
+
+  const wins = trades.filter(t => t.outcome === 'Win' || (t.pnl > 0));
+  const losses = trades.filter(t => t.outcome === 'Loss' || (t.pnl < 0));
+  const totalPnl = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const wr = ((wins.length / trades.length) * 100).toFixed(1);
+  const pnlFmt = v => (v >= 0 ? '+$' : '$') + Math.abs(v).toLocaleString();
+
+  document.getElementById('totalTrades').textContent = trades.length;
+  document.getElementById('winRate').textContent = wr + '%';
+  document.getElementById('winLoss').textContent = wins.length + ' wins · ' + losses.length + ' losses';
+  document.getElementById('netPnl').textContent = pnlFmt(totalPnl);
+  document.getElementById('netPnl').className = 'stat-value ' + (totalPnl >= 0 ? 'green' : 'red');
+}
+
+/* ── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderTrades();
+  renderCharts();
+  computeStats();
+});
+</script>
+</body>
+</html>
