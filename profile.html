@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -910,13 +911,25 @@ function handlePhoto(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
   reader.onload = e => {
-    const avatars = document.querySelectorAll('.avatar-lg, .avatar');
-    avatars.forEach(a => {
-      a.style.backgroundImage = `url(${e.target.result})`;
+    const dataUrl = e.target.result;
+    // Save to localStorage so it persists on reload
+    try { localStorage.setItem('tradeva_photo', dataUrl); } catch(e) {}
+
+    const avatarLg = document.querySelector('.avatar-lg');
+    const avatarSm = document.querySelector('.avatar');
+
+    [avatarLg, avatarSm].forEach(a => {
+      if (!a) return;
+      a.style.backgroundImage = `url(${dataUrl})`;
       a.style.backgroundSize = 'cover';
       a.style.backgroundPosition = 'center';
-      a.textContent = '';
+      a.style.color = 'transparent';
     });
+    // Clear text in avatarLg but keep edit button
+    if (avatarLg) {
+      avatarLg.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+    }
+    if (avatarSm) avatarSm.textContent = '';
   };
   reader.readAsDataURL(input.files[0]);
 }
@@ -959,12 +972,70 @@ function loadStats() {
 /* ── LOAD PROFILE ────────────────────────────────────────── */
 function loadProfile() {
   const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
-  if (p.fname) document.getElementById('fname').value = p.fname;
-  if (p.lname) document.getElementById('lname').value = p.lname;
-  if (p.email) document.getElementById('email').value = p.email;
-  if (p.bio)   document.getElementById('bio').value   = p.bio;
-  if (p.style) document.getElementById('style').value = p.style;
+
+  // Restore form fields
+  if (p.fname)   document.getElementById('fname').value   = p.fname;
+  if (p.lname)   document.getElementById('lname').value   = p.lname;
+  if (p.email)   document.getElementById('email').value   = p.email;
+  if (p.bio)     document.getElementById('bio').value     = p.bio;
+  if (p.style)   document.getElementById('style').value   = p.style;
   if (p.account) document.getElementById('account').value = p.account;
+
+  // ── Also restore the DISPLAY elements (avatar, name, email, badge) ──
+  const fname   = p.fname   || 'Kham';
+  const lname   = p.lname   || '';
+  const email   = p.email   || 'kham@tradeva.app';
+  const account = p.account || 'Pro Trader';
+  const fullName = [fname, lname].filter(Boolean).join(' ');
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+
+  // Display name & email under avatar
+  document.getElementById('displayName').textContent  = fullName;
+  document.getElementById('displayEmail').textContent = email;
+
+  // Badge (account type)
+  document.querySelector('.trader-badge').innerHTML =
+    \`<svg viewBox="0 0 12 12" width="11" height="11" stroke="currentColor" fill="none" stroke-width="2"><polygon points="6,1 7.5,4.5 11,5 8.5,7.5 9,11 6,9.5 3,11 3.5,7.5 1,5 4.5,4.5"/></svg> \${account}\`;
+
+  // Sidebar profile pill name & role
+  document.querySelector('.profile-name').textContent = fname;
+  document.querySelector('.profile-role').textContent = account;
+
+  // Avatar initials (large) — only if no photo saved
+  const savedPhoto = localStorage.getItem('tradeva_photo');
+  const avatarLg = document.querySelector('.avatar-lg');
+  const avatarSm = document.querySelector('.avatar');
+
+  if (savedPhoto) {
+    // Restore uploaded photo
+    [avatarLg, avatarSm].forEach(a => {
+      if (!a) return;
+      a.style.backgroundImage = \`url(\${savedPhoto})\`;
+      a.style.backgroundSize  = 'cover';
+      a.style.backgroundPosition = 'center';
+      a.style.color = 'transparent';
+      // keep the edit button inside avatarLg
+    });
+    // Clear text node but keep child elements
+    const editBtn = avatarLg ? avatarLg.querySelector('.avatar-edit') : null;
+    if (avatarLg) {
+      avatarLg.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+    }
+    if (avatarSm) avatarSm.textContent = '';
+  } else {
+    // Show initials
+    if (avatarSm) avatarSm.textContent = initials;
+    // For avatarLg keep initials but preserve the edit button child
+    if (avatarLg) {
+      const editBtn = avatarLg.querySelector('.avatar-edit');
+      avatarLg.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = initials; });
+      // If no text node, insert one before the edit button
+      const hasText = [...avatarLg.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+      if (!hasText && editBtn) {
+        avatarLg.insertBefore(document.createTextNode(initials), editBtn);
+      }
+    }
+  }
 }
 
 /* ── INIT ────────────────────────────────────────────────── */
