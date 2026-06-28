@@ -440,8 +440,9 @@ td:last-child { text-align: right; }
 .dir-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 11px; font-weight: 700;
-  padding: 3px 10px; border-radius: 6px;
+  padding: 4px 10px; border-radius: 6px;
   transition: background var(--t) var(--ease);
+  white-space: nowrap;
 }
 .dir-long  { background: var(--green-bg); color: var(--green); border: 1px solid #6EE7B7; }
 .dir-short { background: var(--red-bg);   color: var(--red);   border: 1px solid #FCA5A5; }
@@ -534,8 +535,9 @@ td:last-child { text-align: right; }
   thead th:nth-child(4), td:nth-child(4) { display: none; }
 }
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-value { font-size: 20px; }
+  .stat-card { padding: 14px 14px; }
   .page-header { gap: 12px; }
 }
 
@@ -556,7 +558,7 @@ td:last-child { text-align: right; }
 
     <!-- Profile pill -->
     <a href="profile.html" class="profile-pill">
-      <div class="avatar">KH</div>
+      <div class="avatar">AT</div>
       <div class="profile-info">
         <div class="profile-name">Alberuni Trades</div>
         <div class="profile-role">Funded Trader</div>
@@ -695,8 +697,8 @@ td:last-child { text-align: right; }
     </a>
   </div>
 
-  <!-- Stats Row 1: Total Trades / Win Rate / Profit Factor / Avg RR / Net RR -->
-  <div class="stats-grid">
+  <!-- Stats: all 10 cards in one unified grid -->
+  <div class="stats-grid" style="margin-bottom:24px;">
     <div class="stat-card">
       <div class="stat-label">Total Trades</div>
       <div class="stat-value" id="totalTrades">17</div>
@@ -722,10 +724,6 @@ td:last-child { text-align: right; }
       <div class="stat-value green" id="netRR">35.38</div>
       <div class="stat-sub">cumulative RR earned</div>
     </div>
-  </div>
-
-  <!-- Stats Row 2: Net PnL / Largest Win / Largest Loss / Win Streak / Lose Streak -->
-  <div class="stats-grid" style="margin-bottom:24px;">
     <div class="stat-card">
       <div class="stat-label">Net PnL</div>
       <div class="stat-value green" id="netPnl">+$14,370</div>
@@ -972,15 +970,15 @@ function renderCharts() {
   /* ── Drawdown (red curve — same smooth style as growth) ── */
   const dCtx = document.getElementById('drawdownChart').getContext('2d');
   const dGrad = dCtx.createLinearGradient(0, 0, 0, 190);
-  dGrad.addColorStop(0, 'rgba(239,68,68,0.18)');
-  dGrad.addColorStop(1, 'rgba(239,68,68,0.00)');
+  dGrad.addColorStop(0, 'rgba(239,68,68,0.00)');
+  dGrad.addColorStop(1, 'rgba(239,68,68,0.18)');
 
   chartDrawdown = new Chart(dCtx, {
     type: 'line',
     data: {
       labels: ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'],
       datasets: [{
-        data: [0, 6.5, 3.8, 1.2, 0, 0, 0, 0, 0],
+        data: [0, -6.5, -3.8, -1.2, 0, 0, 0, 0, 0],
         borderColor: '#EF4444',
         borderWidth: 2.5,
         backgroundColor: dGrad,
@@ -1012,8 +1010,8 @@ function renderCharts() {
         x: { grid: { color: gridCol }, ticks: { color: tickCol, font: { size: 11 } } },
         y: {
           grid: { color: gridCol },
-          min: 0,
-          max: 9,
+          min: -9,
+          max: 0,
           ticks: { color: tickCol, font: { size: 11 }, callback: v => v + '%' }
         }
       }
