@@ -1048,8 +1048,38 @@ function computeStats() {
   }
 }
 
+/* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+
+  const fname    = p.fname   || 'Kham';
+  const lname    = p.lname   || '';
+  const account  = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+
+  // Update sidebar profile pill
+  const nameEl = document.querySelector('.profile-name');
+  const roleEl = document.querySelector('.profile-role');
+  const avatarEl = document.querySelector('.avatar');
+  if (nameEl) nameEl.textContent = fname;
+  if (roleEl) roleEl.textContent = account;
+  if (avatarEl) {
+    if (photo) {
+      avatarEl.style.backgroundImage    = 'url(' + photo + ')';
+      avatarEl.style.backgroundSize     = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.color              = 'transparent';
+      avatarEl.textContent              = '';
+    } else {
+      avatarEl.textContent = initials;
+    }
+  }
+}
+
 /* ── INIT ────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
   renderTrades();
   renderCharts();
   computeStats();
