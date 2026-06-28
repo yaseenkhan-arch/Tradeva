@@ -1,5 +1,5 @@
 
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -995,7 +995,7 @@ function loadProfile() {
 
   // Badge (account type)
   document.querySelector('.trader-badge').innerHTML =
-    \`<svg viewBox="0 0 12 12" width="11" height="11" stroke="currentColor" fill="none" stroke-width="2"><polygon points="6,1 7.5,4.5 11,5 8.5,7.5 9,11 6,9.5 3,11 3.5,7.5 1,5 4.5,4.5"/></svg> \${account}\`;
+    '<svg viewBox="0 0 12 12" width="11" height="11" stroke="currentColor" fill="none" stroke-width="2"><polygon points="6,1 7.5,4.5 11,5 8.5,7.5 9,11 6,9.5 3,11 3.5,7.5 1,5 4.5,4.5"/></svg> ' + account;
 
   // Sidebar profile pill name & role
   document.querySelector('.profile-name').textContent = fname;
@@ -1010,7 +1010,7 @@ function loadProfile() {
     // Restore uploaded photo
     [avatarLg, avatarSm].forEach(a => {
       if (!a) return;
-      a.style.backgroundImage = \`url(\${savedPhoto})\`;
+      a.style.backgroundImage = 'url(' + savedPhoto + ')';
       a.style.backgroundSize  = 'cover';
       a.style.backgroundPosition = 'center';
       a.style.color = 'transparent';
