@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Trade Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
+.page-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.back-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); cursor: pointer; text-decoration: none;
+  flex-shrink: 0;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.back-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.back-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); box-shadow: var(--shadow-card); }
+
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.page-title-block { min-width: 0; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
+
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: var(--radius-btn);
+  border: none; background: var(--red);
+  color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  white-space: nowrap; flex-shrink: 0;
+}
+.btn-danger:hover { background: #DC2626; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(239,68,68,0.35); }
+.btn-danger:active { transform: translateY(0); }
+.btn-danger svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Detail Grid ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+
+.detail-card-title {
+  font-size: 16px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 20px;
+  transition: color var(--t) var(--ease);
+}
+
+.detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.detail-row:last-child { margin-bottom: 0; }
+.detail-field { display: flex; flex-direction: column; gap: 4px; }
+.detail-label { font-size: 12px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.detail-value { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.detail-value.dir-long  { color: var(--green); }
+.detail-value.dir-short { color: var(--red); }
+.detail-value.pnl-pos { color: var(--green); font-size: 24px; }
+.detail-value.pnl-neg { color: var(--red);  font-size: 24px; }
+
+.rule-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  width: fit-content;
+}
+.rule-badge.followed { background: var(--green); color: #fff; }
+.rule-badge.broken   { background: var(--red); color: #fff; }
+.rule-badge.unset     { background: var(--border-light); color: var(--text-faint); }
+.rule-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+.setup-text {
+  font-size: 14px; color: var(--text-primary); line-height: 1.6;
+  transition: color var(--t) var(--ease);
+}
+
+/* ── Evidence images ── */
+.evidence-card { margin-bottom: 16px; }
+.evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.evidence-item { display: flex; flex-direction: column; gap: 8px; }
+.evidence-label { font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.evidence-img-wrap {
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-page);
+  aspect-ratio: 16/10;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
+  cursor: pointer;
+}
+.evidence-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.evidence-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-faint); }
+.evidence-empty svg { width: 28px; height: 28px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; }
+.evidence-empty span { font-size: 12px; }
+
+/* ── Notes Card ── */
+.notes-card { margin-bottom: 16px; }
+.notes-text { font-size: 14px; color: var(--text-primary); line-height: 1.7; white-space: pre-wrap; transition: color var(--t) var(--ease); }
+.notes-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
+
+/* ── Image Lightbox ── */
+.lightbox {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85); z-index: 999;
+  align-items: center; justify-content: center;
+  padding: 40px;
+  opacity: 0; transition: opacity var(--t) var(--ease);
+}
+.lightbox.open { display: flex; opacity: 1; }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.lightbox-close {
+  position: absolute; top: 24px; right: 24px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background var(--t) var(--ease);
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+.lightbox-close svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* ── Confirm Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 998;
+  align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--t) var(--ease);
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; opacity: 1; }
+.modal-box {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  padding: 28px; max-width: 380px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  transform: scale(0.95); transition: transform var(--t) var(--ease), background var(--t) var(--ease);
+}
+.modal-overlay.open .modal-box { transform: scale(1); }
+.modal-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--red-bg); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.modal-icon svg { width: 22px; height: 22px; stroke: var(--red); fill: none; stroke-width: 2; stroke-linecap: round; }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.modal-text { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5; transition: color var(--t) var(--ease); }
+.modal-actions { display: flex; gap: 10px; }
+.modal-btn {
+  flex: 1; padding: 10px; border-radius: var(--radius-btn);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif; border: none;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.modal-btn-cancel { background: var(--border-light); color: var(--text-primary); }
+.modal-btn-cancel:hover { background: var(--border); }
+.modal-btn-confirm { background: var(--red); color: #fff; }
+.modal-btn-confirm:hover { background: #DC2626; }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════════ */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-header { flex-wrap: wrap; }
+  .page-title { font-size: 20px; }
+  .btn-danger span { display: none; }
+  .btn-danger { padding: 10px 12px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .evidence-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .detail-row { grid-template-columns: 1fr; gap: 14px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <a href="trades.html" class="back-btn" title="Back to Trades">
+        <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
+      </a>
+      <div class="page-title-block">
+        <h1 class="page-title" id="tradeTitle">Loading…</h1>
+        <p class="page-subtitle" id="tradeSubtitle"></p>
+      </div>
+    </div>
+    <button class="btn-danger" onclick="confirmDelete()">
+      <svg viewBox="0 0 14 14"><polyline points="1,3.5 13,3.5"/><path d="M5 3.5V2h4v1.5M11.5 3.5l-1 9H3.5l-1-9"/></svg>
+      <span>Delete</span>
+    </button>
+  </div>
+
+  <!-- Execution Details + Discipline & Psychology -->
+  <div class="detail-grid">
+
+    <div class="detail-card">
+      <div class="detail-card-title">Execution Details</div>
+
+      <div class="detail-row">
+        <div class="detail-field">
+          <span class="detail-label">Direction</span>
+          <span class="detail-value" id="dDirection">—</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-label">Session</span>
+          <span class="detail-value" id="dSession">—</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-field">
+          <span class="detail-label">Entry Price</span>
+          <span class="detail-value" id="dEntry">—</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-label">Exit Price</span>
+          <span class="detail-value" id="dExit">—</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-field">
+          <span class="detail-label">R:R</span>
+          <span class="detail-value" id="dRR">—</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-label">Pips</span>
+          <span class="detail-value" id="dPips">—</span>
+        </div>
+      </div>
+
+      <div class="detail-row" style="margin-bottom:0;">
+        <div class="detail-field">
+          <span class="detail-label">PnL</span>
+          <span class="detail-value" id="dPnl">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-card-title">Discipline &amp; Psychology</div>
+
+      <div class="detail-field" style="margin-bottom:20px;">
+        <span class="detail-label">Rule Adherence</span>
+        <div id="dRules" style="margin-top:6px;">
+          <span class="rule-badge unset">Not set</span>
+        </div>
+      </div>
+
+      <div class="detail-field" style="margin-bottom:20px;">
+        <span class="detail-label">Trade Type</span>
+        <span class="detail-value" id="dTradeType" style="font-size:14px;">—</span>
+      </div>
+
+      <div class="detail-field" style="margin-bottom:20px;">
+        <span class="detail-label">HTF Bias</span>
+        <span class="detail-value" id="dBias" style="font-size:14px;">—</span>
+      </div>
+
+      <div class="detail-field">
+        <span class="detail-label">Setup Analysis</span>
+        <p class="setup-text" id="dSetup" style="margin-top:4px;">No analysis recorded.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Evidence -->
+  <div class="detail-card evidence-card">
+    <div class="detail-card-title">Evidence</div>
+    <div class="evidence-grid">
+      <div class="evidence-item">
+        <span class="evidence-label">Entry Screenshot</span>
+        <div class="evidence-img-wrap" id="entryImgWrap" onclick="openLightbox('entry')">
+          <div class="evidence-empty">
+            <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
+            <span>No image</span>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-item">
+        <span class="evidence-label">Exit Screenshot</span>
+        <div class="evidence-img-wrap" id="exitImgWrap" onclick="openLightbox('exit')">
+          <div class="evidence-empty">
+            <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
+            <span>No image</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="detail-card notes-card">
+    <div class="detail-card-title">Trade Notes</div>
+    <p class="notes-text" id="dNotes"><span class="notes-empty">No notes recorded for this trade.</span></p>
+  </div>
+
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox(event)">
+    <svg viewBox="0 0 18 18"><line x1="2" y1="2" x2="16" y2="16"/><line x1="16" y1="2" x2="2" y2="16"/></svg>
+  </button>
+  <img id="lightboxImg" src="" alt="Trade screenshot">
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon">
+      <svg viewBox="0 0 22 22"><polyline points="1,5 21,5"/><path d="M7,5V2.5h8V5M18,5l-1.5,15H5.5L4,5"/></svg>
+    </div>
+    <div class="modal-title">Delete this trade?</div>
+    <div class="modal-text">This action is permanent and cannot be undone. All data for this trade will be removed.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" onclick="deleteTrade()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme','dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (dark) track.classList.add('on'); else track.classList.remove('on');
+  label.innerHTML = dark
+    ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+    : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() {
+  applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
+}
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR ── */
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── PROFILE SIDEBAR ── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const lname = p.lname || '';
+  const account = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = account;
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) {
+    av.style.backgroundImage = 'url(' + photo + ')';
+    av.style.backgroundSize = 'cover';
+    av.style.backgroundPosition = 'center';
+    av.style.color = 'transparent';
+    av.textContent = '';
+  } else {
+    av.textContent = initials;
+  }
+}
+
+/* ── SAMPLE DATA (fallback) — matches trades.html sample set ── */
+const SAMPLE_TRADES = [
+  { id:17, date:'Jun 20, 2026', pair:'EURUSD', dir:'Short', session:'London', entry:1.09500, exit:1.09100, sl:1.097, tp:1.088, rr:2.0, pips:40, pnl:800, outcome:'Win', tradeType:'Retest / Reentry', htfBias:'Bearish', notes:'Clean break and retest of structure, entered on the 5m confirmation candle.', rulesFollowed:'Yes', timeInPos:'1h 45m' },
+  { id:16, date:'Jun 18, 2026', pair:'GBPJPY', dir:'Long',  session:'London', entry:183.240, exit:183.800, sl:182.9, tp:184.1, rr:1.6, pips:56, pnl:560, outcome:'Win', tradeType:'Trend Following', htfBias:'Bullish', notes:'', rulesFollowed:'Yes', timeInPos:'2h 10m' },
+  { id:15, date:'Jun 16, 2026', pair:'XAUUSD', dir:'Long',  session:'New York', entry:2318.50, exit:2340.75, sl:2310, tp:2345, rr:2.6, pips:225, pnl:2250, outcome:'Win', tradeType:'Breakout', htfBias:'Bullish', notes:'Strong NFP momentum play, held through minor pullback.', rulesFollowed:'Yes', timeInPos:'3h 20m' },
+  { id:14, date:'Jun 10, 2026', pair:'GBPUSD', dir:'Short', session:'London', entry:1.27200, exit:1.26450, sl:1.275, tp:1.262, rr:2.5, pips:75, pnl:750, outcome:'Win', tradeType:'Reversal', htfBias:'Bearish', notes:'', rulesFollowed:'No', timeInPos:'55m' },
+];
+
+function getTrades() {
+  const stored = localStorage.getItem('tradeva_trades');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.length) return parsed;
+    } catch(e) {}
+  }
+  return SAMPLE_TRADES;
+}
+
+/* ── GET TRADE ID FROM URL ── */
+function getTradeId() {
+  const params = new URLSearchParams(window.location.search);
+  return parseInt(params.get('id'), 10);
+}
+
+let currentTrade = null;
+
+/* ── RENDER TRADE DETAIL ── */
+function renderTradeDetail() {
+  const id = getTradeId();
+  const trades = getTrades();
+  const trade = trades.find(t => t.id === id) || trades[0];
+  currentTrade = trade;
+
+  if (!trade) {
+    document.getElementById('tradeTitle').textContent = 'Trade not found';
+    return;
+  }
+
+  const fmtPrice = v => v ? parseFloat(v).toString() : '—';
+  const fmtPnl = v => {
+    if (v === undefined || v === null) return '—';
+    const sign = v >= 0 ? '+' : '-';
+    return sign + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  };
+
+  // Title & subtitle
+  document.getElementById('tradeTitle').textContent = trade.pair + ' Trade';
+  document.getElementById('tradeSubtitle').textContent = trade.date + (trade.session ? ' • ' + trade.session : '');
+  document.title = 'Tradeva — ' + trade.pair + ' Trade';
+
+  // Execution Details
+  const isLong = trade.dir === 'Long';
+  const dDir = document.getElementById('dDirection');
+  dDir.textContent = trade.dir || '—';
+  dDir.className = 'detail-value ' + (isLong ? 'dir-long' : 'dir-short');
+
+  document.getElementById('dSession').textContent = trade.session || '—';
+  document.getElementById('dEntry').textContent = fmtPrice(trade.entry);
+  document.getElementById('dExit').textContent = fmtPrice(trade.exit);
+  document.getElementById('dRR').textContent = trade.rr ? trade.rr + 'R' : '—';
+  document.getElementById('dPips').textContent = trade.pips || '—';
+
+  const dPnl = document.getElementById('dPnl');
+  dPnl.textContent = fmtPnl(trade.pnl);
+  dPnl.className = 'detail-value ' + (trade.pnl >= 0 ? 'pnl-pos' : 'pnl-neg');
+
+  // Discipline & Psychology
+  const rulesEl = document.getElementById('dRules');
+  if (trade.rulesFollowed === 'Yes') {
+    rulesEl.innerHTML = `<span class="rule-badge followed"><svg viewBox="0 0 12 12"><polyline points="1.5,6 4.5,9 10.5,2"/></svg> Followed Rules</span>`;
+  } else if (trade.rulesFollowed === 'No') {
+    rulesEl.innerHTML = `<span class="rule-badge broken"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> Broke Rules</span>`;
+  } else {
+    rulesEl.innerHTML = `<span class="rule-badge unset">Not set</span>`;
+  }
+
+  document.getElementById('dTradeType').textContent = trade.tradeType || '—';
+  document.getElementById('dBias').textContent = trade.htfBias || '—';
+  document.getElementById('dSetup').textContent = trade.notes || 'No analysis recorded.';
+  if (!trade.notes) document.getElementById('dSetup').style.color = 'var(--text-faint)';
+
+  // Evidence images
+  setEvidenceImage('entryImgWrap', trade.entryImg);
+  setEvidenceImage('exitImgWrap', trade.exitImg);
+
+  // Notes
+  const notesEl = document.getElementById('dNotes');
+  if (trade.notes) {
+    notesEl.innerHTML = '';
+    notesEl.textContent = trade.notes;
+  } else {
+    notesEl.innerHTML = '<span class="notes-empty">No notes recorded for this trade.</span>';
+  }
+}
+
+function setEvidenceImage(wrapId, imgSrc) {
+  const wrap = document.getElementById(wrapId);
+  if (imgSrc) {
+    wrap.innerHTML = `<img src="${imgSrc}" alt="Screenshot">`;
+    wrap.style.cursor = 'pointer';
+  } else {
+    wrap.innerHTML = `<div class="evidence-empty">
+      <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
+      <span>No image</span>
+    </div>`;
+    wrap.style.cursor = 'default';
+  }
+}
+
+/* ── LIGHTBOX ── */
+function openLightbox(which) {
+  if (!currentTrade) return;
+  const src = which === 'entry' ? currentTrade.entryImg : currentTrade.exitImg;
+  if (!src) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── DELETE MODAL ── */
+function confirmDelete() {
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+}
+function deleteTrade() {
+  const id = getTradeId();
+  let trades = JSON.parse(localStorage.getItem('tradeva_trades') || 'null');
+  if (trades) {
+    trades = trades.filter(t => t.id !== id);
+    localStorage.setItem('tradeva_trades', JSON.stringify(trades));
+  }
+  window.location.href = 'trades.html';
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  renderTradeDetail();
+});
+</script>
+</body>
+</html>
