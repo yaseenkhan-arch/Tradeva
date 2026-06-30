@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Tradeva — Add New Trade</title>
+<title>Tradeva — Trades</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -71,7 +72,7 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SIDEBAR — identical to dashboard/profile
+   SIDEBAR — identical across all pages
 ══════════════════════════════════════════════════════════ */
 .sidebar {
   position: fixed; top: 0; right: 0;
@@ -82,45 +83,19 @@ body {
   z-index: 100; overflow: hidden;
   transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
 }
-.sidebar-top {
-  padding: 18px 14px 14px;
-  border-bottom: 1px solid var(--border-light); flex-shrink: 0;
-  transition: border-color var(--t) var(--ease);
-}
-.profile-pill {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 12px; cursor: pointer;
-  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
-  text-decoration: none;
-}
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
 .profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
-.avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--accent-bg); border: 2px solid var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0;
-}
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
 .profile-info { flex: 1; min-width: 0; }
 .profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
 .profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
 .chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
-
 .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
 .sidebar-nav::-webkit-scrollbar { display: none; }
-.nav-section-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
-  text-transform: uppercase; color: var(--text-faint);
-  padding: 0 8px; margin: 16px 0 5px;
-  transition: color var(--t) var(--ease);
-}
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
 .nav-section-label:first-child { margin-top: 2px; }
-.nav-item {
-  display: flex; align-items: center; gap: 9px;
-  padding: 8px 10px; border-radius: 9px;
-  font-size: 13px; font-weight: 500; color: var(--text-muted);
-  cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap;
-  transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
-}
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
 .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
 .nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
@@ -128,19 +103,8 @@ body {
 [data-theme="dark"] .nav-item.active { background: #0D2144; }
 .soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
 .soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
-
-.sidebar-bottom {
-  padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px);
-  border-top: 1px solid var(--border-light); flex-shrink: 0;
-  transition: border-color var(--t) var(--ease);
-}
-.account-switcher {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 12px; border-radius: 11px;
-  border: 1px solid var(--border); background: var(--bg-page);
-  cursor: pointer; margin-bottom: 6px;
-  transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
-}
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
 .account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
 .account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
@@ -157,304 +121,158 @@ body {
 /* ══════════════════════════════════════════════════════════
    MAIN
 ══════════════════════════════════════════════════════════ */
-.main {
-  flex: 1;
-  margin-right: var(--sidebar-w);
-  padding: 28px 32px 80px;
-  min-height: 100vh;
-  transition: margin var(--t) var(--ease);
-  width: 100%;
-}
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; }
 
-/* ── Page Header ── */
-.page-header {
-  display: flex; align-items: center;
-  margin-bottom: 24px;
-}
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .page-header-left { display: flex; align-items: center; }
-.page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
 .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
 
-.back-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border); background: var(--bg-card);
-  color: var(--text-muted);
-  cursor: pointer; text-decoration: none;
-  flex-shrink: 0;
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
-}
-.back-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
-.back-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); box-shadow: var(--shadow-card); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
 
-/* ── Section Cards ── */
-.section-card {
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--text-primary); color: var(--bg-card);
+  font-size: 13px; font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-btn);
+  border: none; cursor: pointer;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  white-space: nowrap; text-decoration: none; font-family: 'Inter', sans-serif;
+}
+.btn-primary:hover { background: #1E293B; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+.btn-primary:active { transform: translateY(0); }
+[data-theme="dark"] .btn-primary { background: var(--accent); color: #fff; }
+[data-theme="dark"] .btn-primary:hover { background: var(--accent-hover); }
+.btn-primary svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* ── Filter Bar ── */
+.filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.search-wrap { position: relative; flex: 1; min-width: 200px; }
+.search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; pointer-events: none; }
+.search-input {
+  width: 100%; padding: 9px 13px 9px 36px;
+  border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-card); color: var(--text-primary);
+  font-size: 13px; font-family: 'Inter', sans-serif;
+  outline: none; transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.search-input::placeholder { color: var(--text-faint); }
+
+.filter-select {
+  padding: 9px 30px 9px 13px;
+  border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-card); color: var(--text-primary);
+  font-size: 13px; font-family: 'Inter', sans-serif;
+  outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+  position: relative;
+  transition: border-color var(--t) var(--ease);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* ── Trades Card ── */
+.trades-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 24px 28px;
-  margin-bottom: 14px;
   box-shadow: var(--shadow-card);
-  width: 100%;
+  overflow: hidden;
   transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
-
-.section-header {
-  display: flex; align-items: center; gap: 10px;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
+.trades-header {
+  padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border-light);
   transition: border-color var(--t) var(--ease);
 }
-.section-icon {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: var(--border-light);
+.trades-title { font-size: 16px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-faint);
+  padding: 12px 24px; text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  transition: color var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+thead th:last-child { text-align: right; }
+
+tbody tr { border-bottom: 1px solid var(--border-light); transition: background var(--t) var(--ease); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--border-light); }
+
+td { padding: 16px 24px; font-size: 14px; color: var(--text-primary); vertical-align: middle; transition: color var(--t) var(--ease); }
+td:last-child { text-align: right; }
+
+.td-date { color: var(--text-muted); font-size: 13px; }
+.td-pair { font-weight: 600; font-size: 14px; }
+.td-dir-long  { color: var(--green); font-weight: 500; }
+.td-dir-short { color: var(--red); font-weight: 500; }
+.pnl-pos { color: var(--green); font-weight: 700; }
+.pnl-neg { color: var(--red); font-weight: 700; }
+
+.view-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 600; color: var(--accent);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 10px; border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+  text-decoration: none;
+}
+.view-btn:hover { background: var(--accent-bg); transform: translateX(2px); }
+.view-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+/* ── Empty State ── */
+.empty-state {
+  padding: 60px 24px; text-align: center;
+}
+.empty-icon {
+  width: 56px; height: 56px; margin: 0 auto 16px;
+  border-radius: 50%; background: var(--border-light);
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
   transition: background var(--t) var(--ease);
 }
-.section-icon svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.section-title {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--text-muted);
-  transition: color var(--t) var(--ease);
-}
-.section-line { flex: 1; height: 1px; background: var(--border-light); }
+.empty-icon svg { width: 26px; height: 26px; stroke: var(--text-faint); fill: none; stroke-width: 1.6; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; transition: color var(--t) var(--ease); }
 
-/* ── Account select (top) ── */
-.account-select-wrap {
-  margin-bottom: 14px;
-  width: 100%;
-}
-.account-label-txt {
-  font-size: 12px; font-weight: 500; color: var(--text-muted);
-  margin-bottom: 6px; display: block;
-  transition: color var(--t) var(--ease);
-}
-
-/* ── Form ── */
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-.form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-.form-row.single { grid-template-columns: 1fr; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group:last-child { margin-bottom: 0; }
-
-.form-label {
-  font-size: 13px; font-weight: 600; color: var(--text-primary);
-  transition: color var(--t) var(--ease);
-}
-.form-label .optional { font-weight: 400; color: var(--text-faint); }
-
-input[type="text"],
-input[type="number"],
-input[type="date"],
-input[type="url"],
-select,
-textarea {
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-btn);
-  background: var(--bg-page);
-  color: var(--text-primary);
-  font-size: 13px; font-family: 'Inter', sans-serif;
-  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
-  outline: none; appearance: none; -webkit-appearance: none; width: 100%;
-}
-input::placeholder, textarea::placeholder { color: var(--text-faint); }
-input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
-  background: var(--bg-card);
-}
-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
-
-.select-wrap { position: relative; }
-.select-wrap select { width: 100%; padding-right: 34px; cursor: pointer; }
-.select-wrap::after {
-  content: '';
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%);
-  width: 0; height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid var(--text-faint);
-  pointer-events: none;
-}
-
-/* ── Direction Toggle ── */
-.dir-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.dir-btn {
-  padding: 12px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-btn);
-  background: var(--bg-page);
-  font-size: 13px; font-weight: 600;
-  cursor: pointer; color: var(--text-muted);
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  font-family: 'Inter', sans-serif;
-  transition: all var(--t) var(--ease);
-}
-.dir-btn:hover { background: var(--border-light); color: var(--text-primary); }
-.dir-btn.long-active {
-  border-color: var(--green); border-width: 2px;
-  background: var(--green-bg); color: var(--green);
-}
-.dir-btn.short-active {
-  border-color: var(--red); border-width: 2px;
-  background: var(--red-bg); color: var(--red);
-}
-
-/* ── Outcome Toggle ── */
-.outcome-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.outcome-btn {
-  padding: 11px 8px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-btn);
-  background: var(--bg-page);
-  font-size: 13px; font-weight: 600;
-  cursor: pointer; color: var(--text-muted);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: 'Inter', sans-serif;
-  transition: all var(--t) var(--ease);
-}
-.outcome-btn:hover { background: var(--border-light); color: var(--text-primary); }
-.outcome-btn.win-active  { border-color: var(--green); border-width: 2px; background: var(--green-bg); color: var(--green); }
-.outcome-btn.loss-active { border-color: var(--red);   border-width: 2px; background: var(--red-bg);   color: var(--red); }
-.outcome-btn.be-active   { border-color: var(--text-faint); border-width: 2px; background: var(--border-light); color: var(--text-primary); }
-
-/* ── Image Upload ── */
-.img-upload-area {
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius-btn);
-  padding: 22px 16px;
-  text-align: center;
+/* ── Mobile cards (alternative table view) ── */
+.mobile-trade-list { display: none; }
+.mobile-trade-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
   cursor: pointer;
-  position: relative;
-  transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
-  background: var(--bg-page);
-}
-.img-upload-area:hover { border-color: var(--accent); background: var(--accent-bg); }
-.img-upload-area input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-.upload-icon { width: 32px; height: 32px; margin: 0 auto 8px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; display: block; transition: stroke var(--t) var(--ease); }
-.img-upload-area:hover .upload-icon { stroke: var(--accent); }
-.upload-txt { font-size: 13px; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.upload-txt span { color: var(--accent); font-weight: 600; }
-.upload-hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; transition: color var(--t) var(--ease); }
-
-.img-preview-wrap { display: none; position: relative; border-radius: var(--radius-btn); overflow: hidden; border: 1px solid var(--border); }
-.img-preview-wrap img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
-.img-remove-btn {
-  position: absolute; top: 8px; right: 8px;
-  width: 28px; height: 28px;
-  background: rgba(0,0,0,0.6); border: none;
-  border-radius: 50%; color: #fff;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background var(--t) var(--ease);
 }
-.img-remove-btn:hover { background: rgba(0,0,0,0.8); }
-.img-remove-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-
-/* ── Rules Followed ── */
-.rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.rule-btn {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-btn);
-  background: var(--bg-page);
-  cursor: pointer; font-family: 'Inter', sans-serif;
-  transition: all var(--t) var(--ease);
-}
-.rule-btn:hover { background: var(--border-light); border-color: var(--text-faint); }
-.rule-btn.yes-active { border-color: var(--green); border-width: 2px; background: var(--green-bg); }
-.rule-btn.no-active  { border-color: var(--red);   border-width: 2px; background: var(--red-bg); }
-.rule-dot {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: all var(--t) var(--ease);
-}
-.rule-btn.yes-active .rule-dot { border-color: var(--green); background: var(--green); }
-.rule-btn.no-active  .rule-dot { border-color: var(--red);   background: var(--red); }
-.rule-dot svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; opacity: 0; transition: opacity var(--t) var(--ease); }
-.rule-btn.yes-active .rule-dot svg,
-.rule-btn.no-active  .rule-dot svg { opacity: 1; }
-.rule-text { display: flex; flex-direction: column; }
-.rule-title { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
-.rule-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; transition: color var(--t) var(--ease); }
-.rule-btn.yes-active .rule-title { color: var(--green); }
-.rule-btn.no-active  .rule-title { color: var(--red); }
-
-/* ── Save Button ── */
-.save-btn {
-  width: 100%; padding: 14px;
-  background: var(--text-primary); color: var(--bg-card);
-  border: none; border-radius: var(--radius-btn);
-  font-size: 15px; font-weight: 700;
-  cursor: pointer; font-family: 'Inter', sans-serif;
-  margin-top: 4px;
-  transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
-  letter-spacing: 0.01em;
-}
-.save-btn:hover { background: #1E293B; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-.save-btn:active { transform: translateY(0); }
-[data-theme="dark"] .save-btn { background: var(--accent); color: #fff; }
-[data-theme="dark"] .save-btn:hover { background: var(--accent-hover); }
-
-/* ── Toast ── */
-.toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: #0F172A; color: #fff;
-  padding: 12px 20px; border-radius: 12px;
-  font-size: 13px; font-weight: 500;
-  display: flex; align-items: center; gap: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  transition: transform var(--t) var(--ease), opacity var(--t) var(--ease);
-  opacity: 0; z-index: 999;
-}
-[data-theme="dark"] .toast { background: #1A2540; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; }
+.mobile-trade-card:last-child { border-bottom: none; }
+.mobile-trade-card:active { background: var(--border-light); }
+.mtc-left { display: flex; flex-direction: column; gap: 3px; }
+.mtc-pair { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.mtc-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.mtc-dir-badge { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 5px; }
+.mtc-dir-long  { background: var(--green-bg); color: var(--green); }
+.mtc-dir-short { background: var(--red-bg); color: var(--red); }
+.mtc-right { display: flex; align-items: center; gap: 8px; }
+.mtc-pnl { font-size: 14px; font-weight: 700; }
+.mtc-chevron { width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
 
 /* ══════════════════════════════════════════════════════════
    MOBILE
 ══════════════════════════════════════════════════════════ */
-.sidebar-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4); z-index: 98; opacity: 0;
-  transition: opacity var(--t) var(--ease);
-  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-}
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 .sidebar-overlay.open { opacity: 1; }
-.mob-menu-btn {
-  display: none; align-items: center; justify-content: center;
-  width: 38px; height: 38px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--bg-card);
-  cursor: pointer; margin-right: 12px; flex-shrink: 0;
-  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
-}
-.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
-.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
-.mobile-nav {
-  display: none; position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--bg-card); border-top: 1px solid var(--border);
-  padding: 8px 0 env(safe-area-inset-bottom, 8px);
-  z-index: 200; justify-content: space-around;
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-}
-.mob-item {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted);
-  cursor: pointer; text-decoration: none;
-  transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px;
-}
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
 .mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
 .mob-item:hover { transform: translateY(-2px); }
 .mob-item.active { color: var(--accent); }
@@ -467,15 +285,15 @@ textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
   .main { margin-right: 0; padding: 16px 14px 90px; }
   .mobile-nav { display: flex; }
   .mob-menu-btn { display: flex; }
-  .page-title { font-size: 20px; }
-  .page-header { flex-wrap: wrap; gap: 12px; }
-  .form-row { grid-template-columns: 1fr; }
-  .form-row.three { grid-template-columns: 1fr; }
-  .rules-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 480px) {
-  .outcome-row { grid-template-columns: 1fr 1fr 1fr; }
-  .dir-toggle { grid-template-columns: 1fr 1fr; }
+  .page-title { font-size: 22px; }
+  .btn-primary span { display: none; }
+  .btn-primary { padding: 10px 14px; }
+
+  /* Hide desktop table, show mobile card list */
+  .desktop-table-wrap { display: none; }
+  .mobile-trade-list { display: block; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .search-wrap { min-width: 0; }
 }
 
 </style>
@@ -595,273 +413,74 @@ textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
       <button class="mob-menu-btn" onclick="openSidebar()">
         <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
       </button>
-      <a href="trades.html" class="back-btn" title="Back to Trades" style="margin-right:14px;">
-        <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
-      </a>
       <div>
-        <h1 class="page-title">Add New Trade</h1>
-        <p class="page-subtitle">Log a trade execution with full details.</p>
+        <h1 class="page-title">Trades</h1>
+        <p class="page-subtitle">Manage your trading history.</p>
       </div>
     </div>
+    <a href="trades-new.html" class="btn-primary">
+      <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+      <span>New Trade</span>
+    </a>
   </div>
 
-  <!-- Account -->
-  <div class="account-select-wrap">
-    <span class="account-label-txt">Account</span>
-    <div class="select-wrap">
-      <select id="f-account">
-        <option value="">Select account</option>
-        <option>Main Account</option>
-        <option>Funded Account</option>
-        <option>Demo Account</option>
-      </select>
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5"/><line x1="9.5" y1="9.5" x2="13" y2="13"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by pair..." oninput="renderTrades()">
     </div>
+    <select class="filter-select" id="filterDir" onchange="renderTrades()">
+      <option value="">All Directions</option>
+      <option value="Long">Long</option>
+      <option value="Short">Short</option>
+    </select>
+    <select class="filter-select" id="filterOutcome" onchange="renderTrades()">
+      <option value="">All Outcomes</option>
+      <option value="Win">Win</option>
+      <option value="Loss">Loss</option>
+      <option value="B/E">B/E</option>
+    </select>
   </div>
 
-  <!-- ── TRADE DETAILS ── -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6"/><line x1="10.5" y1="3" x2="13" y2="3"/></svg>
-      </div>
-      <span class="section-title">Trade Details</span>
-      <div class="section-line"></div>
+  <!-- Trades Card -->
+  <div class="trades-card">
+    <div class="trades-header">
+      <div class="trades-title">Trade History</div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Date</label>
-        <input type="date" id="f-date">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Pair</label>
-        <input type="text" id="f-pair" placeholder="EURUSD">
-      </div>
+    <!-- Desktop Table -->
+    <div class="desktop-table-wrap" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Symbol</th>
+            <th>Direction</th>
+            <th>PnL</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tradesTableBody"></tbody>
+      </table>
     </div>
 
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Direction</label>
-      <div class="dir-toggle">
-        <button class="dir-btn long-active" id="btn-long" onclick="setDir('Long')">▲ Buy / Long</button>
-        <button class="dir-btn" id="btn-short" onclick="setDir('Short')">▼ Sell / Short</button>
-      </div>
-    </div>
+    <!-- Mobile Card List -->
+    <div class="mobile-trade-list" id="mobileTradeList"></div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Entry</label>
-        <input type="number" id="f-entry" placeholder="0.00000" step="0.00001">
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">
+        <svg viewBox="0 0 26 26"><polyline points="2,18 9,11 13,15 24,4"/><line x1="24" y1="4" x2="24" y2="9"/><line x1="19" y1="4" x2="24" y2="4"/></svg>
       </div>
-      <div class="form-group">
-        <label class="form-label">Exit</label>
-        <input type="number" id="f-exit" placeholder="0.00000" step="0.00001">
-      </div>
-    </div>
-
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group">
-        <label class="form-label">Stop Loss</label>
-        <input type="number" id="f-sl" placeholder="0.00000" step="0.00001">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Take Profit</label>
-        <input type="number" id="f-tp" placeholder="0.00000" step="0.00001">
-      </div>
+      <div class="empty-title">No trades yet</div>
+      <div class="empty-sub">Start logging your trades to build your history.</div>
+      <a href="trades-new.html" class="btn-primary">
+        <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+        <span>Add Your First Trade</span>
+      </a>
     </div>
   </div>
-
-  <!-- ── ANALYSIS ── -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
-      </div>
-      <span class="section-title">Analysis</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Session</label>
-      <div class="select-wrap">
-        <select id="f-session">
-          <option value="">Select session</option>
-          <option>London</option>
-          <option>New York</option>
-          <option>Asian</option>
-          <option>Sydney</option>
-          <option>London / New York Overlap</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Trade Type</label>
-      <div class="select-wrap">
-        <select id="f-type">
-          <option value="">Select type</option>
-          <option>Trend Following</option>
-          <option>Reversal</option>
-          <option>Breakout</option>
-          <option>Retest / Reentry</option>
-          <option>News Play</option>
-          <option>Scalp</option>
-          <option>Swing</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label">HTF Bias</label>
-      <div class="select-wrap">
-        <select id="f-bias">
-          <option value="">Select bias</option>
-          <option>Bullish</option>
-          <option>Bearish</option>
-          <option>Neutral / Ranging</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── RESULTS ── -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg viewBox="0 0 16 16"><polyline points="1,10 5,5 8,8 13,2"/><line x1="13" y1="2" x2="13" y2="5.5"/><line x1="10" y1="2" x2="13" y2="2"/></svg>
-      </div>
-      <span class="section-title">Results</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">R:R</label>
-        <input type="number" id="f-rr" placeholder="e.g. 2.5" step="0.1">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Pips</label>
-        <input type="number" id="f-pips" placeholder="e.g. 42">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Time in Position</label>
-      <input type="text" id="f-time" placeholder="e.g. 2h 30m">
-    </div>
-
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Outcome</label>
-      <div class="outcome-row">
-        <button class="outcome-btn" id="btn-win"  onclick="setOutcome('Win')">✓ Win</button>
-        <button class="outcome-btn" id="btn-loss" onclick="setOutcome('Loss')">✗ Loss</button>
-        <button class="outcome-btn" id="btn-be"   onclick="setOutcome('B/E')">— B/E</button>
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label">P&L ($)</label>
-      <input type="number" id="f-pnl" placeholder="e.g. 250.00 or -120.00 (auto-calculated if blank)">
-    </div>
-  </div>
-
-  <!-- ── EVIDENCE ── -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><circle cx="5.5" cy="6.5" r="1.5"/><polyline points="1.5,11 5,7.5 7.5,10 10,8 14.5,12.5"/></svg>
-      </div>
-      <span class="section-title">Evidence</span>
-      <div class="section-line"></div>
-    </div>
-
-    <!-- Entry Screenshot -->
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Entry Screenshot</label>
-      <div class="img-upload-area" id="entry-area">
-        <input type="file" id="entry-file" accept="image/*"
-          onchange="previewImg('entry-file','entry-wrap','entry-area','entry-img')"
-          onclick="event.stopPropagation()">
-        <svg class="upload-icon" viewBox="0 0 32 32"><rect x="2" y="8" width="28" height="20" rx="3"/><polyline points="10,16 16,10 22,16"/><line x1="16" y1="10" x2="16" y2="24"/></svg>
-        <p class="upload-txt"><span>Choose from gallery</span> or drag & drop</p>
-        <p class="upload-hint">PNG, JPG, WEBP up to 20MB</p>
-      </div>
-      <div class="img-preview-wrap" id="entry-wrap">
-        <img id="entry-img" src="" alt="Entry screenshot">
-        <button class="img-remove-btn" onclick="removeImg('entry-file','entry-wrap','entry-area','entry-img')">
-          <svg viewBox="0 0 13 13"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Exit Screenshot -->
-    <div class="form-group" style="margin-bottom:14px;">
-      <label class="form-label">Exit Screenshot</label>
-      <div class="img-upload-area" id="exit-area">
-        <input type="file" id="exit-file" accept="image/*"
-          onchange="previewImg('exit-file','exit-wrap','exit-area','exit-img')"
-          onclick="event.stopPropagation()">
-        <svg class="upload-icon" viewBox="0 0 32 32"><rect x="2" y="8" width="28" height="20" rx="3"/><polyline points="10,16 16,10 22,16"/><line x1="16" y1="10" x2="16" y2="24"/></svg>
-        <p class="upload-txt"><span>Choose from gallery</span> or drag & drop</p>
-        <p class="upload-hint">PNG, JPG, WEBP up to 20MB</p>
-      </div>
-      <div class="img-preview-wrap" id="exit-wrap">
-        <img id="exit-img" src="" alt="Exit screenshot">
-        <button class="img-remove-btn" onclick="removeImg('exit-file','exit-wrap','exit-area','exit-img')">
-          <svg viewBox="0 0 13 13"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- TradingView Link -->
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label">TradingView Link <span class="optional">(optional)</span></label>
-      <input type="url" id="f-tv" placeholder="https://www.tradingview.com/chart/...">
-    </div>
-  </div>
-
-  <!-- ── NOTES & RULES ── -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg viewBox="0 0 16 16"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/><line x1="4.5" y1="6" x2="11.5" y2="6"/><line x1="4.5" y1="9" x2="9" y2="9"/></svg>
-      </div>
-      <span class="section-title">Notes</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:20px;">
-      <label class="form-label">Trade Notes</label>
-      <textarea id="f-notes" placeholder="Describe your setup, what you saw, what happened..."></textarea>
-    </div>
-
-    <!-- Rules Followed -->
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label" style="margin-bottom:8px; display:block;">Rules Followed?</label>
-      <div class="rules-grid">
-        <button class="rule-btn" id="btn-rules-yes" onclick="setRules('Yes')">
-          <div class="rule-dot">
-            <svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg>
-          </div>
-          <div class="rule-text">
-            <span class="rule-title">Yes, followed rules</span>
-            <span class="rule-sub">Traded by the playbook</span>
-          </div>
-        </button>
-        <button class="rule-btn" id="btn-rules-no" onclick="setRules('No')">
-          <div class="rule-dot">
-            <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
-          </div>
-          <div class="rule-text">
-            <span class="rule-title">No, broke rules</span>
-            <span class="rule-sub">Deviated from the plan</span>
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Save Button -->
-  <button class="save-btn" onclick="saveTrade()">Save Trade</button>
 
 </main>
 
@@ -871,11 +490,11 @@ textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
     <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
     Home
   </a>
-  <a href="trades.html" class="mob-item">
+  <a href="trades.html" class="mob-item active">
     <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
     Trades
   </a>
-  <a href="trades-new.html" class="mob-item active">
+  <a href="trades-new.html" class="mob-item">
     <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
     Add
   </a>
@@ -888,12 +507,6 @@ textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
     Calendar
   </a>
 </nav>
-
-<!-- Toast -->
-<div class="toast" id="toast">
-  <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
-  <span>Trade saved successfully!</span>
-</div>
 
 <script>
 /* ── THEME ── */
@@ -948,151 +561,116 @@ function loadProfileSidebar() {
   }
 }
 
-/* ── SET DATE ── */
-document.getElementById('f-date').valueAsDate = new Date();
+/* ── SAMPLE DATA (fallback if no trades saved yet) ── */
+const SAMPLE_TRADES = [
+  { id:17, date:'Jun 20, 2026', pair:'EURUSD', dir:'Short', pnl:800,  outcome:'Win' },
+  { id:16, date:'Jun 18, 2026', pair:'GBPJPY', dir:'Long',  pnl:560,  outcome:'Win' },
+  { id:15, date:'Jun 16, 2026', pair:'XAUUSD', dir:'Long',  pnl:2250, outcome:'Win' },
+  { id:14, date:'Jun 10, 2026', pair:'GBPUSD', dir:'Short', pnl:750,  outcome:'Win' },
+  { id:13, date:'Jun 05, 2026', pair:'XAUUSD', dir:'Short', pnl:1750, outcome:'Win' },
+  { id:12, date:'Jun 02, 2026', pair:'EURUSD', dir:'Long',  pnl:800,  outcome:'Win' },
+  { id:11, date:'May 29, 2026', pair:'GBPUSD', dir:'Long',  pnl:900,  outcome:'Win' },
+  { id:10, date:'May 22, 2026', pair:'XAUUSD', dir:'Long',  pnl:1500, outcome:'Win' },
+  { id:9,  date:'May 21, 2026', pair:'EURUSD', dir:'Short', pnl:900,  outcome:'Win' },
+  { id:8,  date:'May 19, 2026', pair:'GBPJPY', dir:'Short', pnl:560,  outcome:'Win' },
+  { id:7,  date:'May 14, 2026', pair:'XAUUSD', dir:'Short', pnl:1500, outcome:'Win' },
+  { id:6,  date:'May 12, 2026', pair:'GBPUSD', dir:'Long',  pnl:900,  outcome:'Win' },
+];
 
-/* ── DIRECTION ── */
-let selectedDir = 'Long';
-function setDir(dir) {
-  selectedDir = dir;
-  document.getElementById('btn-long').className  = 'dir-btn' + (dir === 'Long'  ? ' long-active'  : '');
-  document.getElementById('btn-short').className = 'dir-btn' + (dir === 'Short' ? ' short-active' : '');
+function getTrades() {
+  const stored = localStorage.getItem('tradeva_trades');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.length) return parsed;
+    } catch(e) {}
+  }
+  return SAMPLE_TRADES;
 }
 
-/* ── OUTCOME ── */
-let selectedOutcome = '';
-function setOutcome(o) {
-  selectedOutcome = o;
-  document.getElementById('btn-win').className  = 'outcome-btn' + (o === 'Win'  ? ' win-active'  : '');
-  document.getElementById('btn-loss').className = 'outcome-btn' + (o === 'Loss' ? ' loss-active' : '');
-  document.getElementById('btn-be').className   = 'outcome-btn' + (o === 'B/E'  ? ' be-active'   : '');
+/* ── FORMAT PNL ── */
+function fmtPnl(v) {
+  const sign = v >= 0 ? '+' : '-';
+  return sign + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-/* ── RULES FOLLOWED ── */
-let selectedRules = '';
-function setRules(r) {
-  selectedRules = r;
-  document.getElementById('btn-rules-yes').className = 'rule-btn' + (r === 'Yes' ? ' yes-active' : '');
-  document.getElementById('btn-rules-no').className  = 'rule-btn' + (r === 'No'  ? ' no-active'  : '');
-}
+/* ── RENDER TRADES (table + mobile cards) ── */
+function renderTrades() {
+  let trades = getTrades();
 
-/* ── IMAGE PREVIEW ── */
-function previewImg(fileId, wrapId, areaId, imgId) {
-  const file = document.getElementById(fileId).files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById(imgId).src = e.target.result;
-    document.getElementById(wrapId).style.display = 'block';
-    document.getElementById(areaId).style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-}
-function removeImg(fileId, wrapId, areaId, imgId) {
-  document.getElementById(fileId).value = '';
-  document.getElementById(imgId).src = '';
-  document.getElementById(wrapId).style.display = 'none';
-  document.getElementById(areaId).style.display = 'block';
-}
+  // Sort newest first by id (fallback to array order)
+  trades = [...trades].sort((a,b) => (b.id||0) - (a.id||0));
 
-/* Drag & drop */
-['entry-area','exit-area'].forEach(areaId => {
-  const area = document.getElementById(areaId);
-  const isEntry = areaId.startsWith('entry');
-  const fileId = isEntry ? 'entry-file' : 'exit-file';
-  const wrapId = isEntry ? 'entry-wrap' : 'exit-wrap';
-  const imgId  = isEntry ? 'entry-img'  : 'exit-img';
-  area.addEventListener('dragover',  e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
-  area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
-  area.addEventListener('drop', e => {
-    e.preventDefault(); area.style.borderColor = '';
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    const dt = new DataTransfer(); dt.items.add(file);
-    document.getElementById(fileId).files = dt.files;
-    previewImg(fileId, wrapId, areaId, imgId);
-  });
-});
+  // Apply filters
+  const search = (document.getElementById('searchInput').value || '').toUpperCase();
+  const filterDir = document.getElementById('filterDir').value;
+  const filterOutcome = document.getElementById('filterOutcome').value;
 
-/* ── TO BASE64 ── */
-function toBase64(fileId) {
-  return new Promise(res => {
-    const file = document.getElementById(fileId).files[0];
-    if (!file) return res(null);
-    const reader = new FileReader();
-    reader.onload = e => res(e.target.result);
-    reader.readAsDataURL(file);
-  });
-}
+  if (search) trades = trades.filter(t => t.pair.toUpperCase().includes(search));
+  if (filterDir) trades = trades.filter(t => t.dir === filterDir);
+  if (filterOutcome) trades = trades.filter(t => t.outcome === filterOutcome);
 
-/* ── SAVE TRADE ── */
-async function saveTrade() {
-  const pair = document.getElementById('f-pair').value.trim().toUpperCase();
-  const date = document.getElementById('f-date').value;
-  if (!pair || !date) {
-    alert('Please fill in at least Date and Pair.');
+  const tbody = document.getElementById('tradesTableBody');
+  const mobileList = document.getElementById('mobileTradeList');
+  const emptyState = document.getElementById('emptyState');
+  const tradesCardTable = document.querySelector('.desktop-table-wrap');
+  const tradesCardMobile = document.querySelector('.mobile-trade-list');
+
+  if (!trades.length) {
+    tbody.innerHTML = '';
+    mobileList.innerHTML = '';
+    emptyState.style.display = 'block';
     return;
   }
+  emptyState.style.display = 'none';
 
-  const entryImg = await toBase64('entry-file');
-  const exitImg  = await toBase64('exit-file');
+  // Desktop table rows
+  tbody.innerHTML = trades.map(t => {
+    const isLong = t.dir === 'Long';
+    const pos = t.pnl >= 0;
+    return `<tr onclick="viewTrade(${t.id})" style="cursor:pointer;">
+      <td class="td-date">${t.date}</td>
+      <td class="td-pair">${t.pair}</td>
+      <td class="${isLong ? 'td-dir-long' : 'td-dir-short'}">${t.dir}</td>
+      <td class="${pos ? 'pnl-pos' : 'pnl-neg'}">${fmtPnl(t.pnl)}</td>
+      <td>
+        <button class="view-btn" onclick="event.stopPropagation(); viewTrade(${t.id})">
+          View
+          <svg viewBox="0 0 13 13"><polyline points="5,2 10,6.5 5,11"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
 
-  const KEY = 'tradeva_trades';
-  const trades = JSON.parse(localStorage.getItem(KEY) || '[]');
-  const newId  = trades.length ? Math.max(...trades.map(t => t.id || 0)) + 1 : 1;
+  // Mobile card list
+  mobileList.innerHTML = trades.map(t => {
+    const isLong = t.dir === 'Long';
+    const pos = t.pnl >= 0;
+    return `<div class="mobile-trade-card" onclick="viewTrade(${t.id})">
+      <div class="mtc-left">
+        <div class="mtc-pair">${t.pair}</div>
+        <div class="mtc-meta">
+          <span class="mtc-dir-badge ${isLong ? 'mtc-dir-long' : 'mtc-dir-short'}">${t.dir}</span>
+          <span>${t.date}</span>
+        </div>
+      </div>
+      <div class="mtc-right">
+        <span class="mtc-pnl ${pos ? 'pnl-pos' : 'pnl-neg'}">${fmtPnl(t.pnl)}</span>
+        <svg class="mtc-chevron" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  const pnlInput = parseFloat(document.getElementById('f-pnl').value);
-  const entry    = parseFloat(document.getElementById('f-entry').value) || 0;
-  const exitVal  = parseFloat(document.getElementById('f-exit').value)  || 0;
-  const sl       = parseFloat(document.getElementById('f-sl').value)    || 0;
-
-  // Auto-calculate PnL if blank (simplified pips-based)
-  let pnl = pnlInput || 0;
-  if (!pnlInput && entry && exitVal && sl) {
-    const risk = Math.abs(entry - sl);
-    const reward = selectedDir === 'Long' ? (exitVal - entry) : (entry - exitVal);
-    if (risk > 0) pnl = parseFloat((reward / risk * 100).toFixed(2));
-  }
-
-  // Format date for display
-  const dateObj = new Date(date + 'T00:00:00');
-  const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-
-  trades.push({
-    id:        newId,
-    date:      displayDate,
-    rawDate:   date,
-    pair,
-    dir:       selectedDir,
-    entry,
-    exit:      exitVal,
-    sl,
-    tp:        parseFloat(document.getElementById('f-tp').value)    || 0,
-    session:   document.getElementById('f-session').value,
-    tradeType: document.getElementById('f-type').value,
-    htfBias:   document.getElementById('f-bias').value,
-    rr:        parseFloat(document.getElementById('f-rr').value)    || 0,
-    pips:      parseFloat(document.getElementById('f-pips').value)  || 0,
-    timeInPos: document.getElementById('f-time').value,
-    outcome:   selectedOutcome,
-    pnl,
-    entryImg,
-    exitImg,
-    tvLink:    document.getElementById('f-tv').value.trim(),
-    notes:     document.getElementById('f-notes').value.trim(),
-    rulesFollowed: selectedRules,
-  });
-
-  localStorage.setItem(KEY, JSON.stringify(trades));
-
-  const toast = document.getElementById('toast');
-  toast.classList.add('show');
-  setTimeout(() => { window.location.href = 'trades.html'; }, 1300);
+/* ── NAVIGATE TO TRADE DETAIL ── */
+function viewTrade(id) {
+  window.location.href = 'trade-detail.html?id=' + id;
 }
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
+  renderTrades();
 });
 </script>
 </body>
