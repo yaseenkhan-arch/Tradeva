@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 
 /* ══════════════════════════════════════════════════════════
@@ -304,6 +307,216 @@ body {
   .detail-row { grid-template-columns: 1fr; gap: 14px; }
 }
 
+/* ══════════════════════════════════════════════════════════
+   P&L CARD GENERATOR
+   (self-contained module — reuses existing detail-card shell,
+   tokens, spacing, radius and shadow from the rest of the app)
+══════════════════════════════════════════════════════════ */
+.pnlgen-header { margin-bottom: 18px; }
+.pnlgen-title-row { display: flex; align-items: center; gap: 10px; }
+.badge-new {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 3px 9px; border-radius: 20px;
+  background: var(--green-bg); color: var(--green);
+  border: 1px solid var(--green-border);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.pnlgen-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; transition: color var(--t) var(--ease); }
+.pnlgen-section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 4px 0 10px; transition: color var(--t) var(--ease); }
+
+/* ── Live preview stage ── */
+.pnlgen-preview-wrap {
+  display: flex; justify-content: center; align-items: center;
+  padding: 28px 16px;
+  background: var(--bg-page);
+  border-radius: var(--radius-btn);
+  margin-bottom: 22px;
+  transition: background var(--t) var(--ease);
+  overflow: hidden;
+}
+
+.pnl-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 220ms var(--ease), opacity 220ms var(--ease), aspect-ratio 320ms var(--ease), background 220ms var(--ease), border-color 220ms var(--ease);
+  box-shadow: 0 20px 44px rgba(0,0,0,0.28);
+  isolation: isolate;
+}
+.pnl-card[data-size="portrait"] { aspect-ratio: 1080 / 1350; }
+.pnl-card[data-size="story"]    { aspect-ratio: 1080 / 1920; }
+
+.pnl-chart-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+.pnl-content {
+  position: relative; z-index: 1;
+  height: 100%; width: 100%;
+  display: flex; flex-direction: column;
+  padding: 22px; box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Template themes ── */
+.pnl-card[data-template="neon"] {
+  background: radial-gradient(circle at 28% 0%, #0d2318 0%, #05130c 62%);
+  border: 1px solid rgba(16,185,129,0.35);
+}
+.pnl-card[data-template="neon"][data-outcome="loss"] {
+  background: radial-gradient(circle at 28% 0%, #2a0d0d 0%, #140505 62%);
+  border-color: rgba(239,68,68,0.35);
+}
+.pnl-card[data-template="minimal"] { background: #ffffff; border: 1px solid #E5E7EB; }
+.pnl-card[data-template="glass"] {
+  background: linear-gradient(135deg, #1e3a8a 0%, #5b21b6 55%, #831843 100%);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.pnl-card[data-template="light"] { background: #F5EFE3; border: 1px solid #E8DCC4; }
+.pnl-card[data-template="darkpro"] { background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%); border: 1px solid #2A3A54; }
+
+.pnl-card[data-template="neon"]    .pnl-content,
+.pnl-card[data-template="glass"]   .pnl-content,
+.pnl-card[data-template="darkpro"] .pnl-content { color: #F8FAFC; }
+.pnl-card[data-template="minimal"] .pnl-content,
+.pnl-card[data-template="light"]   .pnl-content { color: #0F172A; }
+
+.pnl-card[data-outcome="win"]  { --pnl-accent: #10B981; --pnl-accent-bg: rgba(16,185,129,0.16); }
+.pnl-card[data-outcome="loss"] { --pnl-accent: #EF4444; --pnl-accent-bg: rgba(239,68,68,0.16); }
+.pnl-accent-text { color: var(--pnl-accent); }
+
+/* top row */
+.pnl-top { display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+.pnl-logo { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; letter-spacing: 0.03em; }
+.pnl-logo-icon { width: 16px; height: 16px; stroke: var(--pnl-accent, #3B82F6); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.pnl-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.pnl-date { font-size: 11px; font-weight: 600; opacity: 0.65; letter-spacing: 0.03em; }
+.pnl-outcome-badge {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.05em;
+  padding: 4px 11px; border-radius: 20px;
+  background: var(--pnl-accent-bg); color: var(--pnl-accent);
+  border: 1px solid var(--pnl-accent);
+}
+
+/* body */
+.pnl-body { flex: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 14px; min-height: 0; }
+.pnl-main-info { display: flex; flex-direction: column; }
+.pnl-pair { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+.pnl-dir-badge { width: fit-content; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; margin: 6px 0 8px; }
+.pnl-dir-long  { background: rgba(16,185,129,0.18); color: #10B981; }
+.pnl-dir-short { background: rgba(239,68,68,0.18); color: #EF4444; }
+.pnl-stat-block { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }
+.pnl-stat-label { font-size: 10px; font-weight: 600; opacity: 0.6; letter-spacing: 0.05em; text-transform: uppercase; }
+.pnl-stat-value { font-size: 19px; font-weight: 800; line-height: 1.3; }
+.pnl-value-big { font-size: 28px; }
+
+.pnl-info-panel {
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 13px 15px; border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  min-width: 148px; flex-shrink: 0;
+}
+.pnl-card[data-template="minimal"] .pnl-info-panel,
+.pnl-card[data-template="light"]   .pnl-info-panel {
+  background: rgba(0,0,0,0.035); border-color: rgba(0,0,0,0.08);
+}
+.pnl-info-row { display: flex; align-items: center; gap: 8px; }
+.pnl-info-row svg { width: 13px; height: 13px; stroke: currentColor; opacity: 0.55; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+.pnl-info-row > div { display: flex; flex-direction: column; }
+.pnl-info-label { font-size: 9px; opacity: 0.6; }
+.pnl-info-value { font-size: 12px; font-weight: 700; }
+
+/* footer */
+.pnl-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.14); flex-shrink: 0; }
+.pnl-card[data-template="minimal"] .pnl-footer,
+.pnl-card[data-template="light"]   .pnl-footer { border-top-color: rgba(0,0,0,0.1); }
+.pnl-trader { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pnl-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: var(--pnl-accent-bg, rgba(59,130,246,0.2)); color: var(--pnl-accent, #3B82F6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; background-size: cover; background-position: center;
+}
+.pnl-trader-info { display: flex; flex-direction: column; min-width: 0; }
+.pnl-trader-label { font-size: 9px; opacity: 0.6; }
+.pnl-username { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.pnl-qr-block { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pnl-qr-text { font-size: 9px; opacity: 0.6; text-align: right; line-height: 1.3; }
+.pnl-qr-wrap { width: 40px; height: 40px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 3px; box-sizing: border-box; }
+.pnl-qr-wrap canvas { width: 100%; height: 100%; display: block; }
+
+/* candlestick chart background */
+.pnl-candle-up, .pnl-candle-down { fill: rgba(16,185,129,0.42); }
+.pnl-card[data-outcome="loss"] .pnl-candle-up,
+.pnl-card[data-outcome="loss"] .pnl-candle-down { fill: rgba(239,68,68,0.42); }
+.pnl-wick { stroke: rgba(148,163,184,0.28); stroke-width: 1.2; }
+.pnl-card[data-template="minimal"] .pnl-candle-up,
+.pnl-card[data-template="minimal"] .pnl-candle-down,
+.pnl-card[data-template="light"]   .pnl-candle-up,
+.pnl-card[data-template="light"]   .pnl-candle-down { opacity: 0.4; }
+
+/* ── Template selector (horizontal scroll) ── */
+.tpl-row { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 22px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.tpl-row::-webkit-scrollbar { height: 5px; }
+.tpl-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.tpl-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  flex-shrink: 0; width: 84px;
+  background: none; border: none; cursor: pointer;
+  padding: 3px; border-radius: var(--radius-btn);
+  transition: transform var(--t) var(--ease);
+  font-family: 'Inter', sans-serif;
+}
+.tpl-chip:hover { transform: translateY(-2px); }
+.tpl-swatch { width: 100%; aspect-ratio: 4/3; border-radius: 10px; border: 2px solid var(--border); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.tpl-chip.active .tpl-swatch { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+.tpl-chip-label { font-size: 11px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.tpl-chip.active .tpl-chip-label { color: var(--accent); }
+.tpl-swatch-neon    { background: radial-gradient(circle at 30% 20%, #123524, #05130c); }
+.tpl-swatch-minimal { background: #ffffff; }
+.tpl-swatch-glass    { background: linear-gradient(135deg, #1e3a8a, #831843); }
+.tpl-swatch-light   { background: #F5EFE3; }
+.tpl-swatch-darkpro  { background: linear-gradient(160deg, #0F172A, #1E293B); }
+
+/* ── Size selector ── */
+.pnlsize-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.pnlsize-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 12px 8px; border-radius: var(--radius-btn);
+  border: 1.5px solid var(--border); background: var(--bg-page);
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all var(--t) var(--ease);
+}
+.pnlsize-btn:hover { background: var(--border-light); }
+.pnlsize-btn.active { border-color: var(--accent); border-width: 2px; background: var(--accent-bg); }
+.pnlsize-title { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.pnlsize-btn.active .pnlsize-title { color: var(--accent); }
+.pnlsize-sub { font-size: 10px; color: var(--text-faint); transition: color var(--t) var(--ease); }
+
+/* ── Download button ── */
+.pnl-download-btn {
+  width: 100%; padding: 14px;
+  border: none; border-radius: var(--radius-btn);
+  background: var(--green); color: #fff;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: filter var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
+}
+.pnl-download-btn:hover:not(:disabled) { filter: brightness(0.94); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+.pnl-download-btn:active:not(:disabled) { transform: translateY(0); }
+.pnl-download-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
+.pnl-download-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 480px) {
+  .pnl-content { padding: 18px; }
+  .pnl-pair { font-size: 18px; }
+  .pnl-value-big { font-size: 24px; }
+  .pnl-info-panel { min-width: 128px; padding: 10px 12px; }
+  .pnlgen-preview-wrap { padding: 20px 10px; }
+}
+
 </style>
 </head>
 <body>
@@ -535,6 +748,141 @@ body {
     </div>
   </div>
 
+  <!-- P&L Card Generator -->
+  <div class="detail-card pnlgen-section">
+    <div class="pnlgen-header">
+      <div class="pnlgen-title-row">
+        <span class="detail-card-title" style="margin-bottom:0;">P&amp;L Card</span>
+        <span class="badge-new">New</span>
+      </div>
+      <p class="pnlgen-subtitle">Create and download your trade performance card</p>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="pnlgen-preview-wrap">
+      <div class="pnl-card" id="pnlCard" data-template="neon" data-outcome="win" data-size="square">
+        <svg class="pnl-chart-bg" id="pnlChartBg" viewBox="0 0 400 400" preserveAspectRatio="none"></svg>
+
+        <div class="pnl-content">
+          <div class="pnl-top">
+            <div class="pnl-logo">
+              <svg class="pnl-logo-icon" viewBox="0 0 18 18"><polyline points="1,14 5,9 8,12 13,5 17,3"/><circle cx="17" cy="3" r="1.5" fill="currentColor" stroke="none"/></svg>
+              <span>TRADEVA</span>
+            </div>
+            <div class="pnl-top-right">
+              <span class="pnl-date" id="pnlDate">—</span>
+              <span class="pnl-outcome-badge" id="pnlOutcomeBadge">WIN</span>
+            </div>
+          </div>
+
+          <div class="pnl-body">
+            <div class="pnl-main-info">
+              <div class="pnl-pair" id="pnlPair">—</div>
+              <div class="pnl-dir-badge" id="pnlDirBadge">LONG</div>
+              <div class="pnl-stat-block">
+                <span class="pnl-stat-label">R:R</span>
+                <span class="pnl-stat-value pnl-accent-text" id="pnlRR">—</span>
+              </div>
+              <div class="pnl-stat-block">
+                <span class="pnl-stat-label">Pips</span>
+                <span class="pnl-stat-value" id="pnlPips">—</span>
+              </div>
+              <div class="pnl-stat-block">
+                <span class="pnl-stat-label">P&amp;L</span>
+                <span class="pnl-stat-value pnl-accent-text pnl-value-big" id="pnlPnl">—</span>
+              </div>
+            </div>
+
+            <div class="pnl-info-panel">
+              <div class="pnl-info-row">
+                <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,9.5"/></svg>
+                <div><span class="pnl-info-label">Session</span><span class="pnl-info-value" id="pnlSession">—</span></div>
+              </div>
+              <div class="pnl-info-row">
+                <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+                <div><span class="pnl-info-label">Entry Price</span><span class="pnl-info-value" id="pnlEntry">—</span></div>
+              </div>
+              <div class="pnl-info-row">
+                <svg viewBox="0 0 16 16"><polyline points="1,5 5,10 8,7 13,13"/></svg>
+                <div><span class="pnl-info-label">Exit Price</span><span class="pnl-info-value" id="pnlExit">—</span></div>
+              </div>
+              <div class="pnl-info-row">
+                <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+                <div><span class="pnl-info-label">Trade Type</span><span class="pnl-info-value" id="pnlTradeType">—</span></div>
+              </div>
+              <div class="pnl-info-row">
+                <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+                <div><span class="pnl-info-label">HTF Bias</span><span class="pnl-info-value" id="pnlBias">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pnl-footer">
+            <div class="pnl-trader">
+              <div class="pnl-avatar" id="pnlAvatar">K</div>
+              <div class="pnl-trader-info">
+                <span class="pnl-trader-label">Trader</span>
+                <span class="pnl-username" id="pnlUsername">@trader</span>
+              </div>
+            </div>
+            <div class="pnl-qr-block">
+              <span class="pnl-qr-text">Scan to view<br>on Tradeva</span>
+              <div class="pnl-qr-wrap" id="pnlQrWrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Template -->
+    <div class="pnlgen-section-label">Card Template</div>
+    <div class="tpl-row">
+      <button class="tpl-chip active" data-tpl="neon" onclick="pnlSetTemplate('neon')">
+        <span class="tpl-swatch tpl-swatch-neon"></span>
+        <span class="tpl-chip-label">Neon Pro</span>
+      </button>
+      <button class="tpl-chip" data-tpl="minimal" onclick="pnlSetTemplate('minimal')">
+        <span class="tpl-swatch tpl-swatch-minimal"></span>
+        <span class="tpl-chip-label">Minimal</span>
+      </button>
+      <button class="tpl-chip" data-tpl="glass" onclick="pnlSetTemplate('glass')">
+        <span class="tpl-swatch tpl-swatch-glass"></span>
+        <span class="tpl-chip-label">Glass</span>
+      </button>
+      <button class="tpl-chip" data-tpl="light" onclick="pnlSetTemplate('light')">
+        <span class="tpl-swatch tpl-swatch-light"></span>
+        <span class="tpl-chip-label">Light</span>
+      </button>
+      <button class="tpl-chip" data-tpl="darkpro" onclick="pnlSetTemplate('darkpro')">
+        <span class="tpl-swatch tpl-swatch-darkpro"></span>
+        <span class="tpl-chip-label">Dark Pro</span>
+      </button>
+    </div>
+
+    <!-- Card Size -->
+    <div class="pnlgen-section-label">Card Size</div>
+    <div class="pnlsize-row">
+      <button class="pnlsize-btn active" data-size="square" onclick="pnlSetSize('square')">
+        <span class="pnlsize-title">Square</span>
+        <span class="pnlsize-sub">1080 × 1080</span>
+      </button>
+      <button class="pnlsize-btn" data-size="portrait" onclick="pnlSetSize('portrait')">
+        <span class="pnlsize-title">Portrait</span>
+        <span class="pnlsize-sub">1080 × 1350</span>
+      </button>
+      <button class="pnlsize-btn" data-size="story" onclick="pnlSetSize('story')">
+        <span class="pnlsize-title">Story</span>
+        <span class="pnlsize-sub">1080 × 1920</span>
+      </button>
+    </div>
+
+    <!-- Download -->
+    <button class="pnl-download-btn" id="pnlDownloadBtn" onclick="pnlDownloadCard()">
+      <svg viewBox="0 0 16 16"><path d="M8 1v9.5M4.5 7L8 10.5 11.5 7"/><path d="M2 12.5v1a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1"/></svg>
+      <span>Download P&amp;L Card</span>
+    </button>
+  </div>
+
   <!-- Notes -->
   <div class="detail-card notes-card">
     <div class="detail-card-title">Trade Notes</div>
@@ -737,6 +1085,9 @@ function renderTradeDetail() {
   } else {
     notesEl.innerHTML = '<span class="notes-empty">No notes recorded for this trade.</span>';
   }
+
+  // P&L Card Generator — reads currentTrade, no duplicate data source
+  renderPnlCard();
 }
 
 function setEvidenceImage(wrapId, imgSrc) {
@@ -783,6 +1134,186 @@ function deleteTrade() {
     localStorage.setItem('tradeva_trades', JSON.stringify(trades));
   }
   window.location.href = 'trades.html';
+}
+
+/* ══════════════════════════════════════════════════════════
+   P&L CARD GENERATOR  (modular, self-contained)
+   — Reads from the existing `currentTrade` global only.
+   — Does not duplicate or refetch trade data.
+   — Does not alter any function above this block.
+══════════════════════════════════════════════════════════ */
+let pnlTemplate = 'neon';
+let pnlSize = 'square';
+
+/* Template switch */
+function pnlSetTemplate(tpl) {
+  pnlTemplate = tpl;
+  const card = document.getElementById('pnlCard');
+  card.style.transform = 'scale(0.97)';
+  card.style.opacity = '0.55';
+  setTimeout(() => {
+    card.setAttribute('data-template', tpl);
+    card.style.transform = '';
+    card.style.opacity = '1';
+  }, 160);
+  document.querySelectorAll('.tpl-chip').forEach(c => c.classList.toggle('active', c.dataset.tpl === tpl));
+}
+
+/* Size switch */
+function pnlSetSize(size) {
+  pnlSize = size;
+  document.getElementById('pnlCard').setAttribute('data-size', size);
+  document.querySelectorAll('.pnlsize-btn').forEach(b => b.classList.toggle('active', b.dataset.size === size));
+}
+
+/* Deterministic pseudo-random generator so each trade's chart is stable across renders */
+function pnlSeededRandom(seed) {
+  let s = (seed || 1) % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function () {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+/* Draw decorative candlestick background — trends up for wins, down for losses */
+function pnlRenderChartBg(isWin, seedNum) {
+  const svg = document.getElementById('pnlChartBg');
+  if (!svg) return;
+  const rand = pnlSeededRandom(seedNum);
+  const candleCount = 26;
+  const w = 400, h = 400;
+  const step = w / candleCount;
+  let cursor = isWin ? h * 0.85 : h * 0.15;
+  let markup = '';
+
+  for (let i = 0; i < candleCount; i++) {
+    const drift = (isWin ? -1 : 1) * (5 + rand() * 9);
+    const open = cursor;
+    cursor = Math.max(24, Math.min(h - 24, cursor + drift + (rand() - 0.5) * 8));
+    const close = cursor;
+    const high = Math.min(open, close) - (rand() * 12 + 3);
+    const low = Math.max(open, close) + (rand() * 12 + 3);
+    const bodyTop = Math.min(open, close);
+    const bodyH = Math.max(2.5, Math.abs(close - open));
+    const bodyW = step * 0.42;
+    const cx = i * step + step * 0.3;
+    const isUpCandle = close < open;
+
+    markup += `<line x1="${(cx + bodyW / 2).toFixed(1)}" y1="${high.toFixed(1)}" x2="${(cx + bodyW / 2).toFixed(1)}" y2="${low.toFixed(1)}" class="pnl-wick"/>`;
+    markup += `<rect x="${cx.toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}" rx="1" class="${isUpCandle ? 'pnl-candle-up' : 'pnl-candle-down'}"/>`;
+  }
+  svg.innerHTML = markup;
+}
+
+/* Generate the scannable QR code linking back to this trade */
+function pnlGenerateQr(text) {
+  const wrap = document.getElementById('pnlQrWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (window.QRCode && window.QRCode.toCanvas) {
+    QRCode.toCanvas(text, { width: 68, margin: 0, color: { dark: '#000000', light: '#ffffff' } }, function (err, canvas) {
+      if (!err && canvas) wrap.appendChild(canvas);
+    });
+  }
+}
+
+/* Populate the live preview from currentTrade — called automatically
+   at the end of renderTradeDetail(), and whenever trade data changes. */
+function renderPnlCard() {
+  if (!currentTrade) return;
+  const t = currentTrade;
+  const isWin = (t.pnl || 0) >= 0;
+  const card = document.getElementById('pnlCard');
+  if (!card) return;
+
+  card.setAttribute('data-outcome', isWin ? 'win' : 'loss');
+
+  document.getElementById('pnlDate').textContent = (t.date || '').toUpperCase();
+  document.getElementById('pnlOutcomeBadge').textContent = isWin ? 'WIN' : 'LOSS';
+
+  document.getElementById('pnlPair').textContent = t.pair || '—';
+
+  const isLong = t.dir === 'Long';
+  const dirBadge = document.getElementById('pnlDirBadge');
+  dirBadge.textContent = isLong ? 'LONG ↗' : 'SHORT ↘';
+  dirBadge.className = 'pnl-dir-badge ' + (isLong ? 'pnl-dir-long' : 'pnl-dir-short');
+
+  document.getElementById('pnlRR').textContent = (t.rr || t.rr === 0) ? (t.rr >= 0 ? '+' : '') + t.rr + 'R' : '—';
+  document.getElementById('pnlPips').textContent = (t.pips !== undefined && t.pips !== null && t.pips !== '') ? t.pips : '—';
+
+  const pnlVal = t.pnl || 0;
+  document.getElementById('pnlPnl').textContent =
+    (pnlVal >= 0 ? '+$' : '-$') + Math.abs(pnlVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  document.getElementById('pnlSession').textContent = t.session || '—';
+  document.getElementById('pnlEntry').textContent = (t.entry || t.entry === 0) ? parseFloat(t.entry) : '—';
+  document.getElementById('pnlExit').textContent = (t.exit || t.exit === 0) ? parseFloat(t.exit) : '—';
+  document.getElementById('pnlTradeType').textContent = t.tradeType || '—';
+  document.getElementById('pnlBias').textContent = t.htfBias || '—';
+
+  // Trader identity — read from the same saved profile used across the app (no new data source)
+  const profile = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const rawUsername = profile.username || 'trader';
+  document.getElementById('pnlUsername').textContent = rawUsername.startsWith('@') ? rawUsername : '@' + rawUsername;
+
+  const avatarEl = document.getElementById('pnlAvatar');
+  if (photo) {
+    avatarEl.style.backgroundImage = 'url(' + photo + ')';
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+  } else {
+    const initials = ((profile.fname || 'K').charAt(0) + ((profile.lname || '').charAt(0) || '')).toUpperCase();
+    avatarEl.style.backgroundImage = '';
+    avatarEl.textContent = initials || 'K';
+  }
+
+  pnlRenderChartBg(isWin, t.id || 7);
+  pnlGenerateQr('https://tradeva.app/trade-detail.html?id=' + (t.id || ''));
+
+  // Download button colour mirrors the outcome (green win / red loss)
+  const dlBtn = document.getElementById('pnlDownloadBtn');
+  if (dlBtn) dlBtn.style.background = isWin ? 'var(--green)' : 'var(--red)';
+}
+
+/* Export the live preview as a high-resolution PNG matching the selected size */
+async function pnlDownloadCard() {
+  const card = document.getElementById('pnlCard');
+  const btn = document.getElementById('pnlDownloadBtn');
+  if (!card || !btn || typeof html2canvas === 'undefined') {
+    alert('Image export is still loading — please try again in a moment.');
+    return;
+  }
+
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<span>Generating…</span>';
+  btn.disabled = true;
+
+  const sizeMap = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920] };
+  const [targetW] = sizeMap[pnlSize] || sizeMap.square;
+  const scale = targetW / card.offsetWidth;
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: null,
+      scale: scale,
+      useCORS: true,
+      logging: false,
+    });
+    const trade = currentTrade || {};
+    const link = document.createElement('a');
+    link.download = `tradeva-${(trade.pair || 'trade').toLowerCase()}-${pnlSize}.png`;
+    link.href = canvas.toDataURL('image/png', 1.0);
+    link.click();
+  } catch (err) {
+    console.error('P&L card export failed:', err);
+    alert('Could not generate the image. Please try again.');
+  } finally {
+    btn.innerHTML = originalHTML;
+    btn.disabled = false;
+  }
 }
 
 /* ── INIT ── */
