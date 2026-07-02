@@ -373,13 +373,23 @@ body {
   border: 1px solid rgba(255,255,255,0.25);
 }
 .pnl-card[data-template="light"] { background: #F5EFE3; border: 1px solid #E8DCC4; }
-.pnl-card[data-template="darkpro"] { background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%); border: 1px solid #2A3A54; }
+.pnl-card[data-template="pro"] { background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%); border: 1px solid #2A3A54; }
+.pnl-card[data-template="cyber"] { background: linear-gradient(160deg, #0a0118 0%, #170b2e 55%, #0a0118 100%); border: 1px solid rgba(34,211,238,0.4); }
+.pnl-card[data-template="luxury"] { background: radial-gradient(circle at 50% 0%, #161616 0%, #050505 72%); border: 1px solid rgba(212,175,55,0.5); }
+.pnl-card[data-template="tvstyle"] { background: #131722; border: 1px solid #2A2E39; }
 
 .pnl-card[data-template="neon"]    .pnl-content,
 .pnl-card[data-template="glass"]   .pnl-content,
-.pnl-card[data-template="darkpro"] .pnl-content { color: #F8FAFC; }
+.pnl-card[data-template="pro"]     .pnl-content,
+.pnl-card[data-template="cyber"]   .pnl-content,
+.pnl-card[data-template="luxury"]  .pnl-content { color: #F8FAFC; }
 .pnl-card[data-template="minimal"] .pnl-content,
 .pnl-card[data-template="light"]   .pnl-content { color: #0F172A; }
+.pnl-card[data-template="tvstyle"] .pnl-content { color: #D1D4DC; }
+.pnl-card[data-template="cyber"]   .pnl-logo,
+.pnl-card[data-template="cyber"]   .pnl-pair { color: #E5F9FF; }
+.pnl-card[data-template="luxury"]  .pnl-logo span,
+.pnl-card[data-template="luxury"]  .pnl-pair { color: #F1E4BE; }
 
 .pnl-card[data-outcome="win"]  { --pnl-accent: #10B981; --pnl-accent-bg: rgba(16,185,129,0.16); }
 .pnl-card[data-outcome="loss"] { --pnl-accent: #EF4444; --pnl-accent-bg: rgba(239,68,68,0.16); }
@@ -449,9 +459,28 @@ body {
 .pnl-qr-wrap img, .pnl-qr-wrap canvas { width: 100%; height: 100%; display: block; }
 
 /* candlestick chart background */
-.pnl-candle-up, .pnl-candle-down { fill: rgba(16,185,129,0.42); }
-.pnl-card[data-outcome="loss"] .pnl-candle-up,
-.pnl-card[data-outcome="loss"] .pnl-candle-down { fill: rgba(239,68,68,0.42); }
+/* Candle color follows trade DIRECTION (bullish long / bearish short),
+   not win/loss outcome — a winning Short still shows a red downtrend,
+   because that's what the market actually did. */
+.pnl-candle-up, .pnl-candle-down { fill: rgba(16,185,129,0.42); } /* long / bullish default */
+.pnl-card[data-direction="short"] .pnl-candle-up,
+.pnl-card[data-direction="short"] .pnl-candle-down { fill: rgba(239,68,68,0.42); } /* short / bearish default */
+
+/* Per-template candle palette overrides */
+.pnl-card[data-template="cyber"][data-direction="long"]  .pnl-candle-up,
+.pnl-card[data-template="cyber"][data-direction="long"]  .pnl-candle-down { fill: rgba(34,211,238,0.55); }
+.pnl-card[data-template="cyber"][data-direction="short"] .pnl-candle-up,
+.pnl-card[data-template="cyber"][data-direction="short"] .pnl-candle-down { fill: rgba(236,72,153,0.55); }
+
+.pnl-card[data-template="luxury"][data-direction="long"]  .pnl-candle-up,
+.pnl-card[data-template="luxury"][data-direction="long"]  .pnl-candle-down { fill: rgba(212,175,55,0.48); }
+.pnl-card[data-template="luxury"][data-direction="short"] .pnl-candle-up,
+.pnl-card[data-template="luxury"][data-direction="short"] .pnl-candle-down { fill: rgba(153,27,27,0.5); }
+
+.pnl-card[data-template="tvstyle"][data-direction="long"]  .pnl-candle-up,
+.pnl-card[data-template="tvstyle"][data-direction="long"]  .pnl-candle-down { fill: rgba(38,166,154,0.6); }
+.pnl-card[data-template="tvstyle"][data-direction="short"] .pnl-candle-up,
+.pnl-card[data-template="tvstyle"][data-direction="short"] .pnl-candle-down { fill: rgba(239,83,80,0.6); }
 .pnl-wick { stroke: rgba(148,163,184,0.28); stroke-width: 1.2; }
 .pnl-card[data-template="minimal"] .pnl-candle-up,
 .pnl-card[data-template="minimal"] .pnl-candle-down,
@@ -479,7 +508,10 @@ body {
 .tpl-swatch-minimal { background: #ffffff; }
 .tpl-swatch-glass    { background: linear-gradient(135deg, #1e3a8a, #831843); }
 .tpl-swatch-light   { background: #F5EFE3; }
-.tpl-swatch-darkpro  { background: linear-gradient(160deg, #0F172A, #1E293B); }
+.tpl-swatch-pro      { background: linear-gradient(160deg, #0F172A, #1E293B); }
+.tpl-swatch-cyber    { background: linear-gradient(160deg, #0a0118, #170b2e); }
+.tpl-swatch-luxury  { background: radial-gradient(circle at 50% 0%, #161616, #050505); }
+.tpl-swatch-tvstyle  { background: #131722; }
 
 /* ── Size selector ── */
 .pnlsize-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
@@ -788,7 +820,7 @@ body {
 
     <!-- Live Preview -->
     <div class="pnlgen-preview-wrap">
-      <div class="pnl-card" id="pnlCard" data-template="neon" data-outcome="win" data-size="square">
+      <div class="pnl-card" id="pnlCard" data-template="neon" data-outcome="win" data-direction="long" data-size="square">
         <svg class="pnl-chart-bg" id="pnlChartBg" viewBox="0 0 400 400" preserveAspectRatio="none"></svg>
 
         <div class="pnl-content">
@@ -868,13 +900,17 @@ body {
     <!-- Card Template -->
     <div class="pnlgen-section-label">Card Template</div>
     <div class="tpl-row">
-      <button class="tpl-chip active" data-tpl="neon" onclick="pnlSetTemplate('neon')">
-        <span class="tpl-swatch tpl-swatch-neon"></span>
-        <span class="tpl-chip-label">Neon Pro</span>
-      </button>
       <button class="tpl-chip" data-tpl="minimal" onclick="pnlSetTemplate('minimal')">
         <span class="tpl-swatch tpl-swatch-minimal"></span>
         <span class="tpl-chip-label">Minimal</span>
+      </button>
+      <button class="tpl-chip" data-tpl="pro" onclick="pnlSetTemplate('pro')">
+        <span class="tpl-swatch tpl-swatch-pro"></span>
+        <span class="tpl-chip-label">Pro</span>
+      </button>
+      <button class="tpl-chip active" data-tpl="neon" onclick="pnlSetTemplate('neon')">
+        <span class="tpl-swatch tpl-swatch-neon"></span>
+        <span class="tpl-chip-label">Neon</span>
       </button>
       <button class="tpl-chip" data-tpl="glass" onclick="pnlSetTemplate('glass')">
         <span class="tpl-swatch tpl-swatch-glass"></span>
@@ -884,9 +920,17 @@ body {
         <span class="tpl-swatch tpl-swatch-light"></span>
         <span class="tpl-chip-label">Light</span>
       </button>
-      <button class="tpl-chip" data-tpl="darkpro" onclick="pnlSetTemplate('darkpro')">
-        <span class="tpl-swatch tpl-swatch-darkpro"></span>
-        <span class="tpl-chip-label">Dark Pro</span>
+      <button class="tpl-chip" data-tpl="cyber" onclick="pnlSetTemplate('cyber')">
+        <span class="tpl-swatch tpl-swatch-cyber"></span>
+        <span class="tpl-chip-label">Cyber</span>
+      </button>
+      <button class="tpl-chip" data-tpl="luxury" onclick="pnlSetTemplate('luxury')">
+        <span class="tpl-swatch tpl-swatch-luxury"></span>
+        <span class="tpl-chip-label">Luxury Black</span>
+      </button>
+      <button class="tpl-chip" data-tpl="tvstyle" onclick="pnlSetTemplate('tvstyle')">
+        <span class="tpl-swatch tpl-swatch-tvstyle"></span>
+        <span class="tpl-chip-label">TradingView</span>
       </button>
     </div>
 
@@ -1231,23 +1275,29 @@ function pnlSeededRandom(seed) {
 }
 
 /* Draw decorative candlestick background — trends up for wins, down for losses */
-function pnlRenderChartBg(isWin, seedNum) {
+function pnlRenderChartBg(isLong, seedNum) {
   const svg = document.getElementById('pnlChartBg');
   if (!svg) return;
   const rand = pnlSeededRandom(seedNum);
   const candleCount = 26;
   const w = 400, h = 400;
+  const topClear = 100;    // keeps candles clear of logo / date / WIN-LOSS badge
+  const bottomClear = 96;  // keeps candles clear of the footer
+  const zoneTop = topClear;
+  const zoneBottom = h - bottomClear;
+  const zoneH = zoneBottom - zoneTop;
   const step = w / candleCount;
-  let cursor = isWin ? h * 0.85 : h * 0.15;
+
+  let cursor = isLong ? zoneBottom - zoneH * 0.06 : zoneTop + zoneH * 0.06;
   let markup = '';
 
   for (let i = 0; i < candleCount; i++) {
-    const drift = (isWin ? -1 : 1) * (5 + rand() * 9);
+    const drift = (isLong ? -1 : 1) * (zoneH * 0.02 + rand() * zoneH * 0.035);
     const open = cursor;
-    cursor = Math.max(24, Math.min(h - 24, cursor + drift + (rand() - 0.5) * 8));
+    cursor = Math.max(zoneTop + 6, Math.min(zoneBottom - 6, cursor + drift + (rand() - 0.5) * zoneH * 0.03));
     const close = cursor;
-    const high = Math.min(open, close) - (rand() * 12 + 3);
-    const low = Math.max(open, close) + (rand() * 12 + 3);
+    const high = Math.max(zoneTop, Math.min(open, close) - (rand() * zoneH * 0.045 + zoneH * 0.01));
+    const low = Math.min(zoneBottom, Math.max(open, close) + (rand() * zoneH * 0.045 + zoneH * 0.01));
     const bodyTop = Math.min(open, close);
     const bodyH = Math.max(2.5, Math.abs(close - open));
     const bodyW = step * 0.42;
@@ -1258,6 +1308,7 @@ function pnlRenderChartBg(isWin, seedNum) {
     markup += `<rect x="${cx.toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}" rx="1" class="${isUpCandle ? 'pnl-candle-up' : 'pnl-candle-down'}"/>`;
   }
   svg.innerHTML = markup;
+
 }
 
 /* IMPORTANT FIX: QR generation is now a real Promise that the caller can
@@ -1339,6 +1390,7 @@ async function renderPnlCard() {
   const dirBadge = document.getElementById('pnlDirBadge');
   dirBadge.textContent = isLong ? 'LONG ↗' : 'SHORT ↘';
   dirBadge.className = 'pnl-dir-badge ' + (isLong ? 'pnl-dir-long' : 'pnl-dir-short');
+  card.setAttribute('data-direction', isLong ? 'long' : 'short');
 
   document.getElementById('pnlRR').textContent = (t.rr || t.rr === 0) ? (t.rr >= 0 ? '+' : '') + t.rr + 'R' : '—';
   document.getElementById('pnlPips').textContent = (t.pips !== undefined && t.pips !== null && t.pips !== '') ? t.pips : '—';
@@ -1374,7 +1426,7 @@ async function renderPnlCard() {
     avatarInitials.textContent = initials || 'K';
   }
 
-  pnlRenderChartBg(isWin, t.id || 7);
+  pnlRenderChartBg(isLong, t.id || 7);
   await pnlGenerateQr('https://tradeva.app/trade-detail.html?id=' + (t.id || ''));
 
   // Download button colour mirrors the outcome (green win / red loss)
