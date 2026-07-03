@@ -1015,12 +1015,43 @@ function removeImg(fileId, wrapId, areaId, imgId) {
 });
 
 /* ── TO BASE64 ── */
+/* Reads a file and returns a COMPRESSED base64 image (resized + JPEG-encoded).
+   Raw phone-camera photos are often 3-8MB — once base64-encoded that alone
+   can blow past the browser's ~5-10MB localStorage quota, which is what was
+   silently breaking Save Trade whenever a photo was attached. Resizing to a
+   reasonable max width and compressing to JPEG brings each image down to
+   roughly 80-250KB, so trades with photos actually fit and save reliably. */
 function toBase64(fileId) {
-  return new Promise(res => {
+  return new Promise((resolve, reject) => {
     const file = document.getElementById(fileId).files[0];
-    if (!file) return res(null);
+    if (!file) return resolve(null);
+
     const reader = new FileReader();
-    reader.onload = e => res(e.target.result);
+    reader.onerror = () => reject(new Error('Could not read the selected image. Please try a different photo.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Could not process the selected image. Please try a different photo.'));
+      img.onload = () => {
+        const MAX_DIMENSION = 1280;
+        let { width, height } = img;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          if (width > height) {
+            height = Math.round(height * (MAX_DIMENSION / width));
+            width = MAX_DIMENSION;
+          } else {
+            width = Math.round(width * (MAX_DIMENSION / height));
+            height = MAX_DIMENSION;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -1034,60 +1065,83 @@ async function saveTrade() {
     return;
   }
 
-  const entryImg = await toBase64('entry-file');
-  const exitImg  = await toBase64('exit-file');
+  const saveBtn = document.querySelector('.save-btn');
+  const originalBtnText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.style.opacity = '0.7';
+  saveBtn.style.cursor = 'default';
+  saveBtn.textContent = 'Saving…';
 
-  const KEY = 'tradeva_trades';
-  const trades = JSON.parse(localStorage.getItem(KEY) || '[]');
-  const newId  = trades.length ? Math.max(...trades.map(t => t.id || 0)) + 1 : 1;
+  try {
+    const entryImg = await toBase64('entry-file');
+    const exitImg  = await toBase64('exit-file');
 
-  const pnlInput = parseFloat(document.getElementById('f-pnl').value);
-  const entry    = parseFloat(document.getElementById('f-entry').value) || 0;
-  const exitVal  = parseFloat(document.getElementById('f-exit').value)  || 0;
-  const sl       = parseFloat(document.getElementById('f-sl').value)    || 0;
+    const KEY = 'tradeva_trades';
+    const trades = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const newId  = trades.length ? Math.max(...trades.map(t => t.id || 0)) + 1 : 1;
 
-  // Auto-calculate PnL if blank (simplified pips-based)
-  let pnl = pnlInput || 0;
-  if (!pnlInput && entry && exitVal && sl) {
-    const risk = Math.abs(entry - sl);
-    const reward = selectedDir === 'Long' ? (exitVal - entry) : (entry - exitVal);
-    if (risk > 0) pnl = parseFloat((reward / risk * 100).toFixed(2));
+    const pnlInput = parseFloat(document.getElementById('f-pnl').value);
+    const entry    = parseFloat(document.getElementById('f-entry').value) || 0;
+    const exitVal  = parseFloat(document.getElementById('f-exit').value)  || 0;
+    const sl       = parseFloat(document.getElementById('f-sl').value)    || 0;
+
+    // Auto-calculate PnL if blank (simplified pips-based)
+    let pnl = pnlInput || 0;
+    if (!pnlInput && entry && exitVal && sl) {
+      const risk = Math.abs(entry - sl);
+      const reward = selectedDir === 'Long' ? (exitVal - entry) : (entry - exitVal);
+      if (risk > 0) pnl = parseFloat((reward / risk * 100).toFixed(2));
+    }
+
+    // Format date for display
+    const dateObj = new Date(date + 'T00:00:00');
+    const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    trades.push({
+      id:        newId,
+      date:      displayDate,
+      rawDate:   date,
+      pair,
+      dir:       selectedDir,
+      entry,
+      exit:      exitVal,
+      sl,
+      tp:        parseFloat(document.getElementById('f-tp').value)    || 0,
+      session:   document.getElementById('f-session').value,
+      tradeType: document.getElementById('f-type').value,
+      htfBias:   document.getElementById('f-bias').value,
+      rr:        parseFloat(document.getElementById('f-rr').value)    || 0,
+      pips:      parseFloat(document.getElementById('f-pips').value)  || 0,
+      timeInPos: document.getElementById('f-time').value,
+      outcome:   selectedOutcome,
+      pnl,
+      entryImg,
+      exitImg,
+      tvLink:    document.getElementById('f-tv').value.trim(),
+      notes:     document.getElementById('f-notes').value.trim(),
+      rulesFollowed: selectedRules,
+    });
+
+    try {
+      localStorage.setItem(KEY, JSON.stringify(trades));
+    } catch (storageErr) {
+      // Storage is full even after compression (very large history / very
+      // many photos) — surface this clearly instead of failing silently.
+      throw new Error('Your saved trades are taking up too much storage space to add this one. Try removing an old screenshot from another trade, or save this trade without photos.');
+    }
+
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => { window.location.href = 'trades.html'; }, 1300);
+
+  } catch (err) {
+    console.error('Save trade failed:', err);
+    alert(err.message || 'Something went wrong while saving this trade. Please try again.');
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = '';
+    saveBtn.style.cursor = '';
+    saveBtn.textContent = originalBtnText;
   }
-
-  // Format date for display
-  const dateObj = new Date(date + 'T00:00:00');
-  const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-
-  trades.push({
-    id:        newId,
-    date:      displayDate,
-    rawDate:   date,
-    pair,
-    dir:       selectedDir,
-    entry,
-    exit:      exitVal,
-    sl,
-    tp:        parseFloat(document.getElementById('f-tp').value)    || 0,
-    session:   document.getElementById('f-session').value,
-    tradeType: document.getElementById('f-type').value,
-    htfBias:   document.getElementById('f-bias').value,
-    rr:        parseFloat(document.getElementById('f-rr').value)    || 0,
-    pips:      parseFloat(document.getElementById('f-pips').value)  || 0,
-    timeInPos: document.getElementById('f-time').value,
-    outcome:   selectedOutcome,
-    pnl,
-    entryImg,
-    exitImg,
-    tvLink:    document.getElementById('f-tv').value.trim(),
-    notes:     document.getElementById('f-notes').value.trim(),
-    rulesFollowed: selectedRules,
-  });
-
-  localStorage.setItem(KEY, JSON.stringify(trades));
-
-  const toast = document.getElementById('toast');
-  toast.classList.add('show');
-  setTimeout(() => { window.location.href = 'trades.html'; }, 1300);
 }
 
 /* ── INIT ── */
