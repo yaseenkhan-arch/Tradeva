@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="analytics.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SIDEBAR — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Analytics</h1>
+        <p class="page-subtitle">Advanced trading analytics to discover your edge and improve your trading performance.</p>
+      </div>
+    </div>
+    <div class="select-wrap range-select-wrap">
+      <select id="rangeSelect">
+        <option>Last 30 Days</option>
+        <option selected>Last 90 Days</option>
+        <option>Last 6 Months</option>
+        <option>Last Year</option>
+        <option>All Time</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="select-wrap">
+      <select id="filterAccount">
+        <option>All Accounts</option>
+        <option>Main Account</option>
+        <option>Funded Account</option>
+      </select>
+    </div>
+    <div class="select-wrap">
+      <select id="filterPair">
+        <option>All Pairs</option>
+        <option>EURUSD</option>
+        <option>GBPJPY</option>
+        <option>XAUUSD</option>
+        <option>NAS100</option>
+        <option>US30</option>
+      </select>
+    </div>
+    <div class="select-wrap">
+      <select id="filterSession">
+        <option>All Sessions</option>
+        <option>Asia</option>
+        <option>London</option>
+        <option>New York</option>
+        <option>Overlap</option>
+      </select>
+    </div>
+    <div class="select-wrap">
+      <select id="filterDirection">
+        <option>All Directions</option>
+        <option>Long</option>
+        <option>Short</option>
+      </select>
+    </div>
+    <div class="select-wrap">
+      <select id="filterResult">
+        <option>All Results</option>
+        <option>Wins</option>
+        <option>Losses</option>
+        <option>Breakeven</option>
+      </select>
+    </div>
+    <button class="reset-filters-btn" onclick="resetFilters()">
+      <svg viewBox="0 0 14 14"><path d="M12.5 7A5.5 5.5 0 112.6 3.9M2.5 1.5v3h3"/></svg>
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — Quick Summary
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <div class="quick-summary-grid">
+      <div class="qs-card qs-pnl">
+        <div class="qs-icon">
+          <svg viewBox="0 0 18 18"><path d="M2 14l4-4 3 3 6-7"/><path d="M11 6h4v4"/></svg>
+        </div>
+        <div class="qs-label">This Month PnL</div>
+        <div class="qs-value green" data-count="8240" data-prefix="+$">+$8,240</div>
+        <div class="qs-sub"><span class="trend-up">↑ 12.4%</span> vs last month</div>
+      </div>
+      <div class="qs-card">
+        <div class="qs-icon accent">
+          <svg viewBox="0 0 18 18"><polygon points="9,1.5 11,6.5 16.5,7 12.5,10.5 13.5,16 9,13 4.5,16 5.5,10.5 1.5,7 7,6.5"/></svg>
+        </div>
+        <div class="qs-label">Best Pair</div>
+        <div class="qs-value">EURUSD</div>
+        <div class="qs-sub">+$18,900 total profit</div>
+      </div>
+      <div class="qs-card">
+        <div class="qs-icon accent">
+          <svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7"/><polyline points="9,5 9,9 12,11"/></svg>
+        </div>
+        <div class="qs-label">Best Session</div>
+        <div class="qs-value">London</div>
+        <div class="qs-sub">76% win rate</div>
+      </div>
+      <div class="qs-card qs-warn">
+        <div class="qs-icon warn">
+          <svg viewBox="0 0 18 18"><path d="M9 2l8 14H1z"/><line x1="9" y1="7" x2="9" y2="11"/><circle cx="9" cy="13.5" r="0.8" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div class="qs-label">Needs Attention</div>
+        <div class="qs-value red">Friday Trading</div>
+        <div class="qs-sub">-$2,380 this range</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — Performance Overview
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">Performance Overview</h2>
+    <div class="stats-grid-8">
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M1 13l4.5-4.5 3 3L15 4"/><path d="M11 4h4v4"/></svg></div>
+          <span class="mom mom-up">+12.4%</span>
+        </div>
+        <div class="stat-label-lg">Total PnL</div>
+        <div class="stat-value-lg green" data-count="47320" data-prefix="+$">+$47,320</div>
+        <div class="stat-desc">Net profit across all trades in range</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><polyline points="5,8.5 7,10.5 11,5.5"/></svg></div>
+          <span class="mom mom-up">+3.1%</span>
+        </div>
+        <div class="stat-label-lg">Win Rate</div>
+        <div class="stat-value-lg green" data-count="68.4" data-suffix="%">68.4%</div>
+        <div class="stat-desc">158 wins out of 231 trades</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><rect x="1" y="9" width="3" height="6" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="1" width="3" height="14" rx="1"/></svg></div>
+          <span class="mom mom-up">+0.2</span>
+        </div>
+        <div class="stat-label-lg">Profit Factor</div>
+        <div class="stat-value-lg" data-count="2.85">2.85</div>
+        <div class="stat-desc">Gross profit ÷ gross loss</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg></div>
+          <span class="mom mom-up">+$14</span>
+        </div>
+        <div class="stat-label-lg">Expectancy</div>
+        <div class="stat-value-lg green" data-count="186" data-prefix="+$">+$186</div>
+        <div class="stat-desc">Average result per trade</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><polyline points="2,10 6,4 9,7 14,2"/></svg></div>
+          <span class="mom mom-up">+$32</span>
+        </div>
+        <div class="stat-label-lg">Average Win</div>
+        <div class="stat-value-lg green" data-count="620" data-prefix="+$">+$620</div>
+        <div class="stat-desc">Mean profit on winning trades</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><polyline points="2,5 6,11 9,8 14,13"/></svg></div>
+          <span class="mom mom-down">-$8</span>
+        </div>
+        <div class="stat-label-lg">Average Loss</div>
+        <div class="stat-value-lg red" data-count="-218" data-prefix="-$">-$218</div>
+        <div class="stat-desc">Mean loss on losing trades</div>
+      </div>
+
+      <div class="stat-card-lg">
+        <div class="stat-top">
+          <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M8 4.5v4l3 2"/></svg></div>
+          <span class="mom mom-up">+0.3</span>
+        </div>
+        <div class="stat-label-lg">Recovery Factor</div>
+        <div class="stat-value-lg" data-count="4.2">4.2</div>
+        <div class="stat-desc">Net profit ÷ max drawdown</div>
+      </div>
+
+      <div class="stat-card-lg stat-edge">
+        <div class="stat-top">
+          <div class="stat-icon-wrap accent"><svg viewBox="0 0 16 16"><polygon points="8,1 10,6 15,6.5 11,10 12,15 8,12.5 4,15 5,10 1,6.5 6,6"/></svg></div>
+          <span class="mom mom-up">+4</span>
+        </div>
+        <div class="stat-label-lg">Edge Score</div>
+        <div class="stat-value-lg accent-text" data-count="87" data-suffix="/100">87/100</div>
+        <div class="stat-desc">Composite edge rating</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — Performance Trends
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">Performance Trends</h2>
+    <div class="trends-grid">
+
+      <div class="chart-card-lg">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">Equity Curve</div>
+            <div class="chart-card-sub">Cumulative account growth over time</div>
+          </div>
+          <span class="insight-pill green-pill">+$47.3k range</span>
+        </div>
+        <div class="chart-wrap-lg"><canvas id="equityChart"></canvas></div>
+      </div>
+
+      <div class="chart-card-lg">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">Drawdown Curve</div>
+            <div class="chart-card-sub">Peak-to-trough decline over time</div>
+          </div>
+          <span class="insight-pill red-pill">-8.4% max</span>
+        </div>
+        <div class="chart-wrap-lg"><canvas id="drawdownChart"></canvas></div>
+      </div>
+
+      <div class="chart-card-lg">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">Monthly Performance</div>
+            <div class="chart-card-sub">Profit and loss by month</div>
+          </div>
+          <span class="insight-pill blue-pill">10 of 12 green</span>
+        </div>
+        <div class="chart-wrap-lg"><canvas id="monthlyChart"></canvas></div>
+      </div>
+
+      <div class="chart-card-lg">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">Rolling Win Rate</div>
+            <div class="chart-card-sub">30-day rolling win percentage</div>
+          </div>
+          <span class="insight-pill blue-pill">Trending up</span>
+        </div>
+        <div class="chart-wrap-lg"><canvas id="winRateChart"></canvas></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4 — Edge Analysis
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">Edge Analysis</h2>
+    <p class="section-sub">Discover exactly where your edge lives — and where it disappears.</p>
+    <div class="edge-grid">
+
+      <div class="edge-card">
+        <div class="edge-card-title">Session Performance</div>
+        <div class="chart-wrap-md"><canvas id="sessionChart"></canvas></div>
+        <div class="insight-box green-box">
+          <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
+          <span><strong>London</strong> is your strongest session at 76% win rate — 2.5x more profitable than Asia.</span>
+        </div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">PnL by Day of Week</div>
+        <div class="chart-wrap-md"><canvas id="dayOfWeekChart"></canvas></div>
+        <div class="insight-box red-box">
+          <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
+          <span><strong>Friday</strong> is your only losing day (-$2,380). Consider reducing size or sitting it out.</span>
+        </div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">Best Trading Pairs</div>
+        <div class="chart-wrap-md"><canvas id="pairsChart"></canvas></div>
+        <div class="insight-box green-box">
+          <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
+          <span><strong>EURUSD</strong> alone drives 40% of total profit from just 22% of your trades.</span>
+        </div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">Long vs Short</div>
+        <div class="ls-compare">
+          <div class="ls-col ls-long">
+            <div class="ls-col-head">
+              <svg viewBox="0 0 16 16"><polyline points="2,11 6,6 9,9 14,3"/><line x1="14" y1="3" x2="14" y2="6.5"/><line x1="10.5" y1="3" x2="14" y2="3"/></svg>
+              Long
+            </div>
+            <div class="ls-stat"><span class="ls-num green">71%</span><span class="ls-tag">Win Rate</span></div>
+            <div class="ls-stat"><span class="ls-num green">+$32,100</span><span class="ls-tag">Total PnL</span></div>
+            <div class="ls-stat"><span class="ls-num">142</span><span class="ls-tag">Trades</span></div>
+          </div>
+          <div class="ls-col ls-short">
+            <div class="ls-col-head">
+              <svg viewBox="0 0 16 16"><polyline points="2,5 6,10 9,7 14,13"/><line x1="14" y1="13" x2="14" y2="9.5"/><line x1="10.5" y1="13" x2="14" y2="13"/></svg>
+              Short
+            </div>
+            <div class="ls-stat"><span class="ls-num green">62%</span><span class="ls-tag">Win Rate</span></div>
+            <div class="ls-stat"><span class="ls-num green">+$15,220</span><span class="ls-tag">Total PnL</span></div>
+            <div class="ls-stat"><span class="ls-num">89</span><span class="ls-tag">Trades</span></div>
+          </div>
+        </div>
+        <div class="insight-box blue-box">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8.5"/><circle cx="8" cy="11" r="0.7" fill="currentColor" stroke="none"/></svg>
+          <span>You trade <strong>Long setups 60% more</strong> and they're also your higher-conviction trades.</span>
+        </div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">Time of Day Performance</div>
+        <div class="heatmap-row" id="heatmapRow"></div>
+        <div class="insight-box red-box">
+          <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
+          <span><strong>2PM</strong> is consistently your worst hour. Your best window is <strong>9–10AM</strong>.</span>
+        </div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">Trade Duration Analysis</div>
+        <div class="chart-wrap-md"><canvas id="durationChart"></canvas></div>
+        <div class="insight-box green-box">
+          <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
+          <span>Trades held <strong>15–60 minutes</strong> are your most profitable duration bucket.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 5 — Trade Statistics
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">Trade Statistics</h2>
+    <div class="tradestat-grid">
+
+      <div class="edge-card">
+        <div class="edge-card-title">R:R Distribution</div>
+        <div class="chart-wrap-md"><canvas id="rrChart"></canvas></div>
+      </div>
+
+      <div class="edge-card">
+        <div class="edge-card-title">Trade Outcome Distribution</div>
+        <div class="chart-wrap-donut"><canvas id="outcomeChart"></canvas></div>
+        <div class="donut-legend">
+          <div class="donut-legend-item"><span class="dot" style="background:var(--green)"></span>Wins <b>158</b></div>
+          <div class="donut-legend-item"><span class="dot" style="background:var(--red)"></span>Losses <b>61</b></div>
+          <div class="donut-legend-item"><span class="dot" style="background:var(--text-faint)"></span>B/E <b>12</b></div>
+        </div>
+      </div>
+
+      <div class="metric-card-pair">
+        <div class="metric-card">
+          <div class="metric-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,9.5"/></svg></div>
+          <div class="metric-label">Average Holding Time</div>
+          <div class="metric-value">2h 14m</div>
+          <div class="metric-sub">Across all closed trades</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon"><svg viewBox="0 0 16 16"><path d="M8 1.5L2 4.5v4c0 4 2.5 6.5 6 8 3.5-1.5 6-4 6-8v-4z"/></svg></div>
+          <div class="metric-label">Average Risk Per Trade</div>
+          <div class="metric-value">1.2%</div>
+          <div class="metric-sub">≈ $620 per position</div>
+        </div>
+      </div>
+
+      <div class="edge-card timeline-card">
+        <div class="edge-card-title">Winning / Losing Timeline</div>
+        <div class="timeline-strip" id="timelineStrip"></div>
+        <div class="timeline-legend">
+          <span><span class="dot" style="background:var(--green)"></span>Win</span>
+          <span><span class="dot" style="background:var(--red)"></span>Loss</span>
+          <span><span class="dot" style="background:var(--text-faint)"></span>B/E</span>
+          <span class="timeline-note">Last 40 trades, oldest → newest</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 6 — Trade Breakdown
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">Trade Breakdown</h2>
+
+    <div class="breakdown-summary-grid">
+      <div class="stat-card-sm">
+        <div class="stat-label-sm">Largest Win</div>
+        <div class="stat-value-sm green">+$2,250</div>
+        <div class="stat-sub-sm">XAUUSD · Jun 16</div>
+      </div>
+      <div class="stat-card-sm">
+        <div class="stat-label-sm">Largest Loss</div>
+        <div class="stat-value-sm red">-$750</div>
+        <div class="stat-sub-sm">EURUSD · May 14</div>
+      </div>
+      <div class="stat-card-sm">
+        <div class="stat-label-sm">Highest RR Trade</div>
+        <div class="stat-value-sm">3.1R</div>
+        <div class="stat-sub-sm">XAUUSD · May 22</div>
+      </div>
+      <div class="stat-card-sm">
+        <div class="stat-label-sm">Most Profitable Pair</div>
+        <div class="stat-value-sm accent-text">EURUSD</div>
+        <div class="stat-sub-sm">+$18,900 total</div>
+      </div>
+    </div>
+
+    <div class="tables-grid">
+      <div class="table-card">
+        <div class="table-card-head">
+          <div class="table-card-title"><span class="dot" style="background:var(--green)"></span>Best Trades</div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Pair</th><th>Session</th><th>RR</th><th>PnL</th><th>Result</th></tr></thead>
+            <tbody id="bestTradesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-head">
+          <div class="table-card-title"><span class="dot" style="background:var(--red)"></span>Worst Trades</div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Pair</th><th>Session</th><th>RR</th><th>PnL</th><th>Result</th></tr></thead>
+            <tbody id="worstTradesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 7 — Edge Score
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <div class="edge-score-card">
+      <div class="edge-score-left">
+        <div class="edge-score-ring-wrap">
+          <svg class="edge-score-ring" viewBox="0 0 160 160">
+            <circle class="ring-bg" cx="80" cy="80" r="70"/>
+            <circle class="ring-fg" id="edgeRingFg" cx="80" cy="80" r="70"/>
+          </svg>
+          <div class="edge-score-ring-label">
+            <div class="edge-score-num" id="edgeScoreNum">0</div>
+            <div class="edge-score-denom">/ 100</div>
+          </div>
+        </div>
+        <div class="edge-score-title">Your Edge Score</div>
+        <div class="edge-score-desc">A composite rating of consistency, discipline and profitability.</div>
+      </div>
+
+      <div class="edge-score-right">
+        <div class="edge-score-col">
+          <div class="edge-score-col-title strengths-title">
+            <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
+            Strengths
+          </div>
+          <ul class="edge-list">
+            <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>London Session</li>
+            <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>EURUSD</li>
+            <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>Tuesday</li>
+            <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>RR above 2</li>
+          </ul>
+        </div>
+        <div class="edge-score-col">
+          <div class="edge-score-col-title improve-title">
+            <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
+            Needs Improvement
+          </div>
+          <ul class="edge-list edge-list-improve">
+            <li><span class="bullet-dot"></span>Friday trading</li>
+            <li><span class="bullet-dot"></span>Gold (XAUUSD volatility)</li>
+            <li><span class="bullet-dot"></span>Afternoon trades</li>
+            <li><span class="bullet-dot"></span>Holding losers too long</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 8 — AI Insights
+  ══════════════════════════════════════════ -->
+  <section class="analytics-section">
+    <h2 class="section-heading">AI Insights</h2>
+    <p class="section-sub">Coach-style takeaways generated from your trading patterns.</p>
+    <div class="insights-grid">
+
+      <div class="insight-card">
+        <div class="insight-card-icon">
+          <svg viewBox="0 0 18 18"><path d="M9 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 8.2l1.8 1.8 3.2-3.6"/></svg>
+        </div>
+        <p class="insight-card-text">You perform <strong>42% better</strong> during the London session compared to your overall average. Consider weighting more setups toward London hours.</p>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-card-icon">
+          <svg viewBox="0 0 18 18"><polygon points="9,1.5 11,6.5 16.5,7 12.5,10.5 13.5,16 9,13 4.5,16 5.5,10.5 1.5,7 7,6.5"/></svg>
+        </div>
+        <p class="insight-card-text"><strong>EURUSD</strong> has generated <strong>40%</strong> of your total profits from just 22% of your trades — it's your clearest edge.</p>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-card-icon">
+          <svg viewBox="0 0 18 18"><path d="M9 2l7 12.5H2z"/><line x1="9" y1="7" x2="9" y2="10.5"/><circle cx="9" cy="12.5" r="0.8" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <p class="insight-card-text">Reducing <strong>Friday</strong> trades could significantly improve your expectancy — an estimated <strong>+15%</strong> lift.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<script src="analytics.js"></script>
+</body>
+</html>
