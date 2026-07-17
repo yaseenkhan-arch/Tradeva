@@ -1045,6 +1045,14 @@ function renderWeekly() {
     weeks[weekIdx].push(day);
   }
 
+  // If the final week is only a short tail (3 days or fewer), merge it into
+  // the previous week — so a "Week 5" card only appears when the month
+  // genuinely has a substantial 5th week.
+  if (weeks.length > 1 && weeks[weeks.length - 1].length <= 3) {
+    const tail = weeks.pop();
+    weeks[weeks.length - 1].push(...tail);
+  }
+
   const dayMap = buildDayMap(trades);
   container.innerHTML = weeks.map((days, i) => {
     let pnl = 0, rr = 0, count = 0, wins = 0;
