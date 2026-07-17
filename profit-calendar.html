@@ -1,1 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Profit Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
 
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR — identical to Dashboard
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; }
+
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Month nav group */
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.month-nav-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); cursor: pointer;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.month-nav-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); }
+.month-nav-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.month-label {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  min-width: 130px; text-align: center; transition: color var(--t) var(--ease);
+}
+.today-btn {
+  padding: 9px 16px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.today-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); }
+
+/* Toolbar row: filters trigger + export + report */
+.toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+  white-space: nowrap;
+}
+.btn-outline:hover { background: var(--border-light); color: var(--text-primary); border-color: var(--text-faint); transform: translateY(-1px); }
+.btn-outline svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 600; padding: 9px 16px;
+  border-radius: var(--radius-btn); border: none; cursor: pointer;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  white-space: nowrap; font-family: 'Inter', sans-serif;
+}
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-primary svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+.toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Filters drawer/bar */
+.filter-bar { display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.filter-bar.open { display: flex; }
+.select-wrap { position: relative; }
+.select-wrap select {
+  appearance: none; -webkit-appearance: none;
+  padding: 8px 30px 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-page); color: var(--text-primary); font-size: 12.5px; font-weight: 500;
+  font-family: 'Inter', sans-serif; cursor: pointer; outline: none;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.select-wrap select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.select-wrap::after { content: ''; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-faint); pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════
+   MONTH SUMMARY CARDS — identical to dashboard stat-card
+══════════════════════════════════════════════════════════ */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 18px 20px; box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-sub { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+/* Display mode segmented control */
+.mode-toggle-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; justify-content: flex-end; }
+.mode-toggle-label { font-size: 12px; color: var(--text-muted); font-weight: 500; transition: color var(--t) var(--ease); }
+.mode-toggle {
+  position: relative; display: inline-flex; background: var(--border-light);
+  border-radius: 10px; padding: 3px; gap: 2px; transition: background var(--t) var(--ease);
+}
+.mode-btn {
+  position: relative; z-index: 2; width: 40px; padding: 6px 0; text-align: center;
+  font-size: 13px; font-weight: 700; color: var(--text-muted); background: none; border: none;
+  cursor: pointer; border-radius: 7px; font-family: 'Inter', sans-serif;
+  transition: color var(--t) var(--ease);
+}
+.mode-btn.active { color: var(--accent); }
+.mode-indicator {
+  position: absolute; top: 3px; left: 3px; width: 40px; height: calc(100% - 6px);
+  background: var(--bg-card); border-radius: 7px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 260ms var(--ease); z-index: 1;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CALENDAR LAYOUT
+══════════════════════════════════════════════════════════ */
+.calendar-layout { display: grid; grid-template-columns: 1fr 260px; gap: 16px; align-items: start; }
+
+.calendar-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 20px; box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
+.weekday-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; padding-bottom: 4px; transition: color var(--t) var(--ease); }
+
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.day-cell {
+  position: relative; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg-card); padding: 10px 8px; min-height: 92px;
+  display: flex; flex-direction: column; cursor: pointer;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease), background var(--t) var(--ease), outline-color var(--t) var(--ease);
+  outline: 2px solid transparent; outline-offset: -2px;
+}
+.day-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); outline-color: var(--accent); }
+.day-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.day-cell.empty:hover { transform: none; box-shadow: none; outline-color: transparent; }
+.day-cell.no-trade { background: var(--bg-page); }
+.day-cell.win-day { background: var(--green-bg); border-color: var(--green-border); }
+.day-cell.loss-day { background: var(--red-bg); border-color: var(--red-border); }
+.day-cell.is-today { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.day-num { font-size: 12px; font-weight: 700; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.day-cell.win-day .day-num { color: var(--green); }
+.day-cell.loss-day .day-num { color: var(--red); }
+.day-primary { font-size: 15px; font-weight: 800; margin-top: 6px; color: var(--text-primary); letter-spacing: -0.2px; transition: color var(--t) var(--ease); }
+.day-cell.win-day .day-primary { color: var(--green); }
+.day-cell.loss-day .day-primary { color: var(--red); }
+.day-meta { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
+.day-trades { font-size: 10px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.day-winrate { font-size: 10px; font-weight: 600; color: var(--text-faint); transition: color var(--t) var(--ease); }
+
+/* ── Weekly summary sidebar ── */
+.weekly-sidebar { display: flex; flex-direction: column; gap: 12px; }
+.week-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 14px 16px; box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.week-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.week-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 10px; transition: color var(--t) var(--ease); }
+.week-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.week-row:last-child { margin-bottom: 0; }
+.week-row-label { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.week-row-value { font-size: 12.5px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.week-row-value.green { color: var(--green); }
+.week-row-value.red { color: var(--red); }
+
+/* ══════════════════════════════════════════════════════════
+   DAY DETAIL DRAWER
+══════════════════════════════════════════════════════════ */
+.drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; opacity: 0; transition: opacity var(--t) var(--ease); }
+.drawer-overlay.open { display: block; opacity: 1; }
+.day-drawer {
+  position: fixed; top: 0; right: 0; height: 100vh; width: 400px; max-width: 92vw;
+  background: var(--bg-card); border-left: 1px solid var(--border);
+  z-index: 301; transform: translateX(100%);
+  transition: transform 280ms var(--ease), background var(--t) var(--ease), border-color var(--t) var(--ease);
+  display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,0.15);
+}
+.day-drawer.open { transform: translateX(0); }
+.drawer-header { padding: 22px 22px 18px; border-bottom: 1px solid var(--border-light); display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.drawer-date { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-outcome-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; display: inline-block; }
+.drawer-close-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-page); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.drawer-close-btn:hover { background: var(--border-light); transform: rotate(90deg); }
+.drawer-close-btn svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px 22px 32px; }
+
+.drawer-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.drawer-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.drawer-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.drawer-stat-value { font-size: 16px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-stat-value.green { color: var(--green); }
+.drawer-stat-value.red { color: var(--red); }
+
+.drawer-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 18px 0 10px; transition: color var(--t) var(--ease); }
+.drawer-section-title:first-child { margin-top: 0; }
+
+.drawer-trade-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.drawer-trade-left { display: flex; flex-direction: column; gap: 2px; }
+.drawer-trade-pair { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-trade-dir { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 5px; width: fit-content; }
+.drawer-trade-right { display: flex; align-items: center; gap: 10px; }
+.drawer-trade-pnl { font-size: 13px; font-weight: 700; }
+.view-trade-link {
+  font-size: 11px; font-weight: 600; color: var(--accent); text-decoration: none;
+  padding: 4px 9px; border-radius: 7px; border: 1px solid var(--border);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+  white-space: nowrap;
+}
+.view-trade-link:hover { background: var(--accent-bg); border-color: var(--accent); }
+
+.drawer-notes-box {
+  background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px; font-size: 13px; color: var(--text-primary); line-height: 1.6;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+.drawer-notes-empty { color: var(--text-faint); font-style: italic; }
+.drawer-empty-state { text-align: center; padding: 40px 10px; color: var(--text-faint); font-size: 13px; }
+
+/* ══════════════════════════════════════════════════════════
+   MONTHLY REPORT MODAL
+══════════════════════════════════════════════════════════ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--t) var(--ease); padding: 20px; }
+.modal-overlay.open { display: flex; opacity: 1; }
+.report-modal-box {
+  background: var(--bg-card); border-radius: var(--radius-card); max-width: 460px; width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3); transform: scale(0.95);
+  transition: transform var(--t) var(--ease), background var(--t) var(--ease);
+  overflow: hidden;
+}
+.modal-overlay.open .report-modal-box { transform: scale(1); }
+.report-modal-close {
+  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.06); border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 2; transition: background var(--t) var(--ease);
+}
+.report-modal-close:hover { background: rgba(0,0,0,0.12); }
+.report-modal-close svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.report-card { padding: 28px; position: relative; background: var(--bg-card); transition: background var(--t) var(--ease); }
+.report-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.report-brand-icon { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+.report-brand-icon svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.report-brand-name { font-size: 14px; font-weight: 800; letter-spacing: 0.02em; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-month { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 14px 0 18px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.report-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.report-stat-value { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-stat-value.green { color: var(--green); }
+.report-stat-value.red { color: var(--red); }
+
+.report-highlight-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.report-highlight { flex: 1; border-radius: 12px; padding: 12px 14px; }
+.report-highlight.best { background: var(--green-bg); border: 1px solid var(--green-border); }
+.report-highlight.worst { background: var(--red-bg); border: 1px solid var(--red-border); }
+.report-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.report-highlight.best .report-highlight-label { color: var(--green); }
+.report-highlight.worst .report-highlight-label { color: var(--red); }
+.report-highlight-value { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+
+.report-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 10px; color: var(--text-faint); transition: border-color var(--t) var(--ease), color var(--t) var(--ease); }
+
+.report-download-btn {
+  width: 100%; padding: 13px; border: none; background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background var(--t) var(--ease);
+}
+.report-download-btn:hover { background: var(--accent-hover); }
+.report-download-btn svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════════ */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+@media (max-width: 1100px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+  .weekly-sidebar { grid-template-columns: repeat(4, 1fr); display: grid; }
+}
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .weekly-sidebar { grid-template-columns: repeat(2, 1fr); }
+  .day-cell { min-height: 72px; padding: 7px 6px; border-radius: 9px; }
+  .day-num { font-size: 10.5px; }
+  .day-primary { font-size: 12px; margin-top: 4px; }
+  .day-trades, .day-winrate { font-size: 8.5px; }
+  .calendar-grid, .weekday-row { gap: 5px; }
+  .month-label { min-width: 100px; font-size: 13px; }
+  .toolbar-row { flex-direction: column; align-items: stretch; }
+  .toolbar-left, .toolbar-right { justify-content: space-between; }
+  .day-drawer { width: 100%; max-width: 100%; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .weekly-sidebar { grid-template-columns: 1fr 1fr; }
+  .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
+  .report-grid { grid-template-columns: 1fr 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Profit Calendar</h1>
+        <p class="page-subtitle">Review your daily trading performance and consistency.</p>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="changeMonth(-1)" title="Previous Month">
+        <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
+      </button>
+      <span class="month-label" id="monthLabel">June 2026</span>
+      <button class="month-nav-btn" onclick="changeMonth(1)" title="Next Month">
+        <svg viewBox="0 0 14 14"><polyline points="5,2 10,7 5,12"/></svg>
+      </button>
+      <button class="today-btn" onclick="goToToday()">Today</button>
+    </div>
+  </div>
+
+  <!-- Toolbar: Filters / Export / Report -->
+  <div class="toolbar-row">
+    <div class="toolbar-left">
+      <button class="btn-outline" onclick="toggleFilters()">
+        <svg viewBox="0 0 16 16"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/><circle cx="6" cy="4" r="1.6" fill="var(--bg-card)" stroke="currentColor"/><circle cx="10" cy="8" r="1.6" fill="var(--bg-card)" stroke="currentColor"/><circle cx="5" cy="12" r="1.6" fill="var(--bg-card)" stroke="currentColor"/></svg>
+        Filters
+      </button>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn-outline" onclick="exportPNG()">
+        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.2"/><polyline points="1.5,11 5.5,7.5 8,9.5 10.5,7 14.5,10.5"/></svg>
+        PNG
+      </button>
+      <button class="btn-outline" onclick="exportPDF()">
+        <svg viewBox="0 0 16 16"><path d="M4 1.5h6l3 3v10a1 1 0 01-1 1H4a1 1 0 01-1-1v-12a1 1 0 011-1z"/><path d="M10 1.5V5h3"/></svg>
+        PDF
+      </button>
+      <button class="btn-outline" onclick="exportCSV()">
+        <svg viewBox="0 0 16 16"><path d="M4 1.5h6l3 3v10a1 1 0 01-1 1H4a1 1 0 01-1-1v-12a1 1 0 011-1z"/><path d="M10 1.5V5h3"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="5" y1="11.5" x2="11" y2="11.5"/></svg>
+        CSV
+      </button>
+      <button class="btn-primary" onclick="openReportModal()">
+        <svg viewBox="0 0 15 15"><rect x="1.5" y="1.5" width="12" height="12" rx="2"/><path d="M4.5 8l2 2 4-4.5"/></svg>
+        Monthly Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Bar (collapsible) -->
+  <div class="filter-bar" id="filterBar">
+    <div class="select-wrap"><select id="fMonth" onchange="onMonthYearSelect()"></select></div>
+    <div class="select-wrap"><select id="fYear" onchange="onMonthYearSelect()"></select></div>
+    <div class="select-wrap"><select id="fAccount" onchange="renderAll()"><option>All Accounts</option><option>Main Account</option><option>Funded Account</option></select></div>
+    <div class="select-wrap"><select id="fPropFirm" onchange="renderAll()"><option>All Prop Firms</option><option>FTMO</option><option>MyForexFunds</option><option>None</option></select></div>
+    <div class="select-wrap"><select id="fBroker" onchange="renderAll()"><option>All Brokers</option><option>IC Markets</option><option>Pepperstone</option></select></div>
+    <div class="select-wrap"><select id="fSession" onchange="renderAll()"><option>All Sessions</option><option>Asia</option><option>London</option><option>New York</option><option>Overlap</option></select></div>
+    <div class="select-wrap"><select id="fPair" onchange="renderAll()"><option>All Pairs</option><option>EURUSD</option><option>GBPJPY</option><option>XAUUSD</option><option>GBPUSD</option><option>USDCAD</option><option>USDCHF</option></select></div>
+    <div class="select-wrap"><select id="fStrategy" onchange="renderAll()"><option>All Strategies</option><option>Trend Following</option><option>Reversal</option><option>Breakout</option><option>Retest / Reentry</option></select></div>
+    <div class="select-wrap"><select id="fTags" onchange="renderAll()"><option>All Tags</option><option>High Conviction</option><option>News Play</option><option>A+ Setup</option></select></div>
+  </div>
+
+  <!-- Month Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Net Profit</div>
+      <div class="stat-value" id="statNetProfit">—</div>
+      <div class="stat-sub" id="statNetProfitSub">this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net RR</div>
+      <div class="stat-value" id="statNetRR">—</div>
+      <div class="stat-sub">cumulative RR earned</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-value" id="statWinRate">—</div>
+      <div class="stat-sub" id="statWinRateSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Winning Days</div>
+      <div class="stat-value green" id="statWinDays">—</div>
+      <div class="stat-sub">green days this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Losing Days</div>
+      <div class="stat-value red" id="statLossDays">—</div>
+      <div class="stat-sub">red days this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Trading Days</div>
+      <div class="stat-value" id="statTradingDays">—</div>
+      <div class="stat-sub">days with 1+ trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average RR</div>
+      <div class="stat-value" id="statAvgRR">—</div>
+      <div class="stat-sub">per trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Daily Profit</div>
+      <div class="stat-value" id="statAvgDaily">—</div>
+      <div class="stat-sub">on trading days</div>
+    </div>
+  </div>
+
+  <!-- Display Mode Toggle -->
+  <div class="mode-toggle-wrap">
+    <span class="mode-toggle-label">Display as:</span>
+    <div class="mode-toggle">
+      <div class="mode-indicator" id="modeIndicator"></div>
+      <button class="mode-btn active" data-mode="dollar" onclick="setMode('dollar')">$</button>
+      <button class="mode-btn" data-mode="rr" onclick="setMode('rr')">R</button>
+      <button class="mode-btn" data-mode="percent" onclick="setMode('percent')">%</button>
+    </div>
+  </div>
+
+  <!-- Calendar + Weekly Sidebar -->
+  <div class="calendar-layout">
+    <div class="calendar-card" id="calendarCard">
+      <div class="weekday-row">
+        <div class="weekday-label">Mon</div>
+        <div class="weekday-label">Tue</div>
+        <div class="weekday-label">Wed</div>
+        <div class="weekday-label">Thu</div>
+        <div class="weekday-label">Fri</div>
+        <div class="weekday-label">Sat</div>
+        <div class="weekday-label">Sun</div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <div class="weekly-sidebar" id="weeklySidebar"></div>
+  </div>
+
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<!-- Day Detail Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="day-drawer" id="dayDrawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-date" id="drawerDate">—</div>
+      <span class="drawer-outcome-badge" id="drawerOutcomeBadge"></span>
+    </div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">
+      <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- Monthly Report Modal -->
+<div class="modal-overlay" id="reportModalOverlay" onclick="closeReportModalOutside(event)">
+  <div class="report-modal-box" id="reportModalBox">
+    <button class="report-modal-close" onclick="closeReportModal()">
+      <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+    </button>
+    <div class="report-card" id="reportCard">
+      <div class="report-brand">
+        <div class="report-brand-icon">
+          <svg viewBox="0 0 18 18"><polyline points="1,14 5,9 8,12 13,5 17,3"/></svg>
+        </div>
+        <span class="report-brand-name">TRADEVA</span>
+      </div>
+      <div class="report-month" id="reportMonth">June 2026</div>
+
+      <div class="report-grid">
+        <div class="report-stat">
+          <div class="report-stat-label">Net Profit</div>
+          <div class="report-stat-value green" id="reportNetProfit">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Net RR</div>
+          <div class="report-stat-value" id="reportNetRR">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Win Rate</div>
+          <div class="report-stat-value" id="reportWinRate">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Winning / Losing Days</div>
+          <div class="report-stat-value" id="reportDaysSplit">—</div>
+        </div>
+      </div>
+
+      <div class="report-highlight-row">
+        <div class="report-highlight best">
+          <div class="report-highlight-label">Best Day</div>
+          <div class="report-highlight-value" id="reportBestDay">—</div>
+        </div>
+        <div class="report-highlight worst">
+          <div class="report-highlight-label">Worst Day</div>
+          <div class="report-highlight-value" id="reportWorstDay">—</div>
+        </div>
+      </div>
+
+      <div class="report-footer">
+        <span>Generated by Tradeva</span>
+        <span id="reportGeneratedDate">—</span>
+      </div>
+    </div>
+    <button class="report-download-btn" onclick="downloadReportPNG()">
+      <svg viewBox="0 0 16 16"><path d="M8 1v9.5M4.5 7L8 10.5 11.5 7"/><path d="M2 12.5v1a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1"/></svg>
+      Download PNG
+    </button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — PROFIT-CALENDAR.JS
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+/* ── PROFILE ── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const lname = p.lname || '';
+  const account = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = account;
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DATA LAYER
+   Reads real trades from tradeva_trades localStorage.
+   CALENDAR_SAMPLE_TRADES below is the demo fallback shown
+   only when no real trades exist yet.
+══════════════════════════════════════════════════════════ */
+const ACCOUNT_BALANCE = 50000; // used for % mode — replace with real account equity when available
+
+const CALENDAR_SAMPLE_TRADES = [
+  { id: 1,  rawDate: '2026-06-02', date: 'Jun 2, 2026',  pair: 'EURUSD', dir: 'Long',  rr: 2.0, pnl: 800,   outcome: 'Win',  session: 'London',   notes: 'Clean trend continuation off H4 demand.' },
+  { id: 2,  rawDate: '2026-06-03', date: 'Jun 3, 2026',  pair: 'GBPJPY', dir: 'Short', rr: 1.4, pnl: 420,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 3,  rawDate: '2026-06-03', date: 'Jun 3, 2026',  pair: 'XAUUSD', dir: 'Long',  rr: -1,  pnl: -260,  outcome: 'Loss', session: 'New York', notes: 'Chased entry. Rushed it.' },
+  { id: 4,  rawDate: '2026-06-05', date: 'Jun 5, 2026',  pair: 'XAUUSD', dir: 'Short', rr: 2.8, pnl: 1750,  outcome: 'Win',  session: 'New York', notes: 'A+ setup, patient entry at premium.' },
+  { id: 5,  rawDate: '2026-06-09', date: 'Jun 9, 2026',  pair: 'GBPUSD', dir: 'Long',  rr: -1,  pnl: -340,  outcome: 'Loss', session: 'London',   notes: '' },
+  { id: 6,  rawDate: '2026-06-09', date: 'Jun 9, 2026',  pair: 'EURUSD', dir: 'Long',  rr: -0.6, pnl: -180, outcome: 'Loss', session: 'London',   notes: 'Two losses — stopped for the day.' },
+  { id: 7,  rawDate: '2026-06-10', date: 'Jun 10, 2026', pair: 'GBPUSD', dir: 'Short', rr: 2.5, pnl: 750,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 8,  rawDate: '2026-06-12', date: 'Jun 12, 2026', pair: 'USDCAD', dir: 'Long',  rr: 1.8, pnl: 540,   outcome: 'Win',  session: 'New York', notes: '' },
+  { id: 9,  rawDate: '2026-06-16', date: 'Jun 16, 2026', pair: 'XAUUSD', dir: 'Long',  rr: 2.6, pnl: 2250,  outcome: 'Win',  session: 'New York', notes: 'NFP momentum. Best trade this month.' },
+  { id: 10, rawDate: '2026-06-18', date: 'Jun 18, 2026', pair: 'GBPJPY', dir: 'Long',  rr: 1.6, pnl: 560,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 11, rawDate: '2026-06-19', date: 'Jun 19, 2026', pair: 'EURUSD', dir: 'Short', rr: -1,  pnl: -290,  outcome: 'Loss', session: 'Overlap',  notes: 'Friday chop. Should have skipped.' },
+  { id: 12, rawDate: '2026-06-20', date: 'Jun 20, 2026', pair: 'EURUSD', dir: 'Short', rr: 2.2, pnl: 800,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 13, rawDate: '2026-06-23', date: 'Jun 23, 2026', pair: 'USDCHF', dir: 'Short', rr: 2.0, pnl: 620,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 14, rawDate: '2026-06-24', date: 'Jun 24, 2026', pair: 'XAUUSD', dir: 'Short', rr: 1.2, pnl: 380,   outcome: 'Win',  session: 'New York', notes: '' },
+  { id: 15, rawDate: '2026-06-26', date: 'Jun 26, 2026', pair: 'GBPUSD', dir: 'Long',  rr: -1,  pnl: -420,  outcome: 'Loss', session: 'London',   notes: '' },
+  { id: 16, rawDate: '2026-06-30', date: 'Jun 30, 2026', pair: 'USDCHF', dir: 'Short', rr: 2.0, pnl: 980,   outcome: 'Win',  session: 'London',   notes: 'Strong close to the month.' },
+];
+
+function getAllTrades() {
+  const stored = localStorage.getItem('tradeva_trades');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    } catch (e) {}
+  }
+  return CALENDAR_SAMPLE_TRADES;
+}
+
+/* Parse a trade's date into a Date object.
+   Handles both rawDate (yyyy-mm-dd, from trades-new.html) and
+   display date strings like "Jun 20, 2026". */
+function parseTradeDate(t) {
+  if (t.rawDate) {
+    const d = new Date(t.rawDate + 'T00:00:00');
+    if (!isNaN(d)) return d;
+  }
+  if (t.date) {
+    const d = new Date(t.date);
+    if (!isNaN(d)) return d;
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let viewYear = 2026;
+let viewMonth = 5; // 0-indexed: June 2026 default (sample data month)
+let displayMode = 'dollar'; // 'dollar' | 'rr' | 'percent'
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* Initialize view to current month if user has real trades this month,
+   otherwise default to the sample-data month so the page never looks empty. */
+function initViewDate() {
+  const now = new Date();
+  const trades = getAllTrades();
+  const hasThisMonth = trades.some(t => {
+    const d = parseTradeDate(t);
+    return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  if (hasThisMonth || trades !== CALENDAR_SAMPLE_TRADES) {
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   AGGREGATION
+══════════════════════════════════════════════════════════ */
+function getMonthTrades() {
+  const pairFilter = document.getElementById('fPair').value;
+  const sessionFilter = document.getElementById('fSession').value;
+  let trades = getAllTrades().filter(t => {
+    const d = parseTradeDate(t);
+    return d && d.getFullYear() === viewYear && d.getMonth() === viewMonth;
+  });
+  if (pairFilter && !pairFilter.startsWith('All')) trades = trades.filter(t => t.pair === pairFilter);
+  if (sessionFilter && !sessionFilter.startsWith('All')) trades = trades.filter(t => (t.session || '').includes(sessionFilter));
+  return trades;
+}
+
+function buildDayMap(trades) {
+  const map = {};
+  trades.forEach(t => {
+    const d = parseTradeDate(t);
+    if (!d) return;
+    const day = d.getDate();
+    if (!map[day]) map[day] = { trades: [], pnl: 0, rr: 0, wins: 0 };
+    map[day].trades.push(t);
+    map[day].pnl += t.pnl || 0;
+    map[day].rr += t.rr || 0;
+    if ((t.pnl || 0) > 0) map[day].wins++;
+  });
+  return map;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORMATTERS
+══════════════════════════════════════════════════════════ */
+const fmtMoney = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const fmtMoneyFull = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtRR = v => (v >= 0 ? '+' : '') + v.toFixed(1) + 'R';
+const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
+
+function primaryValue(pnl, rr) {
+  if (displayMode === 'rr') return fmtRR(rr);
+  if (displayMode === 'percent') return fmtPct(pnl);
+  return fmtMoney(pnl);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — SUMMARY CARDS
+══════════════════════════════════════════════════════════ */
+function renderSummary() {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const days = Object.values(dayMap);
+
+  const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
+  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
+  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const winDays = days.filter(d => d.pnl > 0).length;
+  const lossDays = days.filter(d => d.pnl < 0).length;
+  const tradingDays = days.length;
+  const avgRR = trades.length ? netRR / trades.length : 0;
+  const avgDaily = tradingDays ? netProfit / tradingDays : 0;
+
+  const npEl = document.getElementById('statNetProfit');
+  npEl.textContent = primaryValue(netProfit, netRR);
+  npEl.className = 'stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+
+  document.getElementById('statNetRR').textContent = fmtRR(netRR);
+  document.getElementById('statWinRate').textContent = winRate + '%';
+  document.getElementById('statWinRateSub').textContent = wins + ' wins · ' + (trades.length - wins) + ' losses';
+  document.getElementById('statWinDays').textContent = winDays;
+  document.getElementById('statLossDays').textContent = lossDays;
+  document.getElementById('statTradingDays').textContent = tradingDays;
+  document.getElementById('statAvgRR').textContent = fmtRR(avgRR);
+
+  const adEl = document.getElementById('statAvgDaily');
+  adEl.textContent = displayMode === 'percent' ? fmtPct(avgDaily) : displayMode === 'rr' ? fmtRR(tradingDays ? netRR / tradingDays : 0) : fmtMoney(avgDaily);
+  adEl.className = 'stat-value ' + (avgDaily >= 0 ? 'green' : 'red');
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — CALENDAR GRID (Monday-start)
+══════════════════════════════════════════════════════════ */
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+
+  document.getElementById('monthLabel').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  let startOffset = firstOfMonth.getDay() - 1; // Monday-start
+  if (startOffset < 0) startOffset = 6;
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
+
+  let cells = '';
+  for (let i = 0; i < startOffset; i++) cells += '<div class="day-cell empty"></div>';
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const data = dayMap[day];
+    const isToday = isCurrentMonth && today.getDate() === day;
+    let cls = 'day-cell no-trade';
+    let inner = `<span class="day-num">${day}</span>`;
+
+    if (data) {
+      const isWin = data.pnl > 0;
+      const isLoss = data.pnl < 0;
+      cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'no-trade');
+      const winRate = Math.round(data.wins / data.trades.length * 100);
+      inner = `
+        <span class="day-num">${day}</span>
+        <span class="day-primary">${primaryValue(data.pnl, data.rr)}</span>
+        <div class="day-meta">
+          <span class="day-trades">${data.trades.length} Trade${data.trades.length > 1 ? 's' : ''}</span>
+          <span class="day-winrate">${winRate}%</span>
+        </div>`;
+    }
+    if (isToday) cls += ' is-today';
+    cells += `<div class="${cls}" onclick="openDrawer(${day})" title="${MONTH_NAMES[viewMonth]} ${day}">${inner}</div>`;
+  }
+  grid.innerHTML = cells;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — WEEKLY SUMMARY
+══════════════════════════════════════════════════════════ */
+function renderWeekly() {
+  const container = document.getElementById('weeklySidebar');
+  const trades = getMonthTrades();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  let startOffset = firstOfMonth.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+
+  // Group days into calendar weeks (Monday-start rows)
+  const weeks = [];
+  let weekIdx = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cellIndex = startOffset + day - 1;
+    weekIdx = Math.floor(cellIndex / 7);
+    if (!weeks[weekIdx]) weeks[weekIdx] = [];
+    weeks[weekIdx].push(day);
+  }
+
+  const dayMap = buildDayMap(trades);
+  container.innerHTML = weeks.map((days, i) => {
+    let pnl = 0, rr = 0, count = 0, wins = 0;
+    days.forEach(d => {
+      const data = dayMap[d];
+      if (data) { pnl += data.pnl; rr += data.rr; count += data.trades.length; wins += data.wins; }
+    });
+    const winRate = count ? Math.round(wins / count * 100) : 0;
+    const pnlCls = pnl > 0 ? 'green' : pnl < 0 ? 'red' : '';
+    return `<div class="week-card">
+      <div class="week-title">Week ${i + 1}</div>
+      <div class="week-row"><span class="week-row-label">Profit</span><span class="week-row-value ${pnlCls}">${count ? primaryValue(pnl, rr) : '—'}</span></div>
+      <div class="week-row"><span class="week-row-label">RR</span><span class="week-row-value">${count ? fmtRR(rr) : '—'}</span></div>
+      <div class="week-row"><span class="week-row-label">Trades</span><span class="week-row-value">${count}</span></div>
+      <div class="week-row"><span class="week-row-label">Win Rate</span><span class="week-row-value">${count ? winRate + '%' : '—'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   DAY DRAWER
+══════════════════════════════════════════════════════════ */
+function openDrawer(day) {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const data = dayMap[day];
+
+  const dateStr = MONTH_NAMES[viewMonth] + ' ' + day + ', ' + viewYear;
+  document.getElementById('drawerDate').textContent = dateStr;
+
+  const badge = document.getElementById('drawerOutcomeBadge');
+  const body = document.getElementById('drawerBody');
+
+  if (!data) {
+    badge.style.display = 'none';
+    body.innerHTML = '<div class="drawer-empty-state">No trades on this day.<br>Rest days are part of the edge too. 🧘</div>';
+  } else {
+    const isWin = data.pnl > 0;
+    badge.style.display = 'inline-block';
+    badge.textContent = isWin ? 'Profitable Day' : data.pnl < 0 ? 'Losing Day' : 'Breakeven Day';
+    badge.style.background = isWin ? 'var(--green-bg)' : 'var(--red-bg)';
+    badge.style.color = isWin ? 'var(--green)' : 'var(--red)';
+
+    const winRate = Math.round(data.wins / data.trades.length * 100);
+    const avgRR = data.rr / data.trades.length;
+    const holdTimes = data.trades.map(t => t.timeInPos).filter(Boolean);
+
+    const tradeRows = data.trades.map(t => {
+      const isLong = t.dir === 'Long';
+      const pos = (t.pnl || 0) >= 0;
+      return `<div class="drawer-trade-row">
+        <div class="drawer-trade-left">
+          <span class="drawer-trade-pair">${t.pair}</span>
+          <span class="drawer-trade-dir" style="background:${isLong ? 'var(--green-bg)' : 'var(--red-bg)'};color:${isLong ? 'var(--green)' : 'var(--red)'};">${t.dir}</span>
+        </div>
+        <div class="drawer-trade-right">
+          <span class="drawer-trade-pnl" style="color:${pos ? 'var(--green)' : 'var(--red)'};">${fmtMoneyFull(t.pnl || 0)}</span>
+          <a class="view-trade-link" href="trade-detail.html?id=${t.id}">View Trade</a>
+        </div>
+      </div>`;
+    }).join('');
+
+    const notes = data.trades.map(t => t.notes).filter(Boolean);
+
+    body.innerHTML = `
+      <div class="drawer-stats-grid">
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily Profit</div>
+          <div class="drawer-stat-value ${data.pnl >= 0 ? 'green' : 'red'}">${fmtMoney(data.pnl)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily RR</div>
+          <div class="drawer-stat-value">${fmtRR(data.rr)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily %</div>
+          <div class="drawer-stat-value ${data.pnl >= 0 ? 'green' : 'red'}">${fmtPct(data.pnl)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Trades Taken</div>
+          <div class="drawer-stat-value">${data.trades.length}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Average RR</div>
+          <div class="drawer-stat-value">${fmtRR(avgRR)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Avg Hold Time</div>
+          <div class="drawer-stat-value" style="font-size:14px;">${holdTimes.length ? holdTimes[0] : '—'}</div>
+        </div>
+      </div>
+
+      <div class="drawer-section-title">Trades (${data.trades.length})</div>
+      ${tradeRows}
+
+      <div class="drawer-section-title">Trading Notes</div>
+      <div class="drawer-notes-box">${notes.length ? notes.map(n => '• ' + n).join('<br>') : '<span class="drawer-notes-empty">No notes recorded for this day.</span>'}</div>
+    `;
+  }
+
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('dayDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('dayDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODE TOGGLE
+══════════════════════════════════════════════════════════ */
+function setMode(mode) {
+  displayMode = mode;
+  const order = { dollar: 0, rr: 1, percent: 2 };
+  document.getElementById('modeIndicator').style.transform = `translateX(${order[mode] * 42}px)`;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  renderAll();
+}
+
+/* ══════════════════════════════════════════════════════════
+   MONTH NAVIGATION + FILTERS
+══════════════════════════════════════════════════════════ */
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  syncMonthYearSelects();
+  renderAll();
+}
+function goToToday() {
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  syncMonthYearSelects();
+  renderAll();
+}
+function toggleFilters() {
+  document.getElementById('filterBar').classList.toggle('open');
+}
+function populateMonthYearSelects() {
+  const mSel = document.getElementById('fMonth');
+  const ySel = document.getElementById('fYear');
+  mSel.innerHTML = MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+  let years = '';
+  for (let y = 2024; y <= 2028; y++) years += `<option value="${y}">${y}</option>`;
+  ySel.innerHTML = years;
+  syncMonthYearSelects();
+}
+function syncMonthYearSelects() {
+  document.getElementById('fMonth').value = viewMonth;
+  document.getElementById('fYear').value = viewYear;
+}
+function onMonthYearSelect() {
+  viewMonth = parseInt(document.getElementById('fMonth').value, 10);
+  viewYear = parseInt(document.getElementById('fYear').value, 10);
+  renderAll();
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPORTS
+══════════════════════════════════════════════════════════ */
+async function exportPNG() {
+  const card = document.getElementById('calendarCard');
+  try {
+    const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const link = document.createElement('a');
+    link.download = `tradeva-calendar-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) { alert('Could not export PNG. Please try again.'); }
+}
+async function exportPDF() {
+  const card = document.getElementById('calendarCard');
+  try {
+    const canvas = await html2canvas(card, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+    pdf.save(`tradeva-calendar-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.pdf`);
+  } catch (e) { alert('Could not export PDF. Please try again.'); }
+}
+function exportCSV() {
+  const trades = getMonthTrades();
+  if (!trades.length) { alert('No trades to export for this month.'); return; }
+  const header = 'Date,Pair,Direction,Session,RR,PnL,Outcome\n';
+  const rows = trades.map(t => [t.date || t.rawDate, t.pair, t.dir, t.session || '', t.rr || 0, t.pnl || 0, t.outcome || ''].join(',')).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.download = `tradeva-trades-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.csv`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/* ══════════════════════════════════════════════════════════
+   MONTHLY REPORT MODAL
+══════════════════════════════════════════════════════════ */
+function openReportModal() {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const days = Object.entries(dayMap);
+
+  const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
+  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
+  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const winDays = days.filter(([, d]) => d.pnl > 0).length;
+  const lossDays = days.filter(([, d]) => d.pnl < 0).length;
+
+  let bestDay = null, worstDay = null;
+  days.forEach(([day, d]) => {
+    if (!bestDay || d.pnl > bestDay.pnl) bestDay = { day, pnl: d.pnl };
+    if (!worstDay || d.pnl < worstDay.pnl) worstDay = { day, pnl: d.pnl };
+  });
+
+  document.getElementById('reportMonth').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+  const rp = document.getElementById('reportNetProfit');
+  rp.textContent = fmtMoney(netProfit);
+  rp.className = 'report-stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+  document.getElementById('reportNetRR').textContent = fmtRR(netRR);
+  document.getElementById('reportWinRate').textContent = winRate + '%';
+  document.getElementById('reportDaysSplit').textContent = winDays + ' / ' + lossDays;
+  document.getElementById('reportBestDay').textContent = bestDay ? MONTH_NAMES[viewMonth].slice(0,3) + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—';
+  document.getElementById('reportWorstDay').textContent = worstDay ? MONTH_NAMES[viewMonth].slice(0,3) + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—';
+  document.getElementById('reportGeneratedDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  document.getElementById('reportModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReportModal() {
+  document.getElementById('reportModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeReportModalOutside(e) {
+  if (e.target === document.getElementById('reportModalOverlay')) closeReportModal();
+}
+async function downloadReportPNG() {
+  const card = document.getElementById('reportCard');
+  try {
+    const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const link = document.createElement('a');
+    link.download = `tradeva-report-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) { alert('Could not generate the report image. Please try again.'); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MASTER RENDER + INIT
+══════════════════════════════════════════════════════════ */
+function renderAll() {
+  renderSummary();
+  renderCalendar();
+  renderWeekly();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  initViewDate();
+  populateMonthYearSelects();
+  renderAll();
+});
+
+</script>
+</body>
+</html>
