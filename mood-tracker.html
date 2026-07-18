@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Mood Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --amber:        #F59E0B;
+  --amber-bg:     #FFFBEB;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --amber-bg:     #1E1503;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR — identical to Dashboard
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; max-width: 1160px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; max-width: 640px; line-height: 1.55; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* ══════════════════════════════════════════════════════════
+   STAT CARDS (reused)
+══════════════════════════════════════════════════════════ */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; display: flex; align-items: center; gap: 6px; transition: color var(--t) var(--ease); }
+.stat-value .stat-emoji { font-size: 22px; }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; transition: color var(--t) var(--ease); }
+.trend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   TWO-COLUMN LAYOUT
+══════════════════════════════════════════════════════════ */
+.mood-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+.mood-col { display: flex; flex-direction: column; gap: 16px; }
+
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-head { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.card-head-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-head-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.card-head-date { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   MOOD CATEGORY / EMOJI CARDS
+══════════════════════════════════════════════════════════ */
+.mood-category { margin-bottom: 22px; }
+.mood-category:last-of-type { margin-bottom: 0; }
+.mood-category-label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; transition: color var(--t) var(--ease); }
+.mood-category-label .cat-emoji { font-size: 16px; }
+.mood-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.mood-option {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 14px 6px; border-radius: 13px;
+  border: 1.5px solid var(--border); background: var(--bg-page);
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all var(--t) var(--ease); user-select: none; position: relative;
+}
+.mood-option:hover { transform: translateY(-3px); border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.mood-emoji { font-size: 26px; line-height: 1; transition: transform var(--t) var(--ease); }
+.mood-option:hover .mood-emoji { transform: scale(1.18); }
+.mood-name { font-size: 10px; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2; transition: color var(--t) var(--ease); }
+.mood-option.selected {
+  border-width: 2px; border-color: var(--accent); background: var(--accent-bg);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12), 0 4px 12px rgba(59,130,246,0.15);
+}
+.mood-option.selected .mood-name { color: var(--accent); font-weight: 700; }
+.mood-option.selected .mood-emoji { transform: scale(1.1); }
+
+/* ── Notes ── */
+.form-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: block; transition: color var(--t) var(--ease); }
+textarea {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-page); color: var(--text-primary);
+  font-size: 13px; font-family: 'Inter', sans-serif; line-height: 1.6;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
+  outline: none; width: 100%; resize: vertical; min-height: 110px;
+}
+textarea::placeholder { color: var(--text-faint); }
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
+
+input[type="date"] {
+  padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-page); color: var(--text-primary); font-size: 13px;
+  font-family: 'Inter', sans-serif; outline: none; width: 100%;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
+}
+input[type="date"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
+
+/* ── Save button ── */
+.save-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-btn); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease), opacity var(--t) var(--ease); margin-top: 20px; }
+.save-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.save-btn:disabled { opacity: 0.75; cursor: default; }
+.save-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════
+   RIGHT COLUMN — SUMMARY / BALANCE / AI
+══════════════════════════════════════════════════════════ */
+.summary-bars { display: flex; flex-direction: column; gap: 14px; }
+.summary-bar-row { }
+.summary-bar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.summary-bar-label { font-size: 12px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; transition: color var(--t) var(--ease); }
+.summary-bar-label .bar-emoji { font-size: 14px; }
+.summary-bar-score { font-size: 12px; font-weight: 700; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.summary-bar-track { height: 8px; border-radius: 10px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.summary-bar-fill { height: 100%; border-radius: 10px; transition: width 700ms var(--ease); }
+.summary-empty { text-align: center; padding: 20px 10px; color: var(--text-faint); font-size: 12.5px; line-height: 1.5; }
+
+/* Emotional balance ring */
+.balance-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.balance-ring-wrap { position: relative; width: 150px; height: 150px; margin-bottom: 12px; }
+.balance-ring { width: 150px; height: 150px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--border-light); stroke-width: 11; transition: stroke var(--t) var(--ease); }
+.ring-fg { fill: none; stroke: var(--accent); stroke-width: 11; stroke-linecap: round; stroke-dasharray: 408.4; stroke-dashoffset: 408.4; transition: stroke-dashoffset 1s var(--ease), stroke var(--t) var(--ease); }
+.balance-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.balance-pct { font-size: 34px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; transition: color var(--t) var(--ease); }
+.balance-tier { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.balance-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; transition: color var(--t) var(--ease); }
+
+/* AI insight card */
+.ai-card { background: linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-card) 70%); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.ai-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ai-card-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59,130,246,0.35); flex-shrink: 0; }
+.ai-card-icon svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ai-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.soon-badge-inline { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); margin-left: auto; }
+.ai-card-text { font-size: 13px; line-height: 1.6; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   HISTORY + FILTERS
+══════════════════════════════════════════════════════════ */
+.section-heading { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 8px 0 4px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+.section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; transition: color var(--t) var(--ease); }
+.filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.filter-pill { padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.filter-pill:hover { border-color: var(--text-faint); color: var(--text-primary); transform: translateY(-1px); }
+.filter-pill.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+.entries-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.entry-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.entry-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.entry-top { display: flex; align-items: center; gap: 14px; }
+.entry-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; }
+.entry-main { flex: 1; min-width: 0; }
+.entry-date { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.entry-mood-name { font-size: 12.5px; color: var(--text-muted); margin-top: 1px; transition: color var(--t) var(--ease); }
+.entry-score-badge { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.entry-score-ring { width: 44px; height: 44px; transform: rotate(-90deg); }
+.entry-score-ring .ebg { fill: none; stroke: var(--border-light); stroke-width: 4; }
+.entry-score-ring .efg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.entry-score-wrap { position: relative; width: 44px; height: 44px; }
+.entry-score-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.entry-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light); font-size: 12.5px; color: var(--text-muted); line-height: 1.5; transition: color var(--t) var(--ease), border-color var(--t) var(--ease); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.entry-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.entry-action-btn { flex: 1; padding: 7px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-page); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.entry-action-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.entry-action-btn.primary { border-color: var(--accent); color: var(--accent); }
+.entry-action-btn.primary:hover { background: var(--accent-bg); }
+.entry-action-btn.danger:hover { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+.empty-state { text-align: center; padding: 48px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.empty-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.empty-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); max-width: 360px; margin: 0 auto; line-height: 1.5; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   MOOD ANALYTICS (coming soon placeholders)
+══════════════════════════════════════════════════════════ */
+.analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.analytics-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow-card); position: relative; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.analytics-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.analytics-card-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--border-light); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; transition: background var(--t) var(--ease); }
+.analytics-card-icon svg { width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.analytics-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.analytics-card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; transition: color var(--t) var(--ease); }
+.analytics-soon { position: absolute; top: 16px; right: 16px; font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); transition: background var(--t) var(--ease), color var(--t) var(--ease); }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0F172A; color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform var(--t) var(--ease), opacity var(--t) var(--ease); opacity: 0; z-index: 999; pointer-events: none; }
+[data-theme="dark"] .toast { background: #1A2540; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════════ */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+@media (max-width: 1000px) {
+  .mood-layout { grid-template-columns: 1fr; }
+  .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; max-width: 100%; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .entries-grid { grid-template-columns: 1fr; }
+  .analytics-grid { grid-template-columns: 1fr; }
+  .mood-scale { gap: 5px; }
+  .mood-option { padding: 11px 3px; border-radius: 10px; }
+  .mood-emoji { font-size: 22px; }
+  .mood-name { font-size: 8.5px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .mood-emoji { font-size: 19px; }
+  .mood-name { font-size: 7.5px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Mood Tracker</h1>
+        <p class="page-subtitle">Track your emotions, energy, and mental state before and after trading to discover how your mindset influences your trading performance.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary stat cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Average Mood</div>
+      <div class="stat-value" id="statAvgMood">—</div>
+      <div class="stat-sub" id="statAvgMoodSub">today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average Energy</div>
+      <div class="stat-value" id="statAvgEnergy">—</div>
+      <div class="stat-sub" id="statAvgEnergySub">today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Emotional Trend</div>
+      <div class="stat-value" id="statTrend" style="font-size:20px;">—</div>
+      <div class="stat-sub"><span class="trend-dot" id="trendDot" style="background:var(--text-faint);"></span><span id="statTrendSub">not enough data</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Current Streak</div>
+      <div class="stat-value" id="statStreak">0</div>
+      <div class="stat-sub">days logged</div>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="mood-layout">
+
+    <!-- LEFT — Today's Check-in -->
+    <div class="mood-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 9.5c.6.9 1.5 1.5 2.5 1.5s1.9-.6 2.5-1.5"/><line x1="5.8" y1="6" x2="6" y2="6"/><line x1="10" y1="6" x2="10.2" y2="6"/></svg></div>
+          <span class="card-head-title">Today's Mood Check-in</span>
+          <span class="card-head-date" id="todayLabel"></span>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label class="form-label">Date</label>
+          <input type="date" id="f-date" onchange="onDateChange()">
+        </div>
+
+        <div id="categoriesWrap"></div>
+
+        <div style="margin-top:22px;">
+          <label class="form-label">Notes</label>
+          <textarea id="f-note" placeholder="How are you feeling today? Is anything affecting your mindset or trading performance?"></textarea>
+        </div>
+
+        <button class="save-btn" id="saveBtn" onclick="saveEntry()">
+          <svg viewBox="0 0 16 16"><path d="M12.5 14.5h-9a2 2 0 01-2-2v-9a2 2 0 012-2h7l4 4v7a2 2 0 01-2 2z"/><path d="M11 14.5V9H5v5.5M5 1.5V5h5"/></svg>
+          <span id="saveBtnText">Save Today's Mood</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT — Insights -->
+    <div class="mood-col">
+      <!-- Emotional balance ring -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5v3.5l2.5 1.5"/></svg></div>
+          <span class="card-head-title">Emotional Balance</span>
+        </div>
+        <div class="balance-wrap">
+          <div class="balance-ring-wrap">
+            <svg class="balance-ring" viewBox="0 0 150 150">
+              <circle class="ring-bg" cx="75" cy="75" r="65"/>
+              <circle class="ring-fg" id="balanceRing" cx="75" cy="75" r="65"/>
+            </svg>
+            <div class="balance-label">
+              <div class="balance-pct" id="balancePct">—</div>
+              <div class="balance-tier" id="balanceTier"></div>
+            </div>
+          </div>
+          <div class="balance-desc" id="balanceDesc">Select your ratings to see today's overall emotional balance.</div>
+        </div>
+      </div>
+
+      <!-- Today's summary bars -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><svg viewBox="0 0 16 16"><rect x="1" y="9" width="3" height="6" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg></div>
+          <span class="card-head-title">Today's Emotional Summary</span>
+        </div>
+        <div id="summaryBars"></div>
+      </div>
+
+      <!-- AI insight coming soon -->
+      <div class="ai-card">
+        <div class="ai-card-top">
+          <div class="ai-card-icon"><svg viewBox="0 0 18 18"><path d="M9 1.5a2.5 2.5 0 012.5 2.5 2.5 2.5 0 012 4 2.5 2.5 0 01-1 4.5 2.5 2.5 0 01-3.5 1.5 2.5 2.5 0 01-3.5-1.5 2.5 2.5 0 01-1-4.5 2.5 2.5 0 012-4A2.5 2.5 0 019 1.5z"/><circle cx="9" cy="9" r="1.5"/></svg></div>
+          <span class="ai-card-title">AI Insight</span>
+          <span class="soon-badge-inline">Coming Soon</span>
+        </div>
+        <p class="ai-card-text">Tradeva AI will analyze your emotional patterns over time and show how your mindset affects your trading performance.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mood History -->
+  <h2 class="section-heading">Mood History</h2>
+  <p class="section-sub">Review how you've felt across your recent check-ins.</p>
+  <div class="filter-pills" id="filterPills">
+    <button class="filter-pill" data-range="today">Today</button>
+    <button class="filter-pill" data-range="7">7 Days</button>
+    <button class="filter-pill active" data-range="30">30 Days</button>
+    <button class="filter-pill" data-range="90">90 Days</button>
+    <button class="filter-pill" data-range="all">All Time</button>
+  </div>
+  <div id="entriesContainer"></div>
+
+  <!-- Mood Analytics (coming soon) -->
+  <h2 class="section-heading" style="margin-top:32px;">Mood Analytics</h2>
+  <p class="section-sub">Deeper emotional insights are on the way.</p>
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><polyline points="2,13 6,8 9,11 16,3"/></svg></div>
+      <div class="analytics-card-title">Mood Trend</div>
+      <div class="analytics-card-desc">See how your emotional baseline shifts week over week.</div>
+    </div>
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><path d="M2 14l4-4 3 3 6-7"/><path d="M11 6h4v4"/></svg></div>
+      <div class="analytics-card-title">Mood vs Profit</div>
+      <div class="analytics-card-desc">Discover how your feelings correlate with your P&L.</div>
+    </div>
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7"/><polyline points="9,5 9,9 12,11"/></svg></div>
+      <div class="analytics-card-title">Mood vs Win Rate</div>
+      <div class="analytics-card-desc">Find out which moods produce your best win rates.</div>
+    </div>
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><path d="M9 2a7 7 0 100 14A7 7 0 009 2z"/><path d="M9 6v3l2 2"/></svg></div>
+      <div class="analytics-card-title">Emotional Patterns</div>
+      <div class="analytics-card-desc">Spot recurring emotional cycles in your trading.</div>
+    </div>
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><polygon points="9,1.5 11,6.5 16.5,7 12.5,10.5 13.5,16 9,13 4.5,16 5.5,10.5 1.5,7 7,6.5"/></svg></div>
+      <div class="analytics-card-title">Best Trading Mood</div>
+      <div class="analytics-card-desc">Learn the emotional state that suits you best.</div>
+    </div>
+    <div class="analytics-card">
+      <span class="analytics-soon">Coming Soon</span>
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><path d="M14 10.5A6 6 0 015.5 4 6.5 6.5 0 1014 10.5z"/></svg></div>
+      <div class="analytics-card-title">Sleep vs Performance</div>
+      <div class="analytics-card-desc">Understand how rest quality drives your results.</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+  <span id="toastText">Mood saved!</span>
+</div>
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — MOOD TRACKER
+   Storage: localStorage key `tradeva_mood_entries` (array).
+   Strictly emotional — mood, energy, stress, confidence,
+   motivation, sleep + notes. No discipline / execution data.
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR / PROFILE ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const initials = (fname.charAt(0) + ((p.lname || '').charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = p.account || 'Pro Trader';
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CATEGORIES — 6 emotional dimensions, 1-5 emoji scale
+   (Stress is stored so that 5 = best/most relaxed, keeping
+    the balance math consistent: higher is always healthier.)
+══════════════════════════════════════════════════════════ */
+const CATEGORIES = [
+  { key: 'mood',        label: 'Mood',          catEmoji: '😊', color: '#3B82F6',
+    options: [ {s:1,e:'😞',n:'Very Bad'}, {s:2,e:'🙁',n:'Bad'}, {s:3,e:'😐',n:'Neutral'}, {s:4,e:'🙂',n:'Good'}, {s:5,e:'😁',n:'Excellent'} ] },
+  { key: 'energy',      label: 'Energy',        catEmoji: '⚡', color: '#F59E0B',
+    options: [ {s:1,e:'🔋',n:'Empty'}, {s:2,e:'🪫',n:'Low'}, {s:3,e:'🙂',n:'Normal'}, {s:4,e:'💪',n:'High'}, {s:5,e:'🚀',n:'Excellent'} ] },
+  { key: 'stress',      label: 'Stress',        catEmoji: '😌', color: '#10B981',
+    options: [ {s:5,e:'😌',n:'Very Relaxed'}, {s:4,e:'🙂',n:'Low'}, {s:3,e:'😐',n:'Moderate'}, {s:2,e:'😣',n:'High'}, {s:1,e:'😫',n:'Very High'} ] },
+  { key: 'confidence',  label: 'Confidence',    catEmoji: '😎', color: '#8B5CF6',
+    options: [ {s:1,e:'😬',n:'Very Low'}, {s:2,e:'😕',n:'Low'}, {s:3,e:'🙂',n:'Average'}, {s:4,e:'😎',n:'High'}, {s:5,e:'🦁',n:'Extremely High'} ] },
+  { key: 'motivation',  label: 'Motivation',    catEmoji: '🚀', color: '#EC4899',
+    options: [ {s:1,e:'🥱',n:'None'}, {s:2,e:'😐',n:'Low'}, {s:3,e:'🙂',n:'Normal'}, {s:4,e:'💪',n:'Motivated'}, {s:5,e:'🚀',n:'Extremely'} ] },
+  { key: 'sleep',       label: 'Sleep Quality', catEmoji: '😴', color: '#06B6D4',
+    options: [ {s:1,e:'😫',n:'Very Poor'}, {s:2,e:'😴',n:'Poor'}, {s:3,e:'🙂',n:'Average'}, {s:4,e:'😊',n:'Good'}, {s:5,e:'🌟',n:'Excellent'} ] },
+];
+
+const STORAGE_KEY = 'tradeva_mood_entries';
+let selections = {};   // { mood: 4, energy: 3, ... }
+let historyFilter = '30';
+
+/* ══════════════════════════════════════════════════════════
+   RENDER CATEGORY CARDS
+══════════════════════════════════════════════════════════ */
+function renderCategories() {
+  const wrap = document.getElementById('categoriesWrap');
+  wrap.innerHTML = CATEGORIES.map(cat => `
+    <div class="mood-category">
+      <div class="mood-category-label"><span class="cat-emoji">${cat.catEmoji}</span> ${cat.label}</div>
+      <div class="mood-scale" data-cat="${cat.key}">
+        ${cat.options.map(o => `
+          <button type="button" class="mood-option ${selections[cat.key] === o.s ? 'selected' : ''}" data-cat="${cat.key}" data-score="${o.s}">
+            <span class="mood-emoji">${o.e}</span>
+            <span class="mood-name">${o.n}</span>
+          </button>`).join('')}
+      </div>
+    </div>`).join('');
+
+  wrap.querySelectorAll('.mood-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat;
+      selections[cat] = parseInt(btn.dataset.score, 10);
+      renderCategories();
+      renderLiveSummary();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   LIVE SUMMARY + BALANCE RING (updates as you pick)
+══════════════════════════════════════════════════════════ */
+function computeBalance() {
+  const picked = CATEGORIES.filter(c => selections[c.key]);
+  if (!picked.length) return null;
+  const total = picked.reduce((s, c) => s + selections[c.key], 0);
+  return Math.round(total / picked.length / 5 * 100);
+}
+
+function tierFor(pct) {
+  if (pct >= 85) return { label: 'Excellent', color: 'var(--green)' };
+  if (pct >= 70) return { label: 'Good', color: 'var(--green)' };
+  if (pct >= 50) return { label: 'Balanced', color: 'var(--amber)' };
+  if (pct >= 30) return { label: 'Low', color: 'var(--red)' };
+  return { label: 'Very Low', color: 'var(--red)' };
+}
+
+function renderLiveSummary() {
+  // Summary bars
+  const bars = document.getElementById('summaryBars');
+  const anyPicked = CATEGORIES.some(c => selections[c.key]);
+  if (!anyPicked) {
+    bars.innerHTML = '<div class="summary-empty">Your emotional summary will appear here as you complete today\'s check-in.</div>';
+  } else {
+    bars.innerHTML = '<div class="summary-bars">' + CATEGORIES.map(cat => {
+      const val = selections[cat.key];
+      const pct = val ? val / 5 * 100 : 0;
+      const opt = cat.options.find(o => o.s === val);
+      return `<div class="summary-bar-row">
+        <div class="summary-bar-top">
+          <span class="summary-bar-label"><span class="bar-emoji">${cat.catEmoji}</span>${cat.label}</span>
+          <span class="summary-bar-score">${val ? (opt ? opt.n : val + '/5') : '—'}</span>
+        </div>
+        <div class="summary-bar-track"><div class="summary-bar-fill" style="width:${pct}%;background:${cat.color};"></div></div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  // Balance ring
+  const pct = computeBalance();
+  const ring = document.getElementById('balanceRing');
+  const circumference = 408.4; // 2πr, r=65
+  if (pct === null) {
+    ring.style.strokeDashoffset = circumference;
+    document.getElementById('balancePct').textContent = '—';
+    document.getElementById('balanceTier').textContent = '';
+    document.getElementById('balanceDesc').textContent = 'Select your ratings to see today\'s overall emotional balance.';
+    return;
+  }
+  const tier = tierFor(pct);
+  ring.style.strokeDashoffset = circumference - (pct / 100 * circumference);
+  ring.style.stroke = tier.color;
+  document.getElementById('balancePct').textContent = pct + '%';
+  const tierEl = document.getElementById('balanceTier');
+  tierEl.textContent = tier.label;
+  tierEl.style.color = tier.color;
+  document.getElementById('balanceDesc').textContent = 'Your overall emotional balance today, averaged across all six dimensions.';
+}
+
+/* ── Date ── */
+function setToday() {
+  const now = new Date();
+  document.getElementById('f-date').value = now.toISOString().slice(0, 10);
+  document.getElementById('todayLabel').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+function onDateChange() {
+  const date = document.getElementById('f-date').value;
+  const label = document.getElementById('todayLabel');
+  if (date) {
+    const d = new Date(date + 'T00:00:00');
+    label.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+  loadEntryForDate(date);
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE / CRUD
+══════════════════════════════════════════════════════════ */
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch (e) { return []; }
+}
+function setEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+
+/* Auto-load an existing entry for the given date into the form */
+function loadEntryForDate(date) {
+  const entry = getEntries().find(e => e.date === date);
+  selections = {};
+  if (entry && entry.scores) {
+    CATEGORIES.forEach(c => { if (entry.scores[c.key]) selections[c.key] = entry.scores[c.key]; });
+    document.getElementById('f-note').value = entry.note || '';
+  } else {
+    document.getElementById('f-note').value = '';
+  }
+  renderCategories();
+  renderLiveSummary();
+}
+
+async function saveEntry() {
+  const picked = CATEGORIES.filter(c => selections[c.key]);
+  if (picked.length < CATEGORIES.length) {
+    showToast('Please rate all six categories before saving.', false);
+    return;
+  }
+  const date = document.getElementById('f-date').value;
+  if (!date) { showToast('Please choose a date.', false); return; }
+
+  const btn = document.getElementById('saveBtn');
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>Saving…</span>';
+  await new Promise(r => setTimeout(r, 500));
+
+  try {
+    const entries = getEntries();
+    const d = new Date(date + 'T00:00:00');
+    const scores = {};
+    CATEGORIES.forEach(c => scores[c.key] = selections[c.key]);
+    const moodOpt = CATEGORIES[0].options.find(o => o.s === selections.mood);
+    const balance = computeBalance();
+
+    const entryData = {
+      date,
+      displayDate: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+      scores,
+      moodEmoji: moodOpt ? moodOpt.e : '😐',
+      moodName: moodOpt ? moodOpt.n : '',
+      balance,
+      note: document.getElementById('f-note').value.trim(),
+    };
+
+    const idx = entries.findIndex(e => e.date === date);
+    if (idx !== -1) {
+      entryData.id = entries[idx].id;
+      entries[idx] = entryData;
+      showToast('Today\'s mood updated!', true);
+    } else {
+      entryData.id = entries.length ? Math.max(...entries.map(e => e.id || 0)) + 1 : 1;
+      entries.push(entryData);
+      showToast('Today\'s mood saved!', true);
+    }
+
+    setEntries(entries);
+    renderInsights();
+    renderHistory();
+  } catch (err) {
+    console.error('Save mood failed:', err);
+    showToast('Could not save your mood. Please try again.', false);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
+}
+
+function editEntry(id) {
+  const entry = getEntries().find(e => e.id === id);
+  if (!entry) return;
+  document.getElementById('f-date').value = entry.date;
+  onDateChange();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Loaded — adjust and save to update.', true);
+}
+function viewEntry(id) { editEntry(id); }
+
+function deleteEntry(id) {
+  if (!confirm('Delete this mood check-in? This cannot be undone.')) return;
+  setEntries(getEntries().filter(e => e.id !== id));
+  renderInsights();
+  renderHistory();
+  showToast('Check-in deleted.', true);
+}
+
+/* ══════════════════════════════════════════════════════════
+   INSIGHT STAT CARDS
+══════════════════════════════════════════════════════════ */
+function calcStreak(entries) {
+  const dates = new Set(entries.map(e => e.date));
+  let streak = 0;
+  let cursor = new Date();
+  const todayStr = cursor.toISOString().slice(0, 10);
+  const y = new Date(cursor); y.setDate(cursor.getDate() - 1);
+  if (!dates.has(todayStr) && !dates.has(y.toISOString().slice(0, 10))) return 0;
+  if (!dates.has(todayStr)) cursor.setDate(cursor.getDate() - 1);
+  while (dates.has(cursor.toISOString().slice(0, 10))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+  return streak;
+}
+
+function renderInsights() {
+  const entries = getEntries();
+  const today = new Date().toISOString().slice(0, 10);
+  const todayEntry = entries.find(e => e.date === today);
+
+  // Average Mood (today's if present, else latest)
+  const moodRef = todayEntry || [...entries].sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+  if (moodRef && moodRef.scores) {
+    const moodOpt = CATEGORIES[0].options.find(o => o.s === moodRef.scores.mood);
+    document.getElementById('statAvgMood').innerHTML = `<span class="stat-emoji">${moodOpt ? moodOpt.e : ''}</span>${moodRef.scores.mood}/5`;
+    document.getElementById('statAvgMoodSub').textContent = todayEntry ? 'today' : 'latest check-in';
+    const energyOpt = CATEGORIES[1].options.find(o => o.s === moodRef.scores.energy);
+    document.getElementById('statAvgEnergy').innerHTML = `<span class="stat-emoji">${energyOpt ? energyOpt.e : ''}</span>${moodRef.scores.energy}/5`;
+    document.getElementById('statAvgEnergySub').textContent = todayEntry ? 'today' : 'latest check-in';
+  } else {
+    document.getElementById('statAvgMood').textContent = '—';
+    document.getElementById('statAvgEnergy').textContent = '—';
+  }
+
+  // Emotional trend — compare last 3 balances vs previous 3
+  const sorted = [...entries].sort((a,b) => new Date(a.date) - new Date(b.date));
+  const trendEl = document.getElementById('statTrend');
+  const trendDot = document.getElementById('trendDot');
+  const trendSub = document.getElementById('statTrendSub');
+  if (sorted.length >= 2) {
+    const recent = sorted.slice(-3);
+    const prior = sorted.slice(-6, -3);
+    const avg = arr => arr.reduce((s, e) => s + (e.balance || 0), 0) / arr.length;
+    const recentAvg = avg(recent);
+    const priorAvg = prior.length ? avg(prior) : recentAvg;
+    const diff = recentAvg - priorAvg;
+    if (diff > 4) { trendEl.textContent = 'Improving'; trendEl.style.color = 'var(--green)'; trendDot.style.background = 'var(--green)'; trendSub.textContent = 'trending upward'; }
+    else if (diff < -4) { trendEl.textContent = 'Declining'; trendEl.style.color = 'var(--red)'; trendDot.style.background = 'var(--red)'; trendSub.textContent = 'trending downward'; }
+    else { trendEl.textContent = 'Stable'; trendEl.style.color = 'var(--amber)'; trendDot.style.background = 'var(--amber)'; trendSub.textContent = 'holding steady'; }
+  } else {
+    trendEl.textContent = '—'; trendEl.style.color = 'var(--text-primary)';
+    trendDot.style.background = 'var(--text-faint)'; trendSub.textContent = 'not enough data';
+  }
+
+  document.getElementById('statStreak').textContent = calcStreak(entries);
+}
+
+/* ══════════════════════════════════════════════════════════
+   HISTORY + FILTERS
+══════════════════════════════════════════════════════════ */
+function setFilter(range) {
+  historyFilter = range;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.toggle('active', p.dataset.range === range));
+  renderHistory();
+}
+
+function filteredEntries() {
+  const entries = [...getEntries()].sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (historyFilter === 'all') return entries;
+  const now = new Date();
+  if (historyFilter === 'today') {
+    const t = now.toISOString().slice(0, 10);
+    return entries.filter(e => e.date === t);
+  }
+  const days = parseInt(historyFilter, 10);
+  const cutoff = new Date(now); cutoff.setDate(now.getDate() - days);
+  return entries.filter(e => new Date(e.date + 'T00:00:00') >= cutoff);
+}
+
+function renderHistory() {
+  const container = document.getElementById('entriesContainer');
+  const entries = filteredEntries();
+
+  if (!entries.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🌤️</div>
+      <div class="empty-title">No mood check-ins yet.</div>
+      <div class="empty-sub">Start tracking your emotions to understand how your mindset influences your trading performance.</div>
+    </div>`;
+    return;
+  }
+
+  const circ = 2 * Math.PI * 18; // r=18 for entry ring
+  container.innerHTML = '<div class="entries-grid">' + entries.map(e => {
+    const bal = e.balance || 0;
+    const tier = tierFor(bal);
+    const offset = circ - (bal / 100 * circ);
+    return `<div class="entry-card">
+      <div class="entry-top">
+        <span class="entry-emoji">${e.moodEmoji}</span>
+        <div class="entry-main">
+          <div class="entry-date">${e.displayDate || e.date}</div>
+          <div class="entry-mood-name">Mood: ${e.moodName || '—'}</div>
+        </div>
+        <div class="entry-score-badge">
+          <div class="entry-score-wrap">
+            <svg class="entry-score-ring" viewBox="0 0 44 44">
+              <circle class="ebg" cx="22" cy="22" r="18"/>
+              <circle class="efg" cx="22" cy="22" r="18" style="stroke:${tier.color};stroke-dasharray:${circ};stroke-dashoffset:${offset};"/>
+            </svg>
+            <div class="entry-score-num">${bal}</div>
+          </div>
+        </div>
+      </div>
+      ${e.note ? `<div class="entry-note">${e.note.replace(/</g, '&lt;')}</div>` : ''}
+      <div class="entry-actions">
+        <button class="entry-action-btn primary" onclick="viewEntry(${e.id})">View</button>
+        <button class="entry-action-btn" onclick="editEntry(${e.id})">Edit</button>
+        <button class="entry-action-btn danger" onclick="deleteEntry(${e.id})">Delete</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* ── Toast ── */
+let toastTimer;
+function showToast(msg, success) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.querySelector('.toast-icon').style.background = success ? 'var(--green)' : 'var(--red)';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  setToday();
+  renderCategories();
+  renderLiveSummary();
+  renderInsights();
+
+  // Auto-load today's entry if one exists
+  loadEntryForDate(document.getElementById('f-date').value);
+
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.addEventListener('click', () => setFilter(p.dataset.range));
+  });
+  renderHistory();
+});
+</script>
+</body>
+</html>
