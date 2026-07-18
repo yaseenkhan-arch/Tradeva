@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Discipline Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --amber:        #F59E0B;
+  --amber-bg:     #FFFBEB;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --amber-bg:     #1E1503;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; max-width: 1160px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; max-width: 640px; line-height: 1.55; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Stat cards */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-value.amber { color: var(--amber); }
+.stat-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; transition: color var(--t) var(--ease); }
+.status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.status-elite { background: var(--accent-bg); color: var(--accent); }
+.status-excellent { background: var(--green-bg); color: var(--green); }
+.status-good { background: var(--amber-bg); color: var(--amber); }
+.status-needs { background: var(--amber-bg); color: var(--amber); }
+.status-poor { background: var(--red-bg); color: var(--red); }
+
+/* Card system */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-head { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.card-head-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-head-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.card-head-meta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.section-heading { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 24px 0 4px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+.section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; transition: color var(--t) var(--ease); }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: var(--radius-btn); border: none; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease); white-space: nowrap; font-family: 'Inter', sans-serif; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-primary svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+.btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: var(--radius-btn); border: 1px solid var(--border); background: var(--bg-page); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.btn-outline:hover { background: var(--border-light); color: var(--text-primary); border-color: var(--text-faint); transform: translateY(-1px); }
+
+/* Save button */
+.save-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-btn); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease), opacity var(--t) var(--ease); margin: 4px 0 32px; }
+.save-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.save-btn:disabled { opacity: 0.75; cursor: default; }
+.save-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Form inputs */
+input[type="text"], input[type="date"], select, textarea { padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--radius-btn); background: var(--bg-page); color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif; transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; appearance: none; -webkit-appearance: none; width: 100%; }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
+input.invalid { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.form-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: block; transition: color var(--t) var(--ease); }
+.select-wrap { position: relative; }
+.select-wrap select { padding-right: 34px; cursor: pointer; }
+.select-wrap::after { content: ''; position: absolute; right: 13px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-faint); pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════
+   DISCIPLINE SCORE HERO
+══════════════════════════════════════════════════════════ */
+.score-hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+.score-ring-wrap { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+.score-ring { width: 150px; height: 150px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--border-light); stroke-width: 12; transition: stroke var(--t) var(--ease); }
+.ring-fg { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 408.4; stroke-dashoffset: 408.4; transition: stroke-dashoffset 1s var(--ease), stroke var(--t) var(--ease); }
+.score-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-num { font-size: 38px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; transition: color var(--t) var(--ease); }
+.score-badge { font-size: 11px; font-weight: 700; margin-top: 2px; padding: 3px 10px; border-radius: 20px; }
+.score-breakdown { flex: 1; }
+.score-breakdown-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.score-breakdown-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; transition: color var(--t) var(--ease); }
+.score-factors { display: flex; flex-direction: column; gap: 8px; }
+.score-factor { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; padding: 8px 12px; border-radius: 9px; background: var(--bg-page); border: 1px solid var(--border); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.score-factor-label { color: var(--text-primary); font-weight: 500; transition: color var(--t) var(--ease); }
+.score-factor-val { font-weight: 700; }
+.score-factor-val.pos { color: var(--green); }
+.score-factor-val.neg { color: var(--red); }
+
+/* ══════════════════════════════════════════════════════════
+   RULES
+══════════════════════════════════════════════════════════ */
+.rules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.rule-card { border: 1px solid var(--border); border-radius: 13px; padding: 16px; background: var(--bg-page); transition: all var(--t) var(--ease); position: relative; }
+.rule-card:hover { border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.rule-card.disabled { opacity: 0.55; }
+.rule-card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.rule-check { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--t) var(--ease); margin-top: 1px; }
+.rule-check svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity var(--t) var(--ease); }
+.rule-card.followed .rule-check { background: var(--green); border-color: var(--green); }
+.rule-card.followed .rule-check svg { opacity: 1; }
+.rule-info { flex: 1; min-width: 0; }
+.rule-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.rule-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; transition: color var(--t) var(--ease); }
+.rule-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.rule-priority { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.priority-always { background: var(--red-bg); color: var(--red); }
+.priority-important { background: var(--amber-bg); color: var(--amber); }
+.priority-optional { background: var(--border-light); color: var(--text-muted); }
+.rule-actions { display: flex; gap: 4px; margin-left: auto; }
+.rule-icon-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--t) var(--ease); }
+.rule-icon-btn svg { width: 12px; height: 12px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke var(--t) var(--ease); }
+.rule-icon-btn:hover { background: var(--border-light); }
+.rule-icon-btn:hover svg { stroke: var(--text-primary); }
+.rule-icon-btn.danger:hover { border-color: var(--red); background: var(--red-bg); }
+.rule-icon-btn.danger:hover svg { stroke: var(--red); }
+.rule-toggle { width: 34px; height: 19px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.rule-toggle.on { background: var(--green); }
+.rule-toggle-knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.rule-toggle.on .rule-toggle-knob { transform: translateX(15px); }
+.add-rule-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 10px 16px; border-radius: var(--radius-btn); border: 1.5px dashed var(--border); background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.add-rule-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.add-rule-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+
+/* Rule editor inline form */
+.rule-editor { border: 1.5px solid var(--accent); border-radius: 13px; padding: 16px; background: var(--accent-bg); margin-bottom: 12px; }
+.rule-editor .form-row { display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-bottom: 10px; }
+.rule-editor-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ══════════════════════════════════════════════════════════
+   CHECKLIST
+══════════════════════════════════════════════════════════ */
+.checklist-progress-wrap { margin-bottom: 18px; }
+.checklist-progress-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.checklist-progress-label { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.checklist-progress-pct { font-size: 13px; font-weight: 700; color: var(--accent); transition: color var(--t) var(--ease); }
+.progress-track { height: 8px; border-radius: 10px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.progress-fill { height: 100%; border-radius: 10px; background: var(--accent); transition: width 500ms var(--ease), background var(--t) var(--ease); }
+.checklist-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; user-select: none; transition: all var(--t) var(--ease); }
+.check-item:hover { border-color: var(--text-faint); }
+.check-item.checked { border-color: var(--green); background: var(--green-bg); }
+.check-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--t) var(--ease); }
+.check-box svg { width: 11px; height: 11px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity var(--t) var(--ease); }
+.check-item.checked .check-box { background: var(--green); border-color: var(--green); }
+.check-item.checked .check-box svg { opacity: 1; }
+.check-item-label { font-size: 12.5px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   VIOLATIONS
+══════════════════════════════════════════════════════════ */
+.violations-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.violation-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-page); transition: all var(--t) var(--ease); }
+.violation-row.active { border-color: var(--red-border); background: var(--red-bg); }
+.violation-label { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.violation-penalty { font-size: 10.5px; font-weight: 700; color: var(--text-faint); transition: color var(--t) var(--ease); }
+.violation-row.active .violation-penalty { color: var(--red); }
+.v-toggle { width: 40px; height: 22px; border-radius: 12px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.v-toggle.on { background: var(--red); }
+.v-toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.v-toggle.on .v-toggle-knob { transform: translateX(18px); }
+
+/* ══════════════════════════════════════════════════════════
+   REFLECTION
+══════════════════════════════════════════════════════════ */
+.reflection-group { margin-bottom: 16px; }
+.reflection-group:last-child { margin-bottom: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   ANALYTICS
+══════════════════════════════════════════════════════════ */
+.analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.analytics-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow-card); position: relative; transition: all var(--t) var(--ease); }
+.analytics-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.analytics-card-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.analytics-card-icon svg { width: 17px; height: 17px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.analytics-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.analytics-card-value { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; transition: color var(--t) var(--ease); }
+.analytics-card-value.green { color: var(--green); }
+.analytics-card-value.red { color: var(--red); }
+.analytics-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; transition: color var(--t) var(--ease); }
+
+/* Rule performance table */
+.rule-perf-table { width: 100%; border-collapse: collapse; }
+.rule-perf-table thead th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); padding: 10px 14px; text-align: left; background: var(--bg-page); border-bottom: 1px solid var(--border-light); white-space: nowrap; transition: color var(--t) var(--ease), background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.rule-perf-table thead th:last-child { text-align: right; }
+.rule-perf-table tbody tr { border-bottom: 1px solid var(--border-light); transition: background var(--t) var(--ease); }
+.rule-perf-table tbody tr:last-child { border-bottom: none; }
+.rule-perf-table tbody tr:hover { background: var(--border-light); }
+.rule-perf-table td { padding: 12px 14px; font-size: 12.5px; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.rule-perf-table td:last-child { text-align: right; }
+.rule-perf-name { font-weight: 700; }
+.perf-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.perf-bar-track { flex: 1; min-width: 60px; height: 6px; border-radius: 6px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.perf-bar-fill { height: 100%; border-radius: 6px; background: var(--green); }
+.perf-pct { font-size: 12px; font-weight: 700; color: var(--green); min-width: 38px; text-align: right; }
+
+/* ══════════════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════════════ */
+.entries-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.entry-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: all var(--t) var(--ease); }
+.entry-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.entry-top { display: flex; align-items: center; gap: 14px; }
+.entry-score-wrap { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+.entry-score-ring { width: 46px; height: 46px; transform: rotate(-90deg); }
+.entry-score-ring .ebg { fill: none; stroke: var(--border-light); stroke-width: 4; }
+.entry-score-ring .efg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.entry-score-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.entry-main { flex: 1; min-width: 0; }
+.entry-date { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.entry-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; transition: color var(--t) var(--ease); }
+.entry-stats { display: flex; gap: 16px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.entry-stat { display: flex; flex-direction: column; }
+.entry-stat-val { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.entry-stat-val.green { color: var(--green); }
+.entry-stat-val.red { color: var(--red); }
+.entry-stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); transition: color var(--t) var(--ease); }
+.entry-actions { display: flex; gap: 8px; margin-top: 14px; }
+.entry-action-btn { flex: 1; padding: 7px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-page); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.entry-action-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.entry-action-btn.primary { border-color: var(--accent); color: var(--accent); }
+.entry-action-btn.primary:hover { background: var(--accent-bg); }
+.entry-action-btn.danger:hover { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+.empty-state { text-align: center; padding: 48px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-card); transition: all var(--t) var(--ease); }
+.empty-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; }
+.empty-icon svg { width: 26px; height: 26px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.empty-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); max-width: 380px; margin: 0 auto; line-height: 1.5; transition: color var(--t) var(--ease); }
+
+/* AI coach + achievements */
+.ai-card { background: linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-card) 70%); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; box-shadow: var(--shadow-card); margin-bottom: 16px; transition: all var(--t) var(--ease); }
+.ai-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ai-card-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59,130,246,0.35); flex-shrink: 0; }
+.ai-card-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ai-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.soon-badge-inline { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); margin-left: auto; }
+.ai-card-text { font-size: 13px; line-height: 1.6; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+.achievements-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.achievement-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px 14px; text-align: center; box-shadow: var(--shadow-card); position: relative; transition: all var(--t) var(--ease); opacity: 0.75; }
+.achievement-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); opacity: 1; }
+.achievement-emoji { font-size: 34px; line-height: 1; margin-bottom: 10px; filter: grayscale(0.3); }
+.achievement-title { font-size: 12px; font-weight: 700; color: var(--text-primary); line-height: 1.3; transition: color var(--t) var(--ease); }
+.achievement-lock { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--border-light); display: flex; align-items: center; justify-content: center; transition: background var(--t) var(--ease); }
+.achievement-lock svg { width: 10px; height: 10px; stroke: var(--text-faint); fill: none; stroke-width: 2; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0F172A; color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform var(--t) var(--ease), opacity var(--t) var(--ease); opacity: 0; z-index: 999; pointer-events: none; }
+[data-theme="dark"] .toast { background: #1A2540; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* Mobile */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+@media (max-width: 1000px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+  .achievements-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; max-width: 100%; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .score-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .rules-grid, .checklist-grid, .violations-grid, .entries-grid { grid-template-columns: 1fr; }
+  .rule-perf-scroll { overflow-x: auto; }
+  .rule-perf-table { min-width: 520px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .analytics-grid { grid-template-columns: 1fr; }
+  .achievements-grid { grid-template-columns: 1fr 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="discipline-tracker.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Discipline Tracker</h1>
+        <p class="page-subtitle">Measure your trading discipline, follow your trading plan, and build consistent execution habits regardless of market outcomes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary stat cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Discipline Score</div>
+      <div class="stat-value" id="statScore">—</div>
+      <div class="stat-sub"><span class="status-pill" id="statScoreBadge">today</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Discipline Streak</div>
+      <div class="stat-value" id="statStreak">0</div>
+      <div class="stat-sub">consecutive days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Rules Followed</div>
+      <div class="stat-value" id="statRules">— / —</div>
+      <div class="stat-sub">respected today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Best Score</div>
+      <div class="stat-value green" id="statBest">—</div>
+      <div class="stat-sub">highest ever</div>
+    </div>
+  </div>
+
+  <!-- Live score hero -->
+  <div class="card">
+    <div class="score-hero">
+      <div class="score-ring-wrap">
+        <svg class="score-ring" viewBox="0 0 150 150">
+          <circle class="ring-bg" cx="75" cy="75" r="65"/>
+          <circle class="ring-fg" id="scoreRing" cx="75" cy="75" r="65"/>
+        </svg>
+        <div class="score-label">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-badge" id="scoreBadge">—</div>
+        </div>
+      </div>
+      <div class="score-breakdown">
+        <div class="score-breakdown-title">Today's Discipline Score</div>
+        <div class="score-breakdown-sub">Calculated automatically from your checklist completion, rule adherence, and any violations. Focus on process — the score rewards disciplined execution, not P&L.</div>
+        <div class="score-factors" id="scoreFactors"></div>
+      </div>
+    </div>
+    <div style="margin-top:20px;">
+      <label class="form-label">Date</label>
+      <input type="date" id="f-date" onchange="onDateChange()" style="max-width:260px;">
+    </div>
+  </div>
+
+  <!-- SECTION 1 — My Trading Rules -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 16 16"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M5 5.5l1.2 1.2L8 4.8"/><line x1="9.5" y1="6" x2="11.5" y2="6"/><path d="M5 10l1.2 1.2L8 9.3"/><line x1="9.5" y1="10.5" x2="11.5" y2="10.5"/></svg></div>
+      <span class="card-head-title">My Trading Rules</span>
+      <span class="card-head-meta" id="rulesFollowedMeta">0 / 0 followed</span>
+    </div>
+    <p class="section-sub" style="margin-top:-8px;margin-bottom:16px;">Check off each rule you respected today. Add your own personal rules — they're saved and tracked over time.</p>
+    <div id="ruleEditorSlot"></div>
+    <div class="rules-grid" id="rulesGrid"></div>
+    <button class="add-rule-btn" onclick="openRuleEditor()">
+      <svg viewBox="0 0 13 13"><line x1="6.5" y1="1.5" x2="6.5" y2="11.5"/><line x1="1.5" y1="6.5" x2="11.5" y2="6.5"/></svg>
+      Add Rule
+    </button>
+  </div>
+
+  <!-- SECTION 2 — Today's Discipline Checklist -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="2"/><path d="M4.5 8l2.5 2.5 4.5-5"/></svg></div>
+      <span class="card-head-title">Today's Discipline Checklist</span>
+    </div>
+    <div class="checklist-progress-wrap">
+      <div class="checklist-progress-top">
+        <span class="checklist-progress-label" id="checklistLabel">0 / 12 Complete</span>
+        <span class="checklist-progress-pct" id="checklistPct">0%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="checklistFill" style="width:0%;"></div></div>
+    </div>
+    <div class="checklist-grid" id="checklistGrid"></div>
+  </div>
+
+  <!-- SECTION 3 — Rule Violations -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg></div>
+      <span class="card-head-title">Rule Violations</span>
+      <span class="card-head-meta" id="violationsMeta">0 active</span>
+    </div>
+    <p class="section-sub" style="margin-top:-8px;margin-bottom:16px;">Be honest — flag any execution mistakes. Each one lowers today's discipline score.</p>
+    <div class="violations-grid" id="violationsGrid"></div>
+  </div>
+
+  <!-- SECTION 4 — Daily Reflection -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 16 16"><path d="M2 3h12M2 8h12M2 13h8"/></svg></div>
+      <span class="card-head-title">Daily Reflection</span>
+    </div>
+    <div class="reflection-group">
+      <label class="form-label">What did I execute well today?</label>
+      <textarea id="f-executed-well" placeholder="Which parts of your plan did you follow cleanly?"></textarea>
+    </div>
+    <div class="reflection-group">
+      <label class="form-label">What discipline mistake did I make today?</label>
+      <textarea id="f-mistake" placeholder="Where did your execution slip from your plan?"></textarea>
+    </div>
+    <div class="reflection-group">
+      <label class="form-label">What will I improve tomorrow?</label>
+      <textarea id="f-improve" placeholder="One concrete execution improvement for next session."></textarea>
+    </div>
+  </div>
+
+  <button class="save-btn" id="saveBtn" onclick="saveEntry()">
+    <svg viewBox="0 0 16 16"><path d="M12.5 14.5h-9a2 2 0 01-2-2v-9a2 2 0 012-2h7l4 4v7a2 2 0 01-2 2z"/><path d="M11 14.5V9H5v5.5M5 1.5V5h5"/></svg>
+    <span id="saveBtnText">Save Today's Discipline</span>
+  </button>
+
+  <!-- SECTION 5 — Discipline Analytics -->
+  <h2 class="section-heading">Discipline Analytics</h2>
+  <p class="section-sub">How consistently you execute over time.</p>
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7"/><path d="M9 4.5v4.5l3 1.5"/></svg></div>
+      <div class="analytics-card-label">Rule Adherence</div>
+      <div class="analytics-card-value green" id="anAdherence">—</div>
+      <div class="analytics-card-sub">across all logged days</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><path d="M9 2l7 12.5H2z"/><line x1="9" y1="7" x2="9" y2="10.5"/></svg></div>
+      <div class="analytics-card-label">Most Broken Rule</div>
+      <div class="analytics-card-value" id="anMostBroken" style="font-size:16px;">—</div>
+      <div class="analytics-card-sub" id="anMostBrokenSub">no violations yet</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><path d="M9 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6 9l2 2 4-4.5"/></svg></div>
+      <div class="analytics-card-label">Best Followed Rule</div>
+      <div class="analytics-card-value" id="anBestRule" style="font-size:16px;">—</div>
+      <div class="analytics-card-sub" id="anBestRuleSub">start logging to see</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="2"/><path d="M6 9l2 2 4-4"/></svg></div>
+      <div class="analytics-card-label">Weekly Discipline</div>
+      <div class="analytics-card-value" id="anWeekly">—</div>
+      <div class="analytics-card-sub">last 7 days average</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="2"/><line x1="2" y1="7" x2="16" y2="7"/></svg></div>
+      <div class="analytics-card-label">Monthly Discipline</div>
+      <div class="analytics-card-value" id="anMonthly">—</div>
+      <div class="analytics-card-sub">last 30 days average</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-card-icon"><svg viewBox="0 0 18 18"><polyline points="2,13 6,8 9,11 16,3"/></svg></div>
+      <div class="analytics-card-label">Consistency Trend</div>
+      <div class="analytics-card-value" id="anTrend" style="font-size:16px;">—</div>
+      <div class="analytics-card-sub" id="anTrendSub">not enough data</div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 — Rule Performance -->
+  <h2 class="section-heading">Rule Performance</h2>
+  <p class="section-sub">How faithfully you follow each personal rule.</p>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="rule-perf-scroll">
+      <table class="rule-perf-table">
+        <thead>
+          <tr><th>Rule</th><th>Priority</th><th>Adherence</th><th>Days Tracked</th></tr>
+        </thead>
+        <tbody id="rulePerfBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 7 — Discipline History -->
+  <h2 class="section-heading">Discipline History</h2>
+  <p class="section-sub">Your execution record, day by day.</p>
+  <div id="entriesContainer"></div>
+
+  <!-- AI Coach -->
+  <h2 class="section-heading">AI Discipline Coach</h2>
+  <p class="section-sub">Personalized execution guidance is on the way.</p>
+  <div class="ai-card">
+    <div class="ai-card-top">
+      <div class="ai-card-icon"><svg viewBox="0 0 18 18"><path d="M9 1.5a2.5 2.5 0 012.5 2.5 2.5 2.5 0 012 4 2.5 2.5 0 01-1 4.5 2.5 2.5 0 01-3.5 1.5 2.5 2.5 0 01-3.5-1.5 2.5 2.5 0 01-1-4.5 2.5 2.5 0 012-4A2.5 2.5 0 019 1.5z"/><circle cx="9" cy="9" r="1.5"/></svg></div>
+      <span class="ai-card-title">AI Discipline Coach</span>
+      <span class="soon-badge-inline">Coming Soon</span>
+    </div>
+    <p class="ai-card-text">Tradeva AI will analyze your trading behavior, identify recurring discipline mistakes, highlight your strongest habits, and provide personalized recommendations to improve consistency.</p>
+  </div>
+
+  <!-- Achievements -->
+  <h2 class="section-heading">Achievements</h2>
+  <p class="section-sub">Unlock these by building consistent, disciplined habits.</p>
+  <div class="achievements-grid">
+    <div class="achievement-card">
+      <div class="achievement-lock"><svg viewBox="0 0 10 10"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 013 0v1.5"/></svg></div>
+      <div class="achievement-emoji">🥉</div>
+      <div class="achievement-title">7 Days Perfect Discipline</div>
+    </div>
+    <div class="achievement-card">
+      <div class="achievement-lock"><svg viewBox="0 0 10 10"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 013 0v1.5"/></svg></div>
+      <div class="achievement-emoji">🥈</div>
+      <div class="achievement-title">30 Rules Without Violations</div>
+    </div>
+    <div class="achievement-card">
+      <div class="achievement-lock"><svg viewBox="0 0 10 10"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 013 0v1.5"/></svg></div>
+      <div class="achievement-emoji">🥇</div>
+      <div class="achievement-title">100% Discipline Week</div>
+    </div>
+    <div class="achievement-card">
+      <div class="achievement-lock"><svg viewBox="0 0 10 10"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 013 0v1.5"/></svg></div>
+      <div class="achievement-emoji">💎</div>
+      <div class="achievement-title">50 Consecutive Journal Entries</div>
+    </div>
+    <div class="achievement-card">
+      <div class="achievement-lock"><svg viewBox="0 0 10 10"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 013 0v1.5"/></svg></div>
+      <div class="achievement-emoji">🔥</div>
+      <div class="achievement-title">No Rule Breaks for 14 Days</div>
+    </div>
+  </div>
+
+</main>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profit-calendar.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
+    Calendar
+  </a>
+</nav>
+
+<div class="toast" id="toast">
+  <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+  <span id="toastText">Saved!</span>
+</div>
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — DISCIPLINE TRACKER
+   Storage: `tradeva_discipline_rules`  (personal rules)
+            `tradeva_discipline_entries` (daily records)
+   Strictly execution & rule adherence — no emotions/psychology.
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR / PROFILE ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const initials = (fname.charAt(0) + ((p.lname || '').charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = p.account || 'Pro Trader';
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════ */
+const RULES_KEY = 'tradeva_discipline_rules';
+const ENTRIES_KEY = 'tradeva_discipline_entries';
+
+/* Tradeva's fixed best-practice checklist (NOT editable) */
+const CHECKLIST_ITEMS = [
+  'HTF Analysis Completed', 'Market Bias Confirmed', 'Key Levels Marked',
+  'Economic News Checked', 'Minimum RR 1:2', 'Risk Calculated',
+  'Stop Loss Set', 'Correct Position Size', 'Trading Session Confirmed',
+  'Entry Screenshot Saved', 'Trade Plan Written', 'Journal Updated',
+];
+
+/* Violations with their score penalties */
+const VIOLATIONS = [
+  { key: 'revenge',       label: 'Revenge Trading',            penalty: 15 },
+  { key: 'fomo',          label: 'FOMO Entry',                 penalty: 8 },
+  { key: 'overtrading',   label: 'Overtrading',                penalty: 10 },
+  { key: 'movedSL',       label: 'Moved Stop Loss',            penalty: 10 },
+  { key: 'movedTP',       label: 'Moved Take Profit',          penalty: 5 },
+  { key: 'ignoredPlan',   label: 'Ignored Trading Plan',       penalty: 8 },
+  { key: 'oversized',     label: 'Oversized Position',         penalty: 8 },
+  { key: 'noConfirm',     label: 'Entered Without Confirmation', penalty: 6 },
+  { key: 'closedEarly',   label: 'Closed Winner Too Early',    penalty: 4 },
+  { key: 'heldLoser',     label: 'Held Loser Too Long',        penalty: 6 },
+  { key: 'lateEntry',     label: 'Late Entry',                 penalty: 4 },
+  { key: 'outsideSession', label: 'Traded Outside Session',    penalty: 6 },
+];
+
+/* Default starter rules (created on first visit) */
+const DEFAULT_RULES = [
+  { id: 1, title: 'Never risk more than 1%', desc: 'Keep risk per trade at or below 1% of the account.', priority: 'Always', enabled: true },
+  { id: 2, title: 'Maximum two trades per day', desc: 'Quality over quantity — stop after two setups.', priority: 'Always', enabled: true },
+  { id: 3, title: 'Trade London session only', desc: 'Only take setups during the London session.', priority: 'Important', enabled: true },
+  { id: 4, title: 'Wait for confirmation', desc: 'No entries without a confirmed signal.', priority: 'Always', enabled: true },
+  { id: 5, title: 'Never revenge trade', desc: 'Walk away after a loss — no immediate re-entry.', priority: 'Always', enabled: true },
+  { id: 6, title: 'Journal every trade', desc: 'Log each trade with screenshots and notes.', priority: 'Important', enabled: true },
+];
+
+/* Scoring weights */
+const PTS = { checkDone: 5, checkSkip: -2, ruleFollowed: 3, ruleBroken: -8, journalDone: 5 };
+
+/* ── State (today's working set) ── */
+let viewDate = new Date().toISOString().slice(0, 10);
+let ruleFollows = {};   // { ruleId: true/false } for the day
+let checklistState = new Set();
+let violationState = {};   // { key: true }
+let editingRuleId = null;
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════════════════════ */
+function getRules() {
+  const raw = localStorage.getItem(RULES_KEY);
+  if (raw) { try { return JSON.parse(raw); } catch (e) {} }
+  localStorage.setItem(RULES_KEY, JSON.stringify(DEFAULT_RULES));
+  return [...DEFAULT_RULES];
+}
+function setRules(rules) { localStorage.setItem(RULES_KEY, JSON.stringify(rules)); }
+function getEntries() { try { return JSON.parse(localStorage.getItem(ENTRIES_KEY)) || []; } catch (e) { return []; } }
+function setEntries(entries) { localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries)); }
+
+/* ══════════════════════════════════════════════════════════
+   SCORE ENGINE (auto-calculated, never manual)
+══════════════════════════════════════════════════════════ */
+function computeScore() {
+  const enabledRules = getRules().filter(r => r.enabled);
+  const checkDone = checklistState.size;
+  const checkSkip = CHECKLIST_ITEMS.length - checkDone;
+  const rulesFollowed = enabledRules.filter(r => ruleFollows[r.id]).length;
+  const rulesBroken = enabledRules.length - rulesFollowed;
+  const journalDone = checklistState.has(CHECKLIST_ITEMS.indexOf('Journal Updated'));
+
+  const factors = [];
+  let raw = 0;
+
+  const addPts = (label, count, per) => {
+    if (count === 0) return;
+    const pts = count * per;
+    raw += pts;
+    factors.push({ label: `${label} (${count})`, pts });
+  };
+  addPts('Checklist items completed', checkDone, PTS.checkDone);
+  addPts('Personal rules followed', rulesFollowed, PTS.ruleFollowed);
+  if (checkSkip > 0) addPts('Checklist items skipped', checkSkip, PTS.checkSkip);
+  if (rulesBroken > 0) addPts('Personal rules broken', rulesBroken, PTS.ruleBroken);
+  if (journalDone) { raw += PTS.journalDone; factors.push({ label: 'Trading journal completed', pts: PTS.journalDone }); }
+
+  // Violation penalties
+  let violationPenalty = 0;
+  VIOLATIONS.forEach(v => {
+    if (violationState[v.key]) {
+      violationPenalty += v.penalty;
+      factors.push({ label: v.label, pts: -v.penalty });
+    }
+  });
+  raw -= violationPenalty;
+
+  // Normalize to 0-100 against the max achievable for the day
+  const maxPossible =
+    CHECKLIST_ITEMS.length * PTS.checkDone +
+    enabledRules.length * PTS.ruleFollowed +
+    PTS.journalDone;
+  let score = maxPossible > 0 ? Math.round(raw / maxPossible * 100) : 0;
+  score = Math.max(0, Math.min(100, score));
+
+  return { score, factors, rulesFollowed, rulesTotal: enabledRules.length, checkDone };
+}
+
+function scoreTier(score) {
+  if (score >= 95) return { label: 'Elite', cls: 'status-elite', color: 'var(--accent)' };
+  if (score >= 85) return { label: 'Excellent', cls: 'status-excellent', color: 'var(--green)' };
+  if (score >= 70) return { label: 'Good', cls: 'status-good', color: 'var(--amber)' };
+  if (score >= 50) return { label: 'Needs Improvement', cls: 'status-needs', color: 'var(--amber)' };
+  return { label: 'Poor Discipline', cls: 'status-poor', color: 'var(--red)' };
+}
+
+/* ══════════════════════════════════════════════════════════
+   LIVE RENDER — score hero + top stats
+══════════════════════════════════════════════════════════ */
+function renderScore() {
+  const { score, factors, rulesFollowed, rulesTotal, checkDone } = computeScore();
+  const tier = scoreTier(score);
+  const circ = 408.4;
+
+  const ring = document.getElementById('scoreRing');
+  ring.style.strokeDashoffset = circ - (score / 100 * circ);
+  ring.style.stroke = tier.color;
+  document.getElementById('scoreNum').textContent = score;
+  const badge = document.getElementById('scoreBadge');
+  badge.textContent = tier.label;
+  badge.className = 'score-badge ' + tier.cls;
+
+  // Factor breakdown
+  const factorsEl = document.getElementById('scoreFactors');
+  if (!factors.length) {
+    factorsEl.innerHTML = '<div class="score-factor"><span class="score-factor-label">Complete your checklist and rules to build today\'s score</span></div>';
+  } else {
+    factorsEl.innerHTML = factors.map(f =>
+      `<div class="score-factor">
+        <span class="score-factor-label">${f.label}</span>
+        <span class="score-factor-val ${f.pts >= 0 ? 'pos' : 'neg'}">${f.pts >= 0 ? '+' : ''}${f.pts}</span>
+      </div>`).join('');
+  }
+
+  // Top stat cards
+  document.getElementById('statScore').textContent = score + '%';
+  const sBadge = document.getElementById('statScoreBadge');
+  sBadge.textContent = tier.label;
+  sBadge.className = 'status-pill ' + tier.cls;
+  document.getElementById('statRules').textContent = rulesFollowed + ' / ' + rulesTotal;
+  document.getElementById('rulesFollowedMeta').textContent = rulesFollowed + ' / ' + rulesTotal + ' followed';
+
+  // Best + streak from history (plus today's live score)
+  const entries = getEntries();
+  const best = Math.max(score, ...entries.map(e => e.score || 0), 0);
+  document.getElementById('statBest').textContent = best + '%';
+  document.getElementById('statStreak').textContent = calcStreak(entries);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RULES
+══════════════════════════════════════════════════════════ */
+function renderRules() {
+  const grid = document.getElementById('rulesGrid');
+  const rules = getRules();
+  grid.innerHTML = rules.map(r => {
+    const followed = ruleFollows[r.id];
+    const prCls = r.priority === 'Always' ? 'priority-always' : r.priority === 'Important' ? 'priority-important' : 'priority-optional';
+    return `<div class="rule-card ${followed ? 'followed' : ''} ${r.enabled ? '' : 'disabled'}">
+      <div class="rule-card-top">
+        <div class="rule-check" onclick="toggleRuleFollow(${r.id})" title="Mark as followed today">
+          <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+        </div>
+        <div class="rule-info">
+          <div class="rule-title">${escapeHtml(r.title)}</div>
+          ${r.desc ? `<div class="rule-desc">${escapeHtml(r.desc)}</div>` : ''}
+        </div>
+        <div class="rule-toggle ${r.enabled ? 'on' : ''}" onclick="toggleRuleEnabled(${r.id})" title="Enable / disable rule"><div class="rule-toggle-knob"></div></div>
+      </div>
+      <div class="rule-meta-row">
+        <span class="rule-priority ${prCls}">${r.priority}</span>
+        <div class="rule-actions">
+          <button class="rule-icon-btn" onclick="openRuleEditor(${r.id})" title="Edit">
+            <svg viewBox="0 0 12 12"><path d="M8.5 1.5l2 2L4 10l-2.5.5L2 8z"/></svg>
+          </button>
+          <button class="rule-icon-btn danger" onclick="deleteRule(${r.id})" title="Delete">
+            <svg viewBox="0 0 12 12"><polyline points="1.5,3 10.5,3"/><path d="M4 3V1.5h4V3M9.5 3l-.5 7.5h-6L2.5 3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRuleFollow(id) {
+  const rule = getRules().find(r => r.id === id);
+  if (!rule || !rule.enabled) return;
+  ruleFollows[id] = !ruleFollows[id];
+  renderRules();
+  renderScore();
+}
+function toggleRuleEnabled(id) {
+  const rules = getRules();
+  const rule = rules.find(r => r.id === id);
+  if (!rule) return;
+  rule.enabled = !rule.enabled;
+  if (!rule.enabled) delete ruleFollows[id];
+  setRules(rules);
+  renderRules();
+  renderScore();
+}
+
+function openRuleEditor(id) {
+  editingRuleId = id || null;
+  const rule = id ? getRules().find(r => r.id === id) : null;
+  const slot = document.getElementById('ruleEditorSlot');
+  slot.innerHTML = `<div class="rule-editor">
+    <div class="form-row">
+      <input type="text" id="ruleTitleInput" placeholder="Rule title (e.g. Never risk more than 1%)" value="${rule ? escapeHtml(rule.title).replace(/"/g,'&quot;') : ''}">
+      <div class="select-wrap"><select id="rulePriorityInput">
+        <option ${rule && rule.priority==='Always'?'selected':''}>Always</option>
+        <option ${rule && rule.priority==='Important'?'selected':''}>Important</option>
+        <option ${rule && rule.priority==='Optional'?'selected':''}>Optional</option>
+      </select></div>
+    </div>
+    <input type="text" id="ruleDescInput" placeholder="Optional description" style="margin-bottom:10px;" value="${rule && rule.desc ? escapeHtml(rule.desc).replace(/"/g,'&quot;') : ''}">
+    <div class="rule-editor-actions">
+      <button class="btn-outline" onclick="closeRuleEditor()">Cancel</button>
+      <button class="btn-primary" onclick="saveRule()">${id ? 'Update Rule' : 'Add Rule'}</button>
+    </div>
+  </div>`;
+  document.getElementById('ruleTitleInput').focus();
+}
+function closeRuleEditor() { editingRuleId = null; document.getElementById('ruleEditorSlot').innerHTML = ''; }
+
+function saveRule() {
+  const title = document.getElementById('ruleTitleInput').value.trim();
+  const desc = document.getElementById('ruleDescInput').value.trim();
+  const priority = document.getElementById('rulePriorityInput').value;
+  if (!title) { document.getElementById('ruleTitleInput').classList.add('invalid'); showToast('Please enter a rule title.', false); return; }
+
+  const rules = getRules();
+  if (editingRuleId) {
+    const r = rules.find(x => x.id === editingRuleId);
+    if (r) { r.title = title; r.desc = desc; r.priority = priority; }
+    showToast('Rule updated.', true);
+  } else {
+    const newId = rules.length ? Math.max(...rules.map(r => r.id || 0)) + 1 : 1;
+    rules.push({ id: newId, title, desc, priority, enabled: true });
+    showToast('Rule added.', true);
+  }
+  setRules(rules);
+  closeRuleEditor();
+  renderRules();
+  renderScore();
+  renderRulePerformance();
+}
+
+function deleteRule(id) {
+  if (!confirm('Delete this trading rule? This cannot be undone.')) return;
+  setRules(getRules().filter(r => r.id !== id));
+  delete ruleFollows[id];
+  renderRules();
+  renderScore();
+  renderRulePerformance();
+  showToast('Rule deleted.', true);
+}
+
+/* ══════════════════════════════════════════════════════════
+   CHECKLIST
+══════════════════════════════════════════════════════════ */
+function renderChecklist() {
+  const grid = document.getElementById('checklistGrid');
+  grid.innerHTML = CHECKLIST_ITEMS.map((item, i) => `
+    <div class="check-item ${checklistState.has(i) ? 'checked' : ''}" onclick="toggleCheck(${i})">
+      <div class="check-box"><svg viewBox="0 0 11 11"><polyline points="1.5,6 4,8.5 9.5,2.5"/></svg></div>
+      <span class="check-item-label">${item}</span>
+    </div>`).join('');
+  const done = checklistState.size;
+  const pct = Math.round(done / CHECKLIST_ITEMS.length * 100);
+  document.getElementById('checklistLabel').textContent = done + ' / ' + CHECKLIST_ITEMS.length + ' Complete';
+  document.getElementById('checklistPct').textContent = pct + '%';
+  document.getElementById('checklistFill').style.width = pct + '%';
+}
+function toggleCheck(i) {
+  if (checklistState.has(i)) checklistState.delete(i); else checklistState.add(i);
+  renderChecklist();
+  renderScore();
+}
+
+/* ══════════════════════════════════════════════════════════
+   VIOLATIONS
+══════════════════════════════════════════════════════════ */
+function renderViolations() {
+  const grid = document.getElementById('violationsGrid');
+  grid.innerHTML = VIOLATIONS.map(v => `
+    <div class="violation-row ${violationState[v.key] ? 'active' : ''}">
+      <span class="violation-label">${v.label}</span>
+      <span class="violation-penalty">−${v.penalty}</span>
+      <div class="v-toggle ${violationState[v.key] ? 'on' : ''}" onclick="toggleViolation('${v.key}')"><div class="v-toggle-knob"></div></div>
+    </div>`).join('');
+  const active = Object.values(violationState).filter(Boolean).length;
+  document.getElementById('violationsMeta').textContent = active + ' active';
+}
+function toggleViolation(key) {
+  violationState[key] = !violationState[key];
+  renderViolations();
+  renderScore();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DATE + SAVE
+══════════════════════════════════════════════════════════ */
+function onDateChange() {
+  viewDate = document.getElementById('f-date').value || new Date().toISOString().slice(0, 10);
+  loadEntryForDate(viewDate);
+}
+function loadEntryForDate(date) {
+  const entry = getEntries().find(e => e.date === date);
+  ruleFollows = {}; checklistState = new Set(); violationState = {};
+  if (entry) {
+    ruleFollows = { ...(entry.ruleFollows || {}) };
+    checklistState = new Set(entry.checklist || []);
+    violationState = { ...(entry.violations || {}) };
+    document.getElementById('f-executed-well').value = entry.executedWell || '';
+    document.getElementById('f-mistake').value = entry.mistake || '';
+    document.getElementById('f-improve').value = entry.improve || '';
+  } else {
+    document.getElementById('f-executed-well').value = '';
+    document.getElementById('f-mistake').value = '';
+    document.getElementById('f-improve').value = '';
+  }
+  renderRules(); renderChecklist(); renderViolations(); renderScore();
+}
+
+async function saveEntry() {
+  const btn = document.getElementById('saveBtn');
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>Saving…</span>';
+  await new Promise(r => setTimeout(r, 500));
+
+  try {
+    const { score, rulesFollowed, rulesTotal, checkDone } = computeScore();
+    const entries = getEntries();
+    const d = new Date(viewDate + 'T00:00:00');
+    const violCount = Object.values(violationState).filter(Boolean).length;
+
+    const entryData = {
+      date: viewDate,
+      displayDate: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+      score,
+      rulesFollowed, rulesTotal,
+      checklistDone: checkDone, checklistTotal: CHECKLIST_ITEMS.length,
+      violationsCount: violCount,
+      ruleFollows: { ...ruleFollows },
+      checklist: Array.from(checklistState),
+      violations: { ...violationState },
+      executedWell: document.getElementById('f-executed-well').value.trim(),
+      mistake: document.getElementById('f-mistake').value.trim(),
+      improve: document.getElementById('f-improve').value.trim(),
+    };
+
+    const idx = entries.findIndex(e => e.date === viewDate);
+    if (idx !== -1) { entryData.id = entries[idx].id; entries[idx] = entryData; showToast('Discipline record updated!', true); }
+    else { entryData.id = entries.length ? Math.max(...entries.map(e => e.id || 0)) + 1 : 1; entries.push(entryData); showToast('Discipline record saved!', true); }
+
+    setEntries(entries);
+    renderScore(); renderAnalytics(); renderRulePerformance(); renderHistory();
+  } catch (err) {
+    console.error('Save discipline failed:', err);
+    showToast('Could not save. Please try again.', false);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   STREAK + ANALYTICS
+══════════════════════════════════════════════════════════ */
+function calcStreak(entries) {
+  const dates = new Set(entries.map(e => e.date));
+  let streak = 0; let cursor = new Date();
+  const today = cursor.toISOString().slice(0, 10);
+  const y = new Date(cursor); y.setDate(cursor.getDate() - 1);
+  if (!dates.has(today) && !dates.has(y.toISOString().slice(0, 10))) return 0;
+  if (!dates.has(today)) cursor.setDate(cursor.getDate() - 1);
+  while (dates.has(cursor.toISOString().slice(0, 10))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+  return streak;
+}
+
+function renderAnalytics() {
+  const entries = getEntries();
+  if (!entries.length) {
+    document.getElementById('anAdherence').textContent = '—';
+    document.getElementById('anWeekly').textContent = '—';
+    document.getElementById('anMonthly').textContent = '—';
+    return;
+  }
+
+  // Rule adherence % across all entries
+  let totFollowed = 0, totRules = 0;
+  entries.forEach(e => { totFollowed += e.rulesFollowed || 0; totRules += e.rulesTotal || 0; });
+  document.getElementById('anAdherence').textContent = totRules ? Math.round(totFollowed / totRules * 100) + '%' : '—';
+
+  // Most broken violation
+  const violCounts = {};
+  entries.forEach(e => Object.entries(e.violations || {}).forEach(([k, on]) => { if (on) violCounts[k] = (violCounts[k] || 0) + 1; }));
+  const mostBroken = Object.entries(violCounts).sort((a, b) => b[1] - a[1])[0];
+  if (mostBroken) {
+    const v = VIOLATIONS.find(x => x.key === mostBroken[0]);
+    document.getElementById('anMostBroken').textContent = v ? v.label : mostBroken[0];
+    document.getElementById('anMostBrokenSub').textContent = mostBroken[1] + ' occurrence' + (mostBroken[1] > 1 ? 's' : '');
+  }
+
+  // Best followed personal rule
+  const perf = computeRulePerformance();
+  if (perf.length) {
+    const best = [...perf].sort((a, b) => b.pct - a.pct)[0];
+    document.getElementById('anBestRule').textContent = best.title;
+    document.getElementById('anBestRuleSub').textContent = best.pct + '% adherence';
+  }
+
+  // Weekly / monthly averages
+  const avgFor = days => {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+    const subset = entries.filter(e => new Date(e.date + 'T00:00:00') >= cutoff);
+    if (!subset.length) return '—';
+    return Math.round(subset.reduce((s, e) => s + (e.score || 0), 0) / subset.length) + '%';
+  };
+  document.getElementById('anWeekly').textContent = avgFor(7);
+  document.getElementById('anMonthly').textContent = avgFor(30);
+
+  // Consistency trend
+  const sorted = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const trendEl = document.getElementById('anTrend');
+  const trendSub = document.getElementById('anTrendSub');
+  if (sorted.length >= 2) {
+    const recent = sorted.slice(-3), prior = sorted.slice(-6, -3);
+    const avg = arr => arr.reduce((s, e) => s + (e.score || 0), 0) / arr.length;
+    const diff = avg(recent) - (prior.length ? avg(prior) : avg(recent));
+    if (diff > 3) { trendEl.textContent = 'Improving'; trendEl.style.color = 'var(--green)'; trendSub.textContent = 'trending upward'; }
+    else if (diff < -3) { trendEl.textContent = 'Declining'; trendEl.style.color = 'var(--red)'; trendSub.textContent = 'trending downward'; }
+    else { trendEl.textContent = 'Stable'; trendEl.style.color = 'var(--amber)'; trendSub.textContent = 'holding steady'; }
+  }
+}
+
+/* ── Rule performance (per personal rule adherence across history) ── */
+function computeRulePerformance() {
+  const rules = getRules();
+  const entries = getEntries();
+  return rules.map(r => {
+    let followed = 0, tracked = 0;
+    entries.forEach(e => {
+      if (e.ruleFollows && (r.id in e.ruleFollows)) {
+        tracked++;
+        if (e.ruleFollows[r.id]) followed++;
+      }
+    });
+    return { id: r.id, title: r.title, priority: r.priority, pct: tracked ? Math.round(followed / tracked * 100) : 0, tracked };
+  });
+}
+
+function renderRulePerformance() {
+  const body = document.getElementById('rulePerfBody');
+  const perf = computeRulePerformance();
+  if (!perf.length) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:24px;">Add rules and log a few days to see performance.</td></tr>';
+    return;
+  }
+  body.innerHTML = perf.map(p => {
+    const prCls = p.priority === 'Always' ? 'priority-always' : p.priority === 'Important' ? 'priority-important' : 'priority-optional';
+    return `<tr>
+      <td class="rule-perf-name">${escapeHtml(p.title)}</td>
+      <td><span class="rule-priority ${prCls}">${p.priority}</span></td>
+      <td><div class="perf-bar-wrap"><div class="perf-bar-track"><div class="perf-bar-fill" style="width:${p.pct}%;background:${p.pct >= 70 ? 'var(--green)' : p.pct >= 40 ? 'var(--amber)' : 'var(--red)'};"></div></div><span class="perf-pct" style="color:${p.pct >= 70 ? 'var(--green)' : p.pct >= 40 ? 'var(--amber)' : 'var(--red)'};">${p.tracked ? p.pct + '%' : '—'}</span></div></td>
+      <td>${p.tracked} day${p.tracked === 1 ? '' : 's'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════════════ */
+function renderHistory() {
+  const container = document.getElementById('entriesContainer');
+  const entries = [...getEntries()].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!entries.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7.5 12l3 3 6-6.5"/></svg></div>
+      <div class="empty-title">No discipline records yet.</div>
+      <div class="empty-sub">Start tracking your execution and build the habits of consistently profitable traders.</div>
+    </div>`;
+    return;
+  }
+  const circ = 2 * Math.PI * 18;
+  container.innerHTML = '<div class="entries-grid">' + entries.map(e => {
+    const tier = scoreTier(e.score || 0);
+    const offset = circ - ((e.score || 0) / 100 * circ);
+    return `<div class="entry-card">
+      <div class="entry-top">
+        <div class="entry-score-wrap">
+          <svg class="entry-score-ring" viewBox="0 0 46 46">
+            <circle class="ebg" cx="23" cy="23" r="18"/>
+            <circle class="efg" cx="23" cy="23" r="18" style="stroke:${tier.color};stroke-dasharray:${circ};stroke-dashoffset:${offset};"/>
+          </svg>
+          <div class="entry-score-num">${e.score || 0}</div>
+        </div>
+        <div class="entry-main">
+          <div class="entry-date">${e.displayDate || e.date}</div>
+          <div class="entry-sub">${tier.label}</div>
+        </div>
+      </div>
+      <div class="entry-stats">
+        <div class="entry-stat"><span class="entry-stat-val green">${e.rulesFollowed}/${e.rulesTotal}</span><span class="entry-stat-label">Rules</span></div>
+        <div class="entry-stat"><span class="entry-stat-val">${e.checklistDone}/${e.checklistTotal}</span><span class="entry-stat-label">Checklist</span></div>
+        <div class="entry-stat"><span class="entry-stat-val ${e.violationsCount ? 'red' : 'green'}">${e.violationsCount}</span><span class="entry-stat-label">Violations</span></div>
+      </div>
+      <div class="entry-actions">
+        <button class="entry-action-btn primary" onclick="viewEntry(${e.id})">View</button>
+        <button class="entry-action-btn" onclick="viewEntry(${e.id})">Edit</button>
+        <button class="entry-action-btn danger" onclick="deleteEntry(${e.id})">Delete</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function viewEntry(id) {
+  const entry = getEntries().find(e => e.id === id);
+  if (!entry) return;
+  document.getElementById('f-date').value = entry.date;
+  onDateChange();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Loaded — adjust and save to update.', true);
+}
+function deleteEntry(id) {
+  if (!confirm('Delete this discipline record? This cannot be undone.')) return;
+  setEntries(getEntries().filter(e => e.id !== id));
+  renderScore(); renderAnalytics(); renderRulePerformance(); renderHistory();
+  showToast('Record deleted.', true);
+}
+
+/* ── Utils ── */
+function escapeHtml(str) { return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+let toastTimer;
+function showToast(msg, success) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.querySelector('.toast-icon').style.background = success ? 'var(--green)' : 'var(--red)';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  document.getElementById('f-date').value = viewDate;
+  loadEntryForDate(viewDate);
+  renderAnalytics();
+  renderRulePerformance();
+  renderHistory();
+});
+</script>
+</body>
+</html>
