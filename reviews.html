@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Reviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --amber:        #F59E0B;
+  --amber-bg:     #FFFBEB;
+  --purple:       #8B5CF6;
+  --purple-bg:    #F5F3FF;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --amber-bg:     #1E1503;
+  --purple-bg:    #170D2E;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; max-width: 1160px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; max-width: 640px; line-height: 1.55; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Stat cards */
+.stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-value.amber { color: var(--amber); }
+.stat-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; transition: color var(--t) var(--ease); }
+.status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.status-elite { background: var(--accent-bg); color: var(--accent); }
+.status-excellent { background: var(--green-bg); color: var(--green); }
+.status-good { background: var(--amber-bg); color: var(--amber); }
+.status-needs { background: var(--amber-bg); color: var(--amber); }
+.status-poor { background: var(--red-bg); color: var(--red); }
+
+/* Card system */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-head { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.card-head-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-head-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.card-head-meta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.section-heading { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 24px 0 4px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+.section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; transition: color var(--t) var(--ease); }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: var(--radius-btn); border: none; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease); white-space: nowrap; font-family: 'Inter', sans-serif; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-primary svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+.btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: var(--radius-btn); border: 1px solid var(--border); background: var(--bg-page); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.btn-outline:hover { background: var(--border-light); color: var(--text-primary); border-color: var(--text-faint); transform: translateY(-1px); }
+
+/* Save button */
+.save-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-btn); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease), opacity var(--t) var(--ease); margin: 4px 0 32px; }
+.save-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.save-btn:disabled { opacity: 0.75; cursor: default; }
+.save-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Form inputs */
+input[type="text"], input[type="date"], select, textarea { padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--radius-btn); background: var(--bg-page); color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif; transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; appearance: none; -webkit-appearance: none; width: 100%; }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.form-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: block; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   REVIEWS — PERIOD SEGMENTED SELECTOR
+══════════════════════════════════════════════════════════ */
+.period-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.period-seg { display: inline-flex; padding: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-card); position: relative; }
+.period-seg-btn { position: relative; z-index: 1; padding: 9px 20px; border: none; background: transparent; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 9px; transition: color var(--t) var(--ease); white-space: nowrap; }
+.period-seg-btn.active { color: #fff; }
+.period-seg-glider { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); background: var(--accent); border-radius: 9px; box-shadow: var(--shadow-btn); transition: transform 260ms var(--ease), width 260ms var(--ease); z-index: 0; }
+.period-range { font-size: 13px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+.period-range svg { width: 15px; height: 15px; stroke: var(--text-faint); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.period-nav { display: inline-flex; gap: 4px; }
+.period-nav-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--t) var(--ease); }
+.period-nav-btn:hover { background: var(--border-light); border-color: var(--text-faint); }
+.period-nav-btn svg { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ══════════════════════════════════════════════════════════
+   REVIEW GRADE HERO
+══════════════════════════════════════════════════════════ */
+.grade-hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+.grade-badge-wrap { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+.grade-ring { width: 150px; height: 150px; transform: rotate(-90deg); }
+.grade-ring-bg { fill: none; stroke: var(--border-light); stroke-width: 12; transition: stroke var(--t) var(--ease); }
+.grade-ring-fg { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 408.4; stroke-dashoffset: 408.4; transition: stroke-dashoffset 1s var(--ease), stroke var(--t) var(--ease); }
+.grade-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.grade-letter { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; transition: color var(--t) var(--ease); }
+.grade-score-sm { font-size: 11px; font-weight: 700; color: var(--text-faint); margin-top: 4px; }
+.grade-info { flex: 1; }
+.grade-tier { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; }
+.grade-title { font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+.grade-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px; max-width: 560px; transition: color var(--t) var(--ease); }
+.grade-factors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.grade-factor { padding: 12px 14px; border-radius: 11px; background: var(--bg-page); border: 1px solid var(--border); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.grade-factor-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 7px; }
+.grade-factor-val { font-size: 16px; font-weight: 800; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.grade-factor-track { height: 5px; border-radius: 5px; background: var(--border-light); overflow: hidden; margin-top: 7px; transition: background var(--t) var(--ease); }
+.grade-factor-fill { height: 100%; border-radius: 5px; background: var(--accent); transition: width 700ms var(--ease), background var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   PERFORMANCE SUMMARY (best/worst grid)
+══════════════════════════════════════════════════════════ */
+.perf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.perf-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-page); transition: all var(--t) var(--ease); }
+.perf-row:hover { border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.perf-row-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.perf-row-icon.good { background: var(--green-bg); }
+.perf-row-icon.bad { background: var(--red-bg); }
+.perf-row-icon svg { width: 16px; height: 16px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.perf-row-icon.good svg { stroke: var(--green); }
+.perf-row-icon.bad svg { stroke: var(--red); }
+.perf-row-info { flex: 1; min-width: 0; }
+.perf-row-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); margin-bottom: 3px; }
+.perf-row-value { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.perf-row-amt { font-size: 13px; font-weight: 700; text-align: right; flex-shrink: 0; }
+.perf-row-amt.green { color: var(--green); }
+.perf-row-amt.red { color: var(--red); }
+
+/* ══════════════════════════════════════════════════════════
+   COMPARISON CARDS (planner review)
+══════════════════════════════════════════════════════════ */
+.compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.compare-card { border: 1px solid var(--border); border-radius: 13px; padding: 16px 18px; background: var(--bg-page); transition: all var(--t) var(--ease); position: relative; }
+.compare-card:hover { border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.compare-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 12px; }
+.compare-values { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.compare-col { flex: 1; min-width: 0; }
+.compare-col-label { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+.compare-col-val { font-size: 17px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; line-height: 1.2; word-break: break-word; transition: color var(--t) var(--ease); }
+.compare-col-val.planned { color: var(--text-muted); }
+.compare-arrow { flex-shrink: 0; color: var(--text-faint); display: flex; align-items: center; }
+.compare-arrow svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.compare-verdict { position: absolute; top: 14px; right: 16px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+.verdict-good { background: var(--green-bg); color: var(--green); }
+.verdict-bad { background: var(--red-bg); color: var(--red); }
+.verdict-neutral { background: var(--border-light); color: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════════════
+   SUMMARY METRIC GRID (mood / discipline)
+══════════════════════════════════════════════════════════ */
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.metric-tile { padding: 16px 18px; border-radius: 13px; border: 1px solid var(--border); background: var(--bg-page); transition: all var(--t) var(--ease); }
+.metric-tile:hover { border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.metric-tile-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.metric-emoji { font-size: 18px; line-height: 1; }
+.metric-tile-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); }
+.metric-tile-val { font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; line-height: 1; margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.metric-tile-track { height: 6px; border-radius: 6px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.metric-tile-fill { height: 100%; border-radius: 6px; transition: width 600ms var(--ease); }
+.metric-highlight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+.metric-highlight { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-page); transition: all var(--t) var(--ease); }
+.metric-highlight.good { border-color: var(--green-border); background: var(--green-bg); }
+.metric-highlight.bad { border-color: var(--red-border); background: var(--red-bg); }
+.metric-highlight-emoji { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.metric-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); margin-bottom: 3px; }
+.metric-highlight-val { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+
+/* Discipline score ring (compact, reused visual) */
+.disc-summary { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; margin-bottom: 20px; }
+.disc-ring-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.disc-ring { width: 110px; height: 110px; transform: rotate(-90deg); }
+.disc-ring-bg { fill: none; stroke: var(--border-light); stroke-width: 10; transition: stroke var(--t) var(--ease); }
+.disc-ring-fg { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 314.2; stroke-dashoffset: 314.2; transition: stroke-dashoffset 1s var(--ease), stroke var(--t) var(--ease); }
+.disc-ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.disc-ring-num { font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; transition: color var(--t) var(--ease); }
+.disc-ring-cap { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+.disc-metrics { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.rule-tag-row { display: flex; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+.rule-tag { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); flex: 1; min-width: 200px; transition: all var(--t) var(--ease); }
+.rule-tag.good { border-color: var(--green-border); }
+.rule-tag.bad { border-color: var(--red-border); }
+.rule-tag-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rule-tag.good .rule-tag-icon { background: var(--green-bg); }
+.rule-tag.bad .rule-tag-icon { background: var(--red-bg); }
+.rule-tag-icon svg { width: 13px; height: 13px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.rule-tag.good .rule-tag-icon svg { stroke: var(--green); }
+.rule-tag.bad .rule-tag-icon svg { stroke: var(--red); }
+.rule-tag-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); }
+.rule-tag-val { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   REFLECTION
+══════════════════════════════════════════════════════════ */
+.reflection-group { margin-bottom: 18px; }
+.reflection-group:last-child { margin-bottom: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   ACTION PLAN
+══════════════════════════════════════════════════════════ */
+.action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.action-col { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--bg-page); transition: all var(--t) var(--ease); }
+.action-col.continue { border-top: 3px solid var(--green); }
+.action-col.stop { border-top: 3px solid var(--red); }
+.action-col.improve { border-top: 3px solid var(--amber); }
+.action-col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.action-col-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.action-col.continue .action-col-icon { background: var(--green-bg); }
+.action-col.stop .action-col-icon { background: var(--red-bg); }
+.action-col.improve .action-col-icon { background: var(--amber-bg); }
+.action-col-icon svg { width: 15px; height: 15px; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.action-col.continue .action-col-icon svg { stroke: var(--green); }
+.action-col.stop .action-col-icon svg { stroke: var(--red); }
+.action-col.improve .action-col-icon svg { stroke: var(--amber); }
+.action-col-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.action-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; min-height: 4px; }
+.action-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); font-size: 12.5px; color: var(--text-primary); line-height: 1.45; transition: all var(--t) var(--ease); }
+.action-item:hover { border-color: var(--text-faint); }
+.action-item-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.action-col.continue .action-item-dot { background: var(--green); }
+.action-col.stop .action-item-dot { background: var(--red); }
+.action-col.improve .action-item-dot { background: var(--amber); }
+.action-item-text { flex: 1; min-width: 0; word-break: break-word; }
+.action-item-del { flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.5; transition: all var(--t) var(--ease); }
+.action-item-del:hover { opacity: 1; background: var(--red-bg); }
+.action-item-del svg { width: 10px; height: 10px; stroke: var(--red); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.action-add { display: flex; gap: 8px; }
+.action-add input { padding: 9px 12px; font-size: 12.5px; }
+.action-add-btn { flex-shrink: 0; width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t) var(--ease); }
+.action-add-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+.action-add-btn svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+
+/* ══════════════════════════════════════════════════════════
+   AI COACH PLACEHOLDER
+══════════════════════════════════════════════════════════ */
+.ai-card { background: linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-card) 70%); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 28px; box-shadow: var(--shadow-card); margin-bottom: 16px; transition: all var(--t) var(--ease); position: relative; overflow: hidden; }
+.ai-card::after { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,0.12), transparent 70%); pointer-events: none; }
+.ai-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; z-index: 1; }
+.ai-card-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59,130,246,0.35); flex-shrink: 0; }
+.ai-card-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ai-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.soon-badge-inline { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); margin-left: auto; }
+.ai-card-text { font-size: 13.5px; line-height: 1.65; color: var(--text-muted); max-width: 620px; position: relative; z-index: 1; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   REVIEW HISTORY
+══════════════════════════════════════════════════════════ */
+.entries-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.review-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow-card); transition: all var(--t) var(--ease); }
+.review-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.review-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.review-grade-chip { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; flex-shrink: 0; letter-spacing: -1px; }
+.review-card-main { flex: 1; min-width: 0; }
+.review-card-type { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 9px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); margin-bottom: 5px; }
+.review-card-date { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.review-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 14px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); margin-bottom: 14px; transition: border-color var(--t) var(--ease); }
+.review-card-stat { text-align: center; }
+.review-card-stat-val { font-size: 15px; font-weight: 800; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.review-card-stat-val.green { color: var(--green); }
+.review-card-stat-val.red { color: var(--red); }
+.review-card-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); margin-top: 3px; }
+.review-card-actions { display: flex; gap: 8px; }
+.review-action-btn { flex: 1; padding: 8px 0; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-page); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.review-action-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.review-action-btn.primary { border-color: var(--accent); color: var(--accent); }
+.review-action-btn.primary:hover { background: var(--accent-bg); }
+.review-action-btn.danger:hover { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+/* Empty states */
+.empty-state { text-align: center; padding: 48px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-card); transition: all var(--t) var(--ease); }
+.empty-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; }
+.empty-icon svg { width: 26px; height: 26px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.empty-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); max-width: 380px; margin: 0 auto; line-height: 1.5; transition: color var(--t) var(--ease); }
+.section-empty { padding: 28px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 13px; background: var(--bg-page); }
+.section-empty-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.section-empty-text a { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0F172A; color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform var(--t) var(--ease), opacity var(--t) var(--ease); opacity: 0; z-index: 999; pointer-events: none; }
+[data-theme="dark"] .toast { background: #1A2540; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* Mobile shell */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .grade-factors { grid-template-columns: repeat(2, 1fr); }
+  .action-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; max-width: 100%; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .grade-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .grade-desc { margin-left: auto; margin-right: auto; }
+  .grade-factors { width: 100%; }
+  .disc-summary { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .disc-metrics { width: 100%; }
+  .perf-grid, .compare-grid, .entries-grid, .metric-highlight-grid { grid-template-columns: 1fr; }
+  .review-card-actions, .period-bar { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .metric-grid { grid-template-columns: 1fr; }
+  .grade-factors { grid-template-columns: 1fr 1fr; }
+  .period-seg { width: 100%; }
+  .period-seg-btn { flex: 1; padding: 9px 4px; }
+  .rule-tag { min-width: 100%; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="discipline-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="reviews.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Reviews</h1>
+        <p class="page-subtitle">Your personal trading coach. Every module in Tradeva combined into one meaningful review — so you understand <em>why</em> you performed the way you did, not just how much you made.</p>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="scrollToSave()">
+      <svg viewBox="0 0 14 14"><path d="M2 7l4 4 6-8"/></svg>
+      Save Review
+    </button>
+  </div>
+
+  <!-- PERIOD SELECTOR -->
+  <div class="period-bar">
+    <div class="period-seg" id="periodSeg">
+      <div class="period-seg-glider" id="periodGlider"></div>
+      <button class="period-seg-btn active" data-period="daily" onclick="setPeriod('daily', this)">Daily</button>
+      <button class="period-seg-btn" data-period="weekly" onclick="setPeriod('weekly', this)">Weekly</button>
+      <button class="period-seg-btn" data-period="monthly" onclick="setPeriod('monthly', this)">Monthly</button>
+      <button class="period-seg-btn" data-period="yearly" onclick="setPeriod('yearly', this)">Yearly</button>
+    </div>
+    <div class="period-nav">
+      <button class="period-nav-btn" onclick="shiftPeriod(-1)" title="Previous period">
+        <svg viewBox="0 0 13 13"><polyline points="8,2 3.5,6.5 8,11"/></svg>
+      </button>
+      <button class="period-nav-btn" onclick="shiftPeriod(1)" title="Next period">
+        <svg viewBox="0 0 13 13"><polyline points="5,2 9.5,6.5 5,11"/></svg>
+      </button>
+    </div>
+    <div class="period-range">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      <span id="periodRangeLabel">This day</span>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE SUMMARY STAT CARDS -->
+  <div class="stats-grid" id="perfStatCards"><!-- injected --></div>
+
+  <!-- REVIEW GRADE HERO -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon">
+        <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      </div>
+      <div class="card-head-title">Overall Review Grade</div>
+      <div class="card-head-meta" id="gradePeriodMeta">Daily review</div>
+    </div>
+    <div class="grade-hero">
+      <div class="grade-badge-wrap">
+        <svg class="grade-ring" viewBox="0 0 150 150">
+          <circle class="grade-ring-bg" cx="75" cy="75" r="65"/>
+          <circle class="grade-ring-fg" id="gradeRingFg" cx="75" cy="75" r="65"/>
+        </svg>
+        <div class="grade-label">
+          <div class="grade-letter" id="gradeLetter">—</div>
+          <div class="grade-score-sm" id="gradeScoreSm">0 / 100</div>
+        </div>
+      </div>
+      <div class="grade-info">
+        <span class="grade-tier" id="gradeTier">Awaiting data</span>
+        <div class="grade-title" id="gradeTitle">Not enough data yet</div>
+        <p class="grade-desc" id="gradeDesc">Log trades, plan your week, track your mood and discipline — Tradeva will grade your execution automatically. This grade can never be edited by hand.</p>
+        <div class="grade-factors" id="gradeFactors"><!-- injected --></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE PERFORMANCE SUMMARY -->
+  <h2 class="section-heading">Trade Performance Summary</h2>
+  <p class="section-sub">Your best and worst edges this period — pulled automatically from Trade History.</p>
+  <div class="card">
+    <div id="perfSummaryBody">
+      <div class="perf-grid" id="perfSummaryGrid"><!-- injected --></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY PLANNER REVIEW -->
+  <h2 class="section-heading">Weekly Planner Review</h2>
+  <p class="section-sub">Did reality match the plan? Your Weekly Planner targets compared against what actually happened.</p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon">
+        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      </div>
+      <div class="card-head-title">Plan vs Actual</div>
+      <div class="card-head-meta" id="plannerMeta"></div>
+    </div>
+    <div id="plannerBody"><!-- injected --></div>
+  </div>
+
+  <!-- MOOD SUMMARY -->
+  <h2 class="section-heading">Mood Summary</h2>
+  <p class="section-sub">How your emotional state tracked this period — a read-only summary from Mood Tracker.</p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      </div>
+      <div class="card-head-title">Emotional State</div>
+      <div class="card-head-meta" id="moodMeta"></div>
+    </div>
+    <div id="moodBody"><!-- injected --></div>
+  </div>
+
+  <!-- DISCIPLINE SUMMARY -->
+  <h2 class="section-heading">Discipline Summary</h2>
+  <p class="section-sub">How consistently you executed your process — a read-only summary from Discipline Tracker.</p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon">
+        <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      </div>
+      <div class="card-head-title">Execution & Rule Adherence</div>
+      <div class="card-head-meta" id="disciplineMeta"></div>
+    </div>
+    <div id="disciplineBody"><!-- injected --></div>
+  </div>
+
+  <!-- REFLECTION -->
+  <h2 class="section-heading">Reflection</h2>
+  <p class="section-sub">Your own words — the part no algorithm can replace.</p>
+  <div class="card">
+    <div class="reflection-group">
+      <label class="form-label">What went well this period?</label>
+      <textarea id="f-well" placeholder="The setups you nailed, the discipline you held, the good decisions…"></textarea>
+    </div>
+    <div class="reflection-group">
+      <label class="form-label">What mistakes did I make?</label>
+      <textarea id="f-mistakes" placeholder="Where you slipped — rushed entries, broken rules, emotional trades…"></textarea>
+    </div>
+    <div class="reflection-group">
+      <label class="form-label">What is my biggest lesson?</label>
+      <textarea id="f-lesson" placeholder="The single most important takeaway to carry into next period…"></textarea>
+    </div>
+  </div>
+
+  <!-- NEXT ACTION PLAN -->
+  <h2 class="section-heading">Next Action Plan</h2>
+  <p class="section-sub">Turn insight into a plan. Add as many action items as you need to each column.</p>
+  <div class="card">
+    <div class="action-grid">
+      <div class="action-col continue">
+        <div class="action-col-head">
+          <div class="action-col-icon"><svg viewBox="0 0 15 15"><path d="M3 7.5l3 3 6-6.5"/></svg></div>
+          <div class="action-col-title">Continue Doing</div>
+        </div>
+        <div class="action-items" id="items-continue"></div>
+        <div class="action-add">
+          <input type="text" id="input-continue" placeholder="Add an item…" onkeydown="if(event.key==='Enter')addAction('continue')">
+          <button class="action-add-btn" onclick="addAction('continue')"><svg viewBox="0 0 14 14"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg></button>
+        </div>
+      </div>
+      <div class="action-col stop">
+        <div class="action-col-head">
+          <div class="action-col-icon"><svg viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="6"/><line x1="3.5" y1="3.5" x2="11.5" y2="11.5"/></svg></div>
+          <div class="action-col-title">Stop Doing</div>
+        </div>
+        <div class="action-items" id="items-stop"></div>
+        <div class="action-add">
+          <input type="text" id="input-stop" placeholder="Add an item…" onkeydown="if(event.key==='Enter')addAction('stop')">
+          <button class="action-add-btn" onclick="addAction('stop')"><svg viewBox="0 0 14 14"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg></button>
+        </div>
+      </div>
+      <div class="action-col improve">
+        <div class="action-col-head">
+          <div class="action-col-icon"><svg viewBox="0 0 15 15"><path d="M7.5 1.5l1.8 3.9 4.2.5-3.1 2.9.9 4.2-3.8-2.2-3.8 2.2.9-4.2L1.5 5.9l4.2-.5z"/></svg></div>
+          <div class="action-col-title">Improve Next Period</div>
+        </div>
+        <div class="action-items" id="items-improve"></div>
+        <div class="action-add">
+          <input type="text" id="input-improve" placeholder="Add an item…" onkeydown="if(event.key==='Enter')addAction('improve')">
+          <button class="action-add-btn" onclick="addAction('improve')"><svg viewBox="0 0 14 14"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI COACH PLACEHOLDER -->
+  <div class="ai-card">
+    <div class="ai-card-top">
+      <div class="ai-card-icon">
+        <svg viewBox="0 0 20 20"><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.2 4.2l2.1 2.1M13.7 13.7l2.1 2.1M15.8 4.2l-2.1 2.1M6.3 13.7l-2.1 2.1"/><circle cx="10" cy="10" r="3"/></svg>
+      </div>
+      <div class="ai-card-title">AI Trading Coach</div>
+      <span class="soon-badge-inline">Coming Soon</span>
+    </div>
+    <p class="ai-card-text">Tradeva AI will automatically analyze your trading history, mood, discipline, and planner to generate personalized review reports and improvement suggestions — turning every period into a coaching session tailored to exactly how you trade.</p>
+  </div>
+
+  <!-- SAVE -->
+  <button class="save-btn" id="saveBtn" onclick="saveReview()">
+    <svg viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 4"/></svg>
+    <span>Save This Review</span>
+  </button>
+
+  <!-- REVIEW HISTORY -->
+  <h2 class="section-heading">Review History</h2>
+  <p class="section-sub">Every review you've saved — track your growth as a trader over time.</p>
+  <div id="historyBody"><!-- injected --></div>
+
+</main>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="reviews.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+    Reviews
+  </a>
+</nav>
+
+<div class="toast" id="toast">
+  <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+  <span id="toastText">Saved!</span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — REVIEWS
+   The trader's personal coach. Aggregates every module into
+   one end-of-period review.
+
+   Reads (never writes) from:
+     tradeva_trades              (Trade History / Analytics)
+     tradeva_weekly_plans        (Weekly Planner)
+     tradeva_mood_entries        (Mood Tracker)
+     tradeva_discipline_entries  (Discipline Tracker)
+     tradeva_discipline_rules    (Discipline Tracker)
+   Writes:
+     tradeva_reviews             (this page — full CRUD)
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR / PROFILE ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const initials = (fname.charAt(0) + ((p.lname || '').charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = p.account || 'Pro Trader';
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE READERS (read-only from other modules)
+══════════════════════════════════════════════════════════ */
+const REVIEWS_KEY = 'tradeva_reviews';
+function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function getTrades()          { return readJSON('tradeva_trades', []) || []; }
+function getPlans()           { return readJSON('tradeva_weekly_plans', []) || []; }
+function getMoodEntries()     { return readJSON('tradeva_mood_entries', []) || []; }
+function getDisciplineEntries(){ return readJSON('tradeva_discipline_entries', []) || []; }
+function getDisciplineRules() { return readJSON('tradeva_discipline_rules', []) || []; }
+function getReviews()         { return readJSON(REVIEWS_KEY, []) || []; }
+function setReviews(r)        { localStorage.setItem(REVIEWS_KEY, JSON.stringify(r)); }
+
+/* Mood category scale metadata (mirrors Mood Tracker) */
+const MOOD_CATS = [
+  { key: 'mood',       label: 'Mood',          emoji: '😊' },
+  { key: 'energy',     label: 'Energy',        emoji: '⚡' },
+  { key: 'stress',     label: 'Stress',        emoji: '😌' },
+  { key: 'confidence', label: 'Confidence',    emoji: '😎' },
+  { key: 'motivation', label: 'Motivation',    emoji: '🚀' },
+  { key: 'sleep',      label: 'Sleep Quality', emoji: '😴' },
+];
+
+/* ══════════════════════════════════════════════════════════
+   DATE HELPERS
+══════════════════════════════════════════════════════════ */
+/* Trades store date as a display string like "Jun 20, 2026".
+   We parse leniently and fall back to null when unparseable. */
+function parseAnyDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  // ISO first (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) { const d = new Date(v + (v.length === 10 ? 'T00:00:00' : '')); return isNaN(d) ? null : d; }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+function ymd(d) { return d.toISOString().slice(0, 10); }
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+/* Returns {start, end, label, key} for the active period anchored on `anchor`. */
+function periodRange(period, anchor) {
+  const a = startOfDay(anchor);
+  if (period === 'daily') {
+    return { start: a, end: a, label: a.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric', year:'numeric' }), key: ymd(a) };
+  }
+  if (period === 'weekly') {
+    const dow = (a.getDay() + 6) % 7; // Monday=0
+    const start = addDays(a, -dow);
+    const end = addDays(start, 6);
+    const fmt = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    return { start, end, label: fmt(start) + ' → ' + fmt(end) + ', ' + end.getFullYear(), key: 'W' + ymd(start) };
+  }
+  if (period === 'monthly') {
+    const start = new Date(a.getFullYear(), a.getMonth(), 1);
+    const end = new Date(a.getFullYear(), a.getMonth() + 1, 0);
+    return { start, end, label: a.toLocaleDateString('en-US', { month:'long', year:'numeric' }), key: 'M' + a.getFullYear() + '-' + (a.getMonth()+1) };
+  }
+  // yearly
+  const start = new Date(a.getFullYear(), 0, 1);
+  const end = new Date(a.getFullYear(), 11, 31);
+  return { start, end, label: String(a.getFullYear()), key: 'Y' + a.getFullYear() };
+}
+function inRange(d, r) { if (!d) return false; const x = startOfDay(d); return x >= r.start && x <= startOfDay(r.end); }
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let currentPeriod = 'daily';
+let anchorDate = new Date();
+let actionPlan = { continue: [], stop: [], improve: [] };
+let editingReviewId = null;
+
+/* ══════════════════════════════════════════════════════════
+   PERIOD SELECTOR
+══════════════════════════════════════════════════════════ */
+function setPeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-seg-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  moveGlider();
+  renderAll();
+}
+function moveGlider() {
+  const active = document.querySelector('.period-seg-btn.active');
+  const glider = document.getElementById('periodGlider');
+  if (!active || !glider) return;
+  glider.style.width = active.offsetWidth + 'px';
+  glider.style.transform = 'translateX(' + active.offsetLeft + 'px)';
+}
+function shiftPeriod(dir) {
+  if (currentPeriod === 'daily')   anchorDate = addDays(anchorDate, dir);
+  if (currentPeriod === 'weekly')  anchorDate = addDays(anchorDate, dir * 7);
+  if (currentPeriod === 'monthly') anchorDate = new Date(anchorDate.getFullYear(), anchorDate.getMonth() + dir, Math.min(anchorDate.getDate(), 28));
+  if (currentPeriod === 'yearly')  anchorDate = new Date(anchorDate.getFullYear() + dir, anchorDate.getMonth(), anchorDate.getDate());
+  renderAll();
+}
+
+/* ══════════════════════════════════════════════════════════
+   AGGREGATION — TRADES
+══════════════════════════════════════════════════════════ */
+function tradeStats(trades) {
+  const n = trades.length;
+  const wins = trades.filter(t => (t.outcome === 'Win') || (t.outcome == null && Number(t.pnl) > 0));
+  const losses = trades.filter(t => (t.outcome === 'Loss') || (t.outcome == null && Number(t.pnl) < 0));
+  const grossWin = wins.reduce((s, t) => s + Math.abs(Number(t.pnl) || 0), 0);
+  const grossLoss = losses.reduce((s, t) => s + Math.abs(Number(t.pnl) || 0), 0);
+  const netPnl = trades.reduce((s, t) => s + (Number(t.pnl) || 0), 0);
+  const winRate = n ? (wins.length / n) * 100 : 0;
+  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0);
+  const rrVals = trades.map(t => Number(t.rr)).filter(v => !isNaN(v) && v !== 0);
+  const avgRR = rrVals.length ? rrVals.reduce((s,v)=>s+v,0) / rrVals.length : null;
+  // Net RR: sum of per-trade RR when available, else derive from win/loss count as R multiples
+  let netRR = null;
+  if (rrVals.length === n && n > 0) netRR = trades.reduce((s,t)=>s+(Number(t.rr)||0),0);
+  const winnersPnl = wins.map(t => Number(t.pnl) || 0);
+  const losersPnl = losses.map(t => Number(t.pnl) || 0);
+  const largestWinner = winnersPnl.length ? Math.max(...winnersPnl) : 0;
+  const largestLoser  = losersPnl.length ? Math.min(...losersPnl) : 0;
+  return { n, wins: wins.length, losses: losses.length, grossWin, grossLoss, netPnl, winRate, profitFactor, avgRR, netRR, largestWinner, largestLoser };
+}
+
+function fmtMoney(v) {
+  const sign = v >= 0 ? '+' : '-';
+  return sign + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtMoneyPlain(v) { return '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtRR(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + 'R'; }
+function fmtPF(v) { return v === Infinity ? '∞' : v.toFixed(2); }
+
+/* Group helper -> { key: {pnl, count, wins} } */
+function groupBy(trades, keyFn) {
+  const map = {};
+  trades.forEach(t => {
+    const k = keyFn(t);
+    if (!k) return;
+    if (!map[k]) map[k] = { pnl: 0, count: 0, wins: 0 };
+    map[k].pnl += Number(t.pnl) || 0;
+    map[k].count += 1;
+    if (t.outcome === 'Win' || (t.outcome == null && Number(t.pnl) > 0)) map[k].wins += 1;
+  });
+  return map;
+}
+function bestWorst(map) {
+  const entries = Object.entries(map);
+  if (!entries.length) return { best: null, worst: null };
+  entries.sort((a, b) => b[1].pnl - a[1].pnl);
+  return { best: entries[0], worst: entries[entries.length - 1] };
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — PERFORMANCE STAT CARDS
+══════════════════════════════════════════════════════════ */
+function renderPerfCards(s) {
+  const cards = [
+    { label: 'Net RR',        value: s.netRR != null ? fmtRR(s.netRR) : (s.n ? fmtMoney(s.netPnl) : '—'), cls: (s.netRR != null ? s.netRR : s.netPnl) >= 0 ? 'green' : 'red', sub: s.n ? fmtMoney(s.netPnl) + ' net' : 'No trades' },
+    { label: 'Win Rate',      value: s.n ? s.winRate.toFixed(0) + '%' : '—', cls: s.winRate >= 50 ? 'green' : (s.n ? 'amber' : ''), sub: s.n ? s.wins + 'W · ' + s.losses + 'L' : '—' },
+    { label: 'Profit Factor', value: s.n ? fmtPF(s.profitFactor) : '—', cls: s.profitFactor >= 1.5 ? 'green' : (s.n ? 'amber' : ''), sub: s.n ? 'Gross ' + fmtMoneyPlain(s.grossWin) + ' / ' + fmtMoneyPlain(s.grossLoss) : '—' },
+    { label: 'Total Trades',  value: String(s.n), cls: '', sub: s.n ? 'This period' : 'No trades' },
+    { label: 'Average RR',    value: s.avgRR != null ? s.avgRR.toFixed(2) + 'R' : '—', cls: (s.avgRR||0) >= 2 ? 'green' : '', sub: s.avgRR != null ? 'Per trade' : 'Not logged' },
+    { label: 'Largest Winner',value: s.largestWinner ? fmtMoney(s.largestWinner) : '—', cls: s.largestWinner ? 'green' : '', sub: s.largestWinner ? 'Best single trade' : '—' },
+  ];
+  document.getElementById('perfStatCards').innerHTML = cards.map(c => `
+    <div class="stat-card">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value ${c.cls}">${c.value}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — TRADE PERFORMANCE SUMMARY (best/worst)
+══════════════════════════════════════════════════════════ */
+function sessionOf(t) { return t.session || null; }
+function setupOf(t) { return t.tradeType || t.setup || null; }
+function dayLabelOf(t) { const d = parseAnyDate(t.date); return d ? d.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }) : null; }
+function dowOf(t) { const d = parseAnyDate(t.date); return d ? d.toLocaleDateString('en-US', { weekday:'long' }) : null; }
+
+function renderPerfSummary(trades) {
+  const grid = document.getElementById('perfSummaryGrid');
+  if (!trades.length) {
+    document.getElementById('perfSummaryBody').innerHTML = sectionEmpty('No trades in this period. Once you log trades in <a href="trades.html">Trade History</a>, your best and worst edges appear here.');
+    return;
+  }
+  document.getElementById('perfSummaryBody').innerHTML = '<div class="perf-grid" id="perfSummaryGrid"></div>';
+  const g = document.getElementById('perfSummaryGrid');
+
+  const byDay     = bestWorst(groupBy(trades, dayLabelOf));
+  const bySession = bestWorst(groupBy(trades, sessionOf));
+  const byPair    = bestWorst(groupBy(trades, t => t.pair));
+  const bySetup   = bestWorst(groupBy(trades, setupOf));
+
+  // largest trades
+  let bigWin = null, bigLoss = null;
+  trades.forEach(t => {
+    const p = Number(t.pnl) || 0;
+    if (p > 0 && (!bigWin || p > (Number(bigWin.pnl)||0))) bigWin = t;
+    if (p < 0 && (!bigLoss || p < (Number(bigLoss.pnl)||0))) bigLoss = t;
+  });
+
+  const rows = [];
+  const pushPair = (goodLabel, badLabel, res, unit) => {
+    if (res.best) rows.push(perfRow('good', goodLabel, res.best[0], res.best[1].pnl));
+    else rows.push(perfRowEmpty('good', goodLabel));
+    if (res.worst && (!res.best || res.worst[0] !== res.best[0])) rows.push(perfRow('bad', badLabel, res.worst[0], res.worst[1].pnl));
+    else rows.push(perfRowEmpty('bad', badLabel));
+  };
+
+  pushPair('Best Trading Day', 'Worst Trading Day', byDay);
+  pushPair('Best Session', 'Worst Session', bySession);
+  pushPair('Best Pair', 'Worst Pair', byPair);
+  pushPair('Most Profitable Setup', 'Least Profitable Setup', bySetup);
+
+  rows.push(bigWin ? perfRow('good', 'Largest Winning Trade', bigWin.pair + (bigWin.dir ? ' · ' + bigWin.dir : ''), Number(bigWin.pnl)) : perfRowEmpty('good', 'Largest Winning Trade'));
+  rows.push(bigLoss ? perfRow('bad', 'Largest Losing Trade', bigLoss.pair + (bigLoss.dir ? ' · ' + bigLoss.dir : ''), Number(bigLoss.pnl)) : perfRowEmpty('bad', 'Largest Losing Trade'));
+
+  g.innerHTML = rows.join('');
+}
+function perfRow(tone, label, value, amt) {
+  const icon = tone === 'good'
+    ? '<svg viewBox="0 0 16 16"><polyline points="1,11 6,5 9,8 15,2"/><polyline points="11,2 15,2 15,6"/></svg>'
+    : '<svg viewBox="0 0 16 16"><polyline points="1,5 6,11 9,8 15,14"/><polyline points="11,14 15,14 15,10"/></svg>';
+  return `<div class="perf-row">
+    <div class="perf-row-icon ${tone}">${icon}</div>
+    <div class="perf-row-info">
+      <div class="perf-row-label">${label}</div>
+      <div class="perf-row-value">${escapeHtml(String(value))}</div>
+    </div>
+    <div class="perf-row-amt ${amt >= 0 ? 'green' : 'red'}">${fmtMoney(amt)}</div>
+  </div>`;
+}
+function perfRowEmpty(tone, label) {
+  return `<div class="perf-row">
+    <div class="perf-row-icon ${tone}" style="opacity:.5">${tone==='good'?'<svg viewBox=\'0 0 16 16\'><polyline points=\'1,11 6,5 9,8 15,2\'/></svg>':'<svg viewBox=\'0 0 16 16\'><polyline points=\'1,5 6,11 9,8 15,14\'/></svg>'}</div>
+    <div class="perf-row-info"><div class="perf-row-label">${label}</div><div class="perf-row-value" style="color:var(--text-faint)">—</div></div>
+    <div class="perf-row-amt" style="color:var(--text-faint)">—</div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — WEEKLY PLANNER REVIEW
+══════════════════════════════════════════════════════════ */
+function findPlanForRange(r) {
+  const plans = getPlans();
+  // best-overlap: plan whose weekStart falls in range, else plan covering the anchor
+  let match = plans.find(p => { const d = parseAnyDate(p.weekStart); return d && inRange(d, r); });
+  if (!match) match = plans.find(p => { const d = parseAnyDate(p.weekStart); if (!d) return false; const end = addDays(startOfDay(d), 6); return startOfDay(r.start) <= end && startOfDay(r.end) >= startOfDay(d); });
+  return match || null;
+}
+function renderPlannerReview(trades, r) {
+  const body = document.getElementById('plannerBody');
+  const plan = findPlanForRange(r);
+  document.getElementById('plannerMeta').textContent = plan ? (plan.rangeLabel || '') : '';
+  if (!plan) {
+    body.innerHTML = sectionEmpty('No weekly plan overlaps this period. Set targets in the <a href="weekly-planner.html">Weekly Planner</a> to compare plan vs actual here.');
+    return;
+  }
+
+  const s = tradeStats(trades);
+  const actualRR = s.netRR != null ? s.netRR : (s.avgRR != null ? s.avgRR * s.n : null);
+  const tradedPairs = [...new Set(trades.map(t => t.pair).filter(Boolean))];
+  const plannedPairs = plan.focusMarkets || [];
+  const plannedDays = plan.tradingDays || [];
+  const tradedDays = [...new Set(trades.map(dowOf).filter(Boolean))];
+  const daysDone = plannedDays.filter(d => tradedDays.some(td => td.toLowerCase().startsWith(String(d).toLowerCase().slice(0,3))));
+  const actualRiskPct = null; // risk % per trade isn't stored on trades; shown as informational
+
+  // Market bias correctness: compare plan.bias direction against net outcome
+  let biasVerdict = 'neutral', biasActual = '—';
+  if (plan.bias) {
+    const net = s.netPnl;
+    biasActual = net >= 0 ? 'Profitable' : 'Unprofitable';
+    biasVerdict = net >= 0 ? 'good' : 'bad';
+  }
+
+  const cards = [];
+  cards.push(compareCard('Target RR', plan.targetRR ? '+' + Number(plan.targetRR).toFixed(2) + 'R' : '—',
+    actualRR != null ? fmtRR(actualRR) : '—',
+    plan.targetRR != null && actualRR != null ? (actualRR >= Number(plan.targetRR) ? 'good' : 'bad') : 'neutral',
+    plan.targetRR != null && actualRR != null ? (actualRR >= Number(plan.targetRR) ? 'Hit' : 'Missed') : null));
+
+  cards.push(compareCard('Market Bias', plan.bias || '—', biasActual, biasVerdict,
+    plan.bias ? (biasVerdict === 'good' ? 'Correct' : 'Incorrect') : null));
+
+  cards.push(compareCard('Pairs', plannedPairs.length ? plannedPairs.join(', ') : '—',
+    tradedPairs.length ? tradedPairs.join(', ') : 'None traded',
+    plannedPairs.length && tradedPairs.length ? (tradedPairs.every(p => plannedPairs.includes(p)) ? 'good' : 'bad') : 'neutral',
+    plannedPairs.length ? (tradedPairs.every(p => plannedPairs.includes(p)) && tradedPairs.length ? 'On plan' : 'Off plan') : null));
+
+  cards.push(compareCard('Trading Days', plannedDays.length ? plannedDays.length + ' planned' : '—',
+    plannedDays.length ? daysDone.length + ' of ' + plannedDays.length + ' completed' : tradedDays.length + ' traded',
+    plannedDays.length ? (daysDone.length >= plannedDays.length ? 'good' : 'neutral') : 'neutral',
+    plannedDays.length ? Math.round((daysDone.length/plannedDays.length)*100) + '%' : null));
+
+  cards.push(compareCard('Max Weekly Risk', plan.maxDD ? plan.maxDD + '%' : (plan.maxTradesWeek ? plan.maxTradesWeek + ' trades' : '—'),
+    s.n + ' trades taken',
+    plan.maxTradesWeek ? (s.n <= Number(plan.maxTradesWeek) ? 'good' : 'bad') : 'neutral',
+    plan.maxTradesWeek ? (s.n <= Number(plan.maxTradesWeek) ? 'Within' : 'Exceeded') : null));
+
+  cards.push(compareCard('Target Return', plan.targetPct ? '+' + plan.targetPct + '%' : '—',
+    s.n ? fmtMoney(s.netPnl) : '—', 'neutral', null));
+
+  body.innerHTML = '<div class="compare-grid">' + cards.join('') + '</div>';
+}
+function compareCard(title, planned, actual, verdict, verdictLabel) {
+  const vClass = verdict === 'good' ? 'verdict-good' : verdict === 'bad' ? 'verdict-bad' : 'verdict-neutral';
+  return `<div class="compare-card">
+    ${verdictLabel ? `<span class="compare-verdict ${vClass}">${verdictLabel}</span>` : ''}
+    <div class="compare-title">${title}</div>
+    <div class="compare-values">
+      <div class="compare-col"><div class="compare-col-label">Planned</div><div class="compare-col-val planned">${escapeHtml(String(planned))}</div></div>
+      <div class="compare-arrow"><svg viewBox="0 0 16 16"><line x1="2" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/></svg></div>
+      <div class="compare-col"><div class="compare-col-label">Actual</div><div class="compare-col-val">${escapeHtml(String(actual))}</div></div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — MOOD SUMMARY
+══════════════════════════════════════════════════════════ */
+function renderMoodSummary(r) {
+  const body = document.getElementById('moodBody');
+  const entries = getMoodEntries().filter(e => inRange(parseAnyDate(e.date), r));
+  document.getElementById('moodMeta').textContent = entries.length ? entries.length + ' check-in' + (entries.length>1?'s':'') : '';
+  if (!entries.length) {
+    body.innerHTML = sectionEmpty('No mood check-ins in this period. Log how you feel in the <a href="mood-tracker.html">Mood Tracker</a> to see emotional trends here.');
+    return;
+  }
+  const avg = {};
+  MOOD_CATS.forEach(c => {
+    const vals = entries.map(e => e.scores && e.scores[c.key]).filter(v => typeof v === 'number');
+    avg[c.key] = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : null;
+  });
+  const tiles = MOOD_CATS.map(c => {
+    const v = avg[c.key];
+    const pct = v != null ? (v/5)*100 : 0;
+    const color = v == null ? 'var(--border)' : v >= 4 ? 'var(--green)' : v >= 3 ? 'var(--accent)' : v >= 2 ? 'var(--amber)' : 'var(--red)';
+    return `<div class="metric-tile">
+      <div class="metric-tile-top"><span class="metric-emoji">${c.emoji}</span><span class="metric-tile-label">${c.label}</span></div>
+      <div class="metric-tile-val">${v != null ? v.toFixed(1) : '—'}<span style="font-size:12px;color:var(--text-faint);font-weight:600;"> / 5</span></div>
+      <div class="metric-tile-track"><div class="metric-tile-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // best / lowest emotional day by balance (fallback: mood score)
+  const scored = entries.map(e => ({ e, b: typeof e.balance === 'number' ? e.balance : ((e.scores&&e.scores.mood)||0)*20 }));
+  scored.sort((a,b) => b.b - a.b);
+  const best = scored[0].e, low = scored[scored.length-1].e;
+  const highlight = `<div class="metric-highlight-grid">
+    <div class="metric-highlight good">
+      <span class="metric-highlight-emoji">${best.moodEmoji || '😊'}</span>
+      <div><div class="metric-highlight-label">Best Emotional Day</div><div class="metric-highlight-val">${escapeHtml(best.displayDate || best.date)} · ${best.moodName || 'Positive'}</div></div>
+    </div>
+    <div class="metric-highlight bad">
+      <span class="metric-highlight-emoji">${low.moodEmoji || '😔'}</span>
+      <div><div class="metric-highlight-label">Lowest Emotional Day</div><div class="metric-highlight-val">${escapeHtml(low.displayDate || low.date)} · ${low.moodName || 'Low'}</div></div>
+    </div>
+  </div>`;
+
+  body.innerHTML = '<div class="metric-grid">' + tiles + '</div>' + (scored.length > 1 ? highlight : '');
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — DISCIPLINE SUMMARY
+══════════════════════════════════════════════════════════ */
+function renderDisciplineSummary(r) {
+  const body = document.getElementById('disciplineBody');
+  const entries = getDisciplineEntries().filter(e => inRange(parseAnyDate(e.date), r));
+  document.getElementById('disciplineMeta').textContent = entries.length ? entries.length + ' record' + (entries.length>1?'s':'') : '';
+  if (!entries.length) {
+    body.innerHTML = sectionEmpty('No discipline records in this period. Log your execution in the <a href="discipline-tracker.html">Discipline Tracker</a> to summarize adherence here.');
+    return;
+  }
+  const avgScore = Math.round(entries.reduce((s,e)=>s+(e.score||0),0)/entries.length);
+  const ruleFollowed = entries.reduce((s,e)=>s+(e.rulesFollowed||0),0);
+  const ruleTotal = entries.reduce((s,e)=>s+(e.rulesTotal||0),0);
+  const ruleAdherence = ruleTotal ? Math.round((ruleFollowed/ruleTotal)*100) : 0;
+  const checkDone = entries.reduce((s,e)=>s+(e.checklistDone||0),0);
+  const checkTotal = entries.reduce((s,e)=>s+(e.checklistTotal||0),0);
+  const checkPct = checkTotal ? Math.round((checkDone/checkTotal)*100) : 0;
+  const totalViolations = entries.reduce((s,e)=>s+(e.violationsCount||0),0);
+
+  // most broken rule & best followed rule (across entries' ruleFollows maps)
+  const rules = getDisciplineRules();
+  const ruleName = id => { const rr = rules.find(x => String(x.id) === String(id)); return rr ? rr.title : ('Rule ' + id); };
+  const followCount = {}, breakCount = {};
+  entries.forEach(e => { const rf = e.ruleFollows || {}; Object.keys(rf).forEach(id => { if (rf[id]) followCount[id]=(followCount[id]||0)+1; else breakCount[id]=(breakCount[id]||0)+1; }); });
+  const mostBroken = Object.entries(breakCount).sort((a,b)=>b[1]-a[1])[0];
+  const bestFollowed = Object.entries(followCount).sort((a,b)=>b[1]-a[1])[0];
+
+  const ringOffset = 314.2 - (314.2 * Math.min(avgScore,100) / 100);
+  const scoreColor = avgScore >= 85 ? 'var(--green)' : avgScore >= 70 ? 'var(--accent)' : avgScore >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  const metric = (label, val, sub) => `<div class="metric-tile"><div class="metric-tile-top"><span class="metric-tile-label">${label}</span></div><div class="metric-tile-val">${val}</div><div class="stat-sub">${sub||''}</div></div>`;
+
+  body.innerHTML = `
+    <div class="disc-summary">
+      <div class="disc-ring-wrap">
+        <svg class="disc-ring" viewBox="0 0 110 110">
+          <circle class="disc-ring-bg" cx="55" cy="55" r="50"/>
+          <circle class="disc-ring-fg" cx="55" cy="55" r="50" style="stroke:${scoreColor};stroke-dashoffset:${ringOffset}"/>
+        </svg>
+        <div class="disc-ring-label"><div class="disc-ring-num">${avgScore}</div><div class="disc-ring-cap">Avg Score</div></div>
+      </div>
+      <div class="disc-metrics">
+        ${metric('Rule Adherence', ruleAdherence + '%', ruleFollowed + ' of ' + ruleTotal + ' followed')}
+        ${metric('Checklist', checkPct + '%', checkDone + ' of ' + checkTotal + ' items')}
+        ${metric('Violations', String(totalViolations), 'Across ' + entries.length + ' record' + (entries.length>1?'s':''))}
+        ${metric('Records', String(entries.length), 'This period')}
+      </div>
+    </div>
+    <div class="rule-tag-row">
+      <div class="rule-tag good">
+        <div class="rule-tag-icon"><svg viewBox="0 0 13 13"><polyline points="2,7 5,10 11,3"/></svg></div>
+        <div><div class="rule-tag-label">Best Followed Rule</div><div class="rule-tag-val">${bestFollowed ? escapeHtml(ruleName(bestFollowed[0])) : '—'}</div></div>
+      </div>
+      <div class="rule-tag bad">
+        <div class="rule-tag-icon"><svg viewBox="0 0 13 13"><line x1="3" y1="3" x2="10" y2="10"/><line x1="10" y1="3" x2="3" y2="10"/></svg></div>
+        <div><div class="rule-tag-label">Most Broken Rule</div><div class="rule-tag-val">${mostBroken ? escapeHtml(ruleName(mostBroken[0])) : 'None broken 🎉'}</div></div>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   GRADE ENGINE (auto — never editable)
+   Weighted: Performance 40 · Discipline 30 · Planner 15 · Consistency 15
+══════════════════════════════════════════════════════════ */
+function computeGrade(trades, r) {
+  const s = tradeStats(trades);
+  // Performance (0-100): win rate + profit factor + profitability
+  let perf = 0, perfN = 0;
+  if (s.n) {
+    const wrScore = Math.min(s.winRate, 100);
+    const pfScore = s.profitFactor === Infinity ? 100 : Math.min(s.profitFactor / 3 * 100, 100);
+    const netScore = s.netPnl > 0 ? 100 : (s.netPnl === 0 ? 50 : 25);
+    perf = (wrScore * 0.4 + pfScore * 0.35 + netScore * 0.25); perfN = 1;
+  }
+
+  // Discipline (0-100): average discipline score
+  const dEntries = getDisciplineEntries().filter(e => inRange(parseAnyDate(e.date), r));
+  let disc = 0, discN = 0;
+  if (dEntries.length) { disc = dEntries.reduce((a,e)=>a+(e.score||0),0)/dEntries.length; discN = 1; }
+
+  // Planner (0-100): completion / adherence
+  const plan = findPlanForRange(r);
+  let plnr = 0, plnrN = 0;
+  if (plan) {
+    let pts = 0, max = 0;
+    const plannedDays = plan.tradingDays || [];
+    const tradedDows = [...new Set(trades.map(dowOf).filter(Boolean))];
+    if (plannedDays.length) { max += 40; const done = plannedDays.filter(d => tradedDows.some(td => td.toLowerCase().startsWith(String(d).toLowerCase().slice(0,3)))).length; pts += (done/plannedDays.length)*40; }
+    if (plan.targetRR != null && s.netRR != null) { max += 30; pts += (s.netRR >= Number(plan.targetRR) ? 30 : Math.max(0, s.netRR/Number(plan.targetRR))*30); }
+    if (plan.maxTradesWeek != null) { max += 30; pts += (s.n <= Number(plan.maxTradesWeek) ? 30 : 10); }
+    plnr = max ? (pts/max)*100 : 60; plnrN = 1;
+  }
+
+  // Consistency (0-100): fewer violations + steady logging
+  let cons = 60, consN = 0;
+  if (dEntries.length) {
+    const totalViol = dEntries.reduce((a,e)=>a+(e.violationsCount||0),0);
+    const violPenalty = Math.min(totalViol * 8, 60);
+    cons = Math.max(0, 100 - violPenalty); consN = 1;
+  } else if (s.n) {
+    // spread of results as rough consistency proxy
+    cons = s.winRate >= 50 ? 70 : 45; consN = 1;
+  }
+
+  // Weighted composite over available factors
+  const factors = [
+    { key: 'Performance', val: perf,  weight: 40, present: perfN },
+    { key: 'Discipline',  val: disc,  weight: 30, present: discN },
+    { key: 'Planner',     val: plnr,  weight: 15, present: plnrN },
+    { key: 'Consistency', val: cons,  weight: 15, present: consN },
+  ];
+  const activeWeight = factors.reduce((a,f)=>a + (f.present ? f.weight : 0), 0);
+  const composite = activeWeight ? Math.round(factors.reduce((a,f)=>a + (f.present ? f.val * f.weight : 0), 0) / activeWeight) : 0;
+
+  return { score: composite, factors, hasData: activeWeight > 0 };
+}
+function gradeLetter(score) {
+  if (score >= 93) return { letter: 'A+', tier: 'Elite', color: 'var(--green)', tierClass: 'status-excellent', title: 'Outstanding execution and consistency.', desc: 'Textbook discipline and performance this period. Keep protecting exactly what is working.' };
+  if (score >= 85) return { letter: 'A',  tier: 'Excellent', color: 'var(--green)', tierClass: 'status-excellent', title: 'Excellent, well-controlled trading.', desc: 'Strong results with solid process. Small refinements will push this into elite territory.' };
+  if (score >= 75) return { letter: 'B',  tier: 'Solid', color: 'var(--accent)', tierClass: 'status-elite', title: 'Solid period with room to sharpen.', desc: 'A dependable base. Tighten the weakest factor below to level up your grade.' };
+  if (score >= 60) return { letter: 'C',  tier: 'Developing', color: 'var(--amber)', tierClass: 'status-good', title: 'Mixed period — process needs work.', desc: 'Results and discipline are inconsistent. Focus on one clear improvement next period.' };
+  if (score > 0)   return { letter: 'D',  tier: 'Needs Work', color: 'var(--red)', tierClass: 'status-poor', title: 'Difficult period — reset the basics.', desc: 'Step back to your plan and rules. Protect capital and rebuild consistency before size.' };
+  return { letter: '—', tier: 'Awaiting data', color: 'var(--text-faint)', tierClass: 'status-needs', title: 'Not enough data yet', desc: 'Log trades, plan, mood and discipline for this period and Tradeva will grade it automatically.' };
+}
+function renderGrade(g) {
+  const meta = gradeLetter(g.hasData ? g.score : 0);
+  document.getElementById('gradeLetter').textContent = meta.letter;
+  document.getElementById('gradeLetter').style.color = meta.color;
+  document.getElementById('gradeScoreSm').textContent = (g.hasData ? g.score : 0) + ' / 100';
+  const tierEl = document.getElementById('gradeTier');
+  tierEl.textContent = meta.tier; tierEl.className = 'grade-tier ' + meta.tierClass;
+  document.getElementById('gradeTitle').textContent = meta.title;
+  document.getElementById('gradeDesc').textContent = meta.desc;
+  const fg = document.getElementById('gradeRingFg');
+  fg.style.stroke = meta.color;
+  fg.style.strokeDashoffset = 408.4 - (408.4 * (g.hasData ? g.score : 0) / 100);
+  document.getElementById('gradeFactors').innerHTML = g.factors.map(f => `
+    <div class="grade-factor">
+      <div class="grade-factor-label">${f.key}</div>
+      <div class="grade-factor-val" style="${f.present?'':'color:var(--text-faint)'}">${f.present ? Math.round(f.val) : '—'}</div>
+      <div class="grade-factor-track"><div class="grade-factor-fill" style="width:${f.present?Math.round(f.val):0}%;background:${meta.color}"></div></div>
+    </div>`).join('');
+  return { score: g.hasData ? g.score : 0, letter: meta.letter };
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACTION PLAN
+══════════════════════════════════════════════════════════ */
+function addAction(col) {
+  const input = document.getElementById('input-' + col);
+  const val = input.value.trim();
+  if (!val) return;
+  actionPlan[col].push(val);
+  input.value = '';
+  renderActions();
+}
+function removeAction(col, idx) { actionPlan[col].splice(idx, 1); renderActions(); }
+function renderActions() {
+  ['continue','stop','improve'].forEach(col => {
+    const wrap = document.getElementById('items-' + col);
+    wrap.innerHTML = actionPlan[col].map((item, i) => `
+      <div class="action-item">
+        <span class="action-item-dot"></span>
+        <span class="action-item-text">${escapeHtml(item)}</span>
+        <button class="action-item-del" onclick="removeAction('${col}',${i})"><svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></button>
+      </div>`).join('');
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   MASTER RENDER
+══════════════════════════════════════════════════════════ */
+let currentGrade = { score: 0, letter: '—' };
+let currentStats = null;
+function renderAll() {
+  const r = periodRange(currentPeriod, anchorDate);
+  document.getElementById('periodRangeLabel').textContent = r.label;
+  document.getElementById('gradePeriodMeta').textContent = currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1) + ' review';
+
+  const trades = getTrades().filter(t => inRange(parseAnyDate(t.date), r));
+  const s = tradeStats(trades);
+  currentStats = s;
+
+  renderPerfCards(s);
+  const g = computeGrade(trades, r);
+  currentGrade = renderGrade(g);
+  renderPerfSummary(trades);
+  renderPlannerReview(trades, r);
+  renderMoodSummary(r);
+  renderDisciplineSummary(r);
+  moveGlider();
+}
+
+/* ══════════════════════════════════════════════════════════
+   REVIEW CRUD
+══════════════════════════════════════════════════════════ */
+async function saveReview() {
+  const btn = document.getElementById('saveBtn');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>Saving…</span>';
+  await new Promise(res => setTimeout(res, 500));
+
+  try {
+    const r = periodRange(currentPeriod, anchorDate);
+    const trades = getTrades().filter(t => inRange(parseAnyDate(t.date), r));
+    const s = tradeStats(trades);
+    const gRaw = computeGrade(trades, r);
+    const gMeta = gradeLetter(gRaw.hasData ? gRaw.score : 0);
+    const gradeVal = { score: gRaw.hasData ? gRaw.score : 0, letter: gMeta.letter };
+    const dEntries = getDisciplineEntries().filter(e => inRange(parseAnyDate(e.date), r));
+    const discScore = dEntries.length ? Math.round(dEntries.reduce((a,e)=>a+(e.score||0),0)/dEntries.length) : null;
+
+    const reviews = getReviews();
+    const data = {
+      period: currentPeriod,
+      periodKey: r.key,
+      anchorISO: ymd(startOfDay(anchorDate)),
+      rangeLabel: r.label,
+      createdAt: new Date().toISOString(),
+      grade: gradeVal.letter,
+      gradeScore: gradeVal.score,
+      netRR: s.netRR,
+      netPnl: s.netPnl,
+      winRate: Math.round(s.winRate),
+      totalTrades: s.n,
+      disciplineScore: discScore,
+      reflection: {
+        well: document.getElementById('f-well').value.trim(),
+        mistakes: document.getElementById('f-mistakes').value.trim(),
+        lesson: document.getElementById('f-lesson').value.trim(),
+      },
+      actionPlan: JSON.parse(JSON.stringify(actionPlan)),
+    };
+
+    if (editingReviewId) {
+      const idx = reviews.findIndex(x => x.id === editingReviewId);
+      if (idx !== -1) { data.id = editingReviewId; reviews[idx] = data; }
+      editingReviewId = null;
+      showToast('Review updated!', true);
+    } else {
+      data.id = reviews.length ? Math.max(...reviews.map(x => x.id || 0)) + 1 : 1;
+      reviews.unshift(data);
+      showToast('Review saved!', true);
+    }
+    setReviews(reviews);
+    renderHistory();
+    resetReflection();
+  } catch (err) {
+    console.error('Save review failed:', err);
+    showToast('Could not save. Please try again.', false);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+function resetReflection() {
+  document.getElementById('f-well').value = '';
+  document.getElementById('f-mistakes').value = '';
+  document.getElementById('f-lesson').value = '';
+  actionPlan = { continue: [], stop: [], improve: [] };
+  renderActions();
+}
+function editReview(id) {
+  const rv = getReviews().find(x => x.id === id);
+  if (!rv) return;
+  editingReviewId = id;
+  currentPeriod = rv.period || 'daily';
+  if (rv.anchorISO) { const d = parseAnyDate(rv.anchorISO); if (d) anchorDate = d; }
+  document.querySelectorAll('.period-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.period === currentPeriod));
+  document.getElementById('f-well').value = rv.reflection?.well || '';
+  document.getElementById('f-mistakes').value = rv.reflection?.mistakes || '';
+  document.getElementById('f-lesson').value = rv.reflection?.lesson || '';
+  actionPlan = rv.actionPlan ? JSON.parse(JSON.stringify(rv.actionPlan)) : { continue: [], stop: [], improve: [] };
+  renderActions();
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Loaded — adjust and save to update.', true);
+}
+function viewReview(id) {
+  const rv = getReviews().find(x => x.id === id);
+  if (!rv) return;
+  const lines = [
+    `${(rv.period||'').toUpperCase()} REVIEW · ${rv.rangeLabel}`,
+    `Grade ${rv.grade} (${rv.gradeScore}/100)`,
+    `Net RR: ${rv.netRR != null ? fmtRR(rv.netRR) : fmtMoney(rv.netPnl||0)}  ·  Win Rate: ${rv.winRate}%  ·  Trades: ${rv.totalTrades}  ·  Discipline: ${rv.disciplineScore ?? '—'}`,
+    '',
+    `✓ Went well: ${rv.reflection?.well || '—'}`,
+    `✗ Mistakes: ${rv.reflection?.mistakes || '—'}`,
+    `★ Biggest lesson: ${rv.reflection?.lesson || '—'}`,
+  ];
+  alert(lines.join('\n'));
+}
+function deleteReview(id) {
+  if (!confirm('Delete this review? This cannot be undone.')) return;
+  setReviews(getReviews().filter(x => x.id !== id));
+  renderHistory();
+  showToast('Review deleted.', true);
+}
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  const reviews = getReviews();
+  if (!reviews.length) {
+    body.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="3"/></svg></div>
+      <div class="empty-title">No reviews yet.</div>
+      <div class="empty-sub">Complete your first review and begin tracking your growth as a trader.</div>
+    </div>`;
+    return;
+  }
+  const gradeColor = ltr => ltr === 'A+' || ltr === 'A' ? 'var(--green)' : ltr === 'B' ? 'var(--accent)' : ltr === 'C' ? 'var(--amber)' : ltr === 'D' ? 'var(--red)' : 'var(--text-faint)';
+  const gradeBg = ltr => ltr === 'A+' || ltr === 'A' ? 'var(--green-bg)' : ltr === 'B' ? 'var(--accent-bg)' : ltr === 'C' ? 'var(--amber-bg)' : ltr === 'D' ? 'var(--red-bg)' : 'var(--border-light)';
+  body.innerHTML = '<div class="entries-grid">' + reviews.map(rv => {
+    const netDisplay = rv.netRR != null ? fmtRR(rv.netRR) : fmtMoney(rv.netPnl || 0);
+    const netPos = (rv.netRR != null ? rv.netRR : rv.netPnl) >= 0;
+    return `<div class="review-card">
+      <div class="review-card-top">
+        <div class="review-grade-chip" style="background:${gradeBg(rv.grade)};color:${gradeColor(rv.grade)}">${rv.grade}</div>
+        <div class="review-card-main">
+          <span class="review-card-type">${escapeHtml(rv.period || 'review')}</span>
+          <div class="review-card-date">${escapeHtml(rv.rangeLabel || '')}</div>
+        </div>
+      </div>
+      <div class="review-card-stats">
+        <div class="review-card-stat"><div class="review-card-stat-val ${netPos?'green':'red'}">${netDisplay}</div><div class="review-card-stat-label">Net RR</div></div>
+        <div class="review-card-stat"><div class="review-card-stat-val">${rv.disciplineScore ?? '—'}</div><div class="review-card-stat-label">Discipline</div></div>
+        <div class="review-card-stat"><div class="review-card-stat-val">${rv.winRate}%</div><div class="review-card-stat-label">Win Rate</div></div>
+      </div>
+      <div class="review-card-actions">
+        <button class="review-action-btn primary" onclick="viewReview(${rv.id})">View</button>
+        <button class="review-action-btn" onclick="editReview(${rv.id})">Edit</button>
+        <button class="review-action-btn danger" onclick="deleteReview(${rv.id})">Delete</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════════ */
+function escapeHtml(str) { return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function sectionEmpty(msg) { return `<div class="section-empty"><div class="section-empty-text">${msg}</div></div>`; }
+function scrollToSave() { document.getElementById('saveBtn').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+let toastTimer;
+function showToast(msg, success) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.querySelector('.toast-icon').style.background = success ? 'var(--green)' : 'var(--red)';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  renderActions();
+  renderAll();
+  renderHistory();
+  setTimeout(moveGlider, 60);
+});
+window.addEventListener('resize', moveGlider);
+</script>
+</body>
+</html>
