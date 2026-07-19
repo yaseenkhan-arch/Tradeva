@@ -258,6 +258,55 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .check-item.checked .check-box svg { opacity: 1; }
 .check-item-label { font-size: 12.5px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
 
+/* Upgraded checklist cards (CRUD, matching rule cards) */
+.checklist-card { border: 1px solid var(--border); border-radius: 13px; padding: 15px; background: var(--bg-page); transition: all var(--t) var(--ease); position: relative; }
+.checklist-card:hover { border-color: var(--text-faint); box-shadow: var(--shadow-card); }
+.checklist-card.disabled { opacity: 0.5; }
+.checklist-card.done { border-color: var(--accent); background: var(--accent-bg); }
+.checklist-card-top { display: flex; align-items: flex-start; gap: 10px; }
+.cl-check { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--t) var(--ease); margin-top: 1px; }
+.cl-check svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity var(--t) var(--ease), transform var(--t) var(--ease); transform: scale(0.5); }
+.checklist-card.done .cl-check { background: var(--accent); border-color: var(--accent); }
+.checklist-card.done .cl-check svg { opacity: 1; transform: scale(1); }
+.cl-info { flex: 1; min-width: 0; }
+.cl-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.checklist-card.done .cl-title { color: var(--accent); }
+.cl-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; transition: color var(--t) var(--ease); }
+.cl-meta-row { display: flex; align-items: center; gap: 6px; margin-top: 11px; flex-wrap: wrap; }
+.cl-cat-badge { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.cl-cat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.cl-required-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: var(--red-bg); color: var(--red); text-transform: uppercase; letter-spacing: 0.03em; }
+.cl-actions { display: flex; gap: 4px; margin-left: auto; }
+.cl-toggle { width: 34px; height: 19px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.cl-toggle.on { background: var(--green); }
+.cl-toggle-knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.cl-toggle.on .cl-toggle-knob { transform: translateX(15px); }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--t) var(--ease); padding: 20px; }
+.modal-overlay.open { display: flex; opacity: 1; }
+.modal-box { background: var(--bg-card); border-radius: var(--radius-card); max-width: 460px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.3); transform: scale(0.96); transition: transform var(--t) var(--ease), background var(--t) var(--ease); max-height: 90vh; overflow-y: auto; }
+.modal-overlay.open .modal-box { transform: scale(1); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px; border-bottom: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.modal-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-page); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--t) var(--ease); }
+.modal-close:hover { background: var(--border-light); transform: rotate(90deg); }
+.modal-close svg { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+.modal-body { padding: 20px 22px; }
+.modal-field { margin-bottom: 16px; }
+.modal-field:last-child { margin-bottom: 0; }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.req-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-btn); background: var(--bg-page); transition: all var(--t) var(--ease); }
+.req-toggle-info { display: flex; flex-direction: column; gap: 2px; }
+.req-toggle-label { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.req-toggle-hint { font-size: 11px; color: var(--text-faint); transition: color var(--t) var(--ease); }
+.modal-toggle { width: 40px; height: 22px; border-radius: 12px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.modal-toggle.on { background: var(--accent); }
+.modal-toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.modal-toggle.on .modal-toggle-knob { transform: translateX(18px); }
+.modal-foot { display: flex; gap: 10px; padding: 18px 22px; border-top: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.modal-foot .btn-primary, .modal-foot .btn-outline { flex: 1; justify-content: center; padding: 11px; }
+
 /* ══════════════════════════════════════════════════════════
    VIOLATIONS
 ══════════════════════════════════════════════════════════ */
@@ -586,15 +635,21 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
     <div class="card-head">
       <div class="card-head-icon"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="2"/><path d="M4.5 8l2.5 2.5 4.5-5"/></svg></div>
       <span class="card-head-title">Today's Discipline Checklist</span>
+      <span class="card-head-meta" id="checklistMeta">0 / 0 enabled</span>
     </div>
+    <p class="section-sub" style="margin-top:-8px;margin-bottom:16px;">Your personal step-by-step process for every trade. Add, edit, and tailor items to your own strategy.</p>
     <div class="checklist-progress-wrap">
       <div class="checklist-progress-top">
-        <span class="checklist-progress-label" id="checklistLabel">0 / 12 Complete</span>
+        <span class="checklist-progress-label" id="checklistLabel">0 / 0 Complete</span>
         <span class="checklist-progress-pct" id="checklistPct">0%</span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="checklistFill" style="width:0%;"></div></div>
     </div>
     <div class="checklist-grid" id="checklistGrid"></div>
+    <button class="add-rule-btn" onclick="openChecklistModal()">
+      <svg viewBox="0 0 13 13"><line x1="6.5" y1="1.5" x2="6.5" y2="11.5"/><line x1="1.5" y1="6.5" x2="11.5" y2="6.5"/></svg>
+      Add Checklist Item
+    </button>
   </div>
 
   <!-- SECTION 3 — Rule Violations -->
@@ -762,6 +817,53 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   </a>
 </nav>
 
+<!-- Checklist Item Modal -->
+<div class="modal-overlay" id="checklistModal" onclick="closeChecklistModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title" id="clModalTitle">Add Checklist Item</span>
+      <button class="modal-close" onclick="closeChecklistModal()">
+        <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="form-label">Checklist Title</label>
+        <input type="text" id="clTitleInput" placeholder="e.g. HTF Analysis Complete">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Description <span style="font-weight:400;color:var(--text-faint);">(optional)</span></label>
+        <input type="text" id="clDescInput" placeholder="e.g. Review Daily and 4H market structure before entering.">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Category</label>
+        <div class="select-wrap"><select id="clCategoryInput">
+          <option>Pre-Market</option>
+          <option>Analysis</option>
+          <option>Risk Management</option>
+          <option>Entry</option>
+          <option>Execution</option>
+          <option>Post Trade</option>
+          <option>Custom</option>
+        </select></div>
+      </div>
+      <div class="modal-field">
+        <div class="req-toggle-row">
+          <div class="req-toggle-info">
+            <span class="req-toggle-label">Required Item</span>
+            <span class="req-toggle-hint">Required items weigh more in your Discipline Score.</span>
+          </div>
+          <div class="modal-toggle on" id="clRequiredToggle" onclick="this.classList.toggle('on')"><div class="modal-toggle-knob"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeChecklistModal()">Cancel</button>
+      <button class="btn-primary" id="clModalSaveBtn" onclick="saveChecklistItem()">Add Item</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
   <span id="toastText">Saved!</span>
@@ -812,13 +914,34 @@ function loadProfileSidebar() {
 ══════════════════════════════════════════════════════════ */
 const RULES_KEY = 'tradeva_discipline_rules';
 const ENTRIES_KEY = 'tradeva_discipline_entries';
+const CHECKLIST_KEY = 'tradeva_discipline_checklist';
 
-/* Tradeva's fixed best-practice checklist (NOT editable) */
-const CHECKLIST_ITEMS = [
-  'HTF Analysis Completed', 'Market Bias Confirmed', 'Key Levels Marked',
-  'Economic News Checked', 'Minimum RR 1:2', 'Risk Calculated',
-  'Stop Loss Set', 'Correct Position Size', 'Trading Session Confirmed',
-  'Entry Screenshot Saved', 'Trade Plan Written', 'Journal Updated',
+/* Checklist categories with colored badges */
+const CL_CATEGORIES = {
+  'Pre-Market':      { color: '#3B82F6' },
+  'Analysis':        { color: '#10B981' },
+  'Risk Management': { color: '#F59E0B' },
+  'Entry':           { color: '#8B5CF6' },
+  'Execution':       { color: '#EF4444' },
+  'Post Trade':      { color: '#64748B' },
+  'Custom':          { color: '#06B6D4' },
+};
+
+/* Default checklist items — created on first visit; fully editable after.
+   Each is a CRUD object like a rule: {id,title,desc,category,required,enabled}. */
+const DEFAULT_CHECKLIST = [
+  { id: 1,  title: 'HTF Analysis Complete',       desc: 'Review Daily and 4H market structure before entering.', category: 'Analysis',        required: true,  enabled: true },
+  { id: 2,  title: 'Market Bias Confirmed',       desc: 'Confirm your directional bias for the session.',         category: 'Analysis',        required: true,  enabled: true },
+  { id: 3,  title: 'Key Levels Marked',           desc: 'Mark support, resistance, and liquidity zones.',         category: 'Pre-Market',      required: true,  enabled: true },
+  { id: 4,  title: 'Economic News Checked',       desc: 'Check the economic calendar for high-impact events.',    category: 'Pre-Market',      required: true,  enabled: true },
+  { id: 5,  title: 'Risk Calculated',             desc: 'Calculate exact risk before placing the trade.',         category: 'Risk Management', required: true,  enabled: true },
+  { id: 6,  title: 'Minimum RR 1:2',              desc: 'Ensure the setup offers at least a 1:2 reward-to-risk.', category: 'Risk Management', required: true,  enabled: true },
+  { id: 7,  title: 'Stop Loss Set',               desc: 'Place your stop loss before or at entry.',               category: 'Risk Management', required: true,  enabled: true },
+  { id: 8,  title: 'Correct Position Size',       desc: 'Size the position to your planned risk.',                category: 'Risk Management', required: true,  enabled: true },
+  { id: 9,  title: 'Trading Session Confirmed',   desc: 'Confirm you are trading your intended session.',         category: 'Pre-Market',      required: false, enabled: true },
+  { id: 10, title: 'Entry Screenshot Saved',      desc: 'Capture the entry setup for your journal.',              category: 'Entry',           required: false, enabled: true },
+  { id: 11, title: 'Trade Plan Written',          desc: 'Write the plan: entry, stop, target, and reason.',       category: 'Entry',           required: true,  enabled: true },
+  { id: 12, title: 'Journal Updated',             desc: 'Log the trade after execution.',                         category: 'Post Trade',      required: false, enabled: true },
 ];
 
 /* Violations with their score penalties */
@@ -847,15 +970,19 @@ const DEFAULT_RULES = [
   { id: 6, title: 'Journal every trade', desc: 'Log each trade with screenshots and notes.', priority: 'Important', enabled: true },
 ];
 
-/* Scoring weights */
-const PTS = { checkDone: 5, checkSkip: -2, ruleFollowed: 3, ruleBroken: -8, journalDone: 5 };
+/* Scoring weights:
+   Required checklist item done +5 / skipped -5
+   Optional checklist item done +2 / skipped  0
+   Personal rule followed +3 / broken -8       */
+const PTS = { reqDone: 5, reqSkip: -5, optDone: 2, optSkip: 0, ruleFollowed: 3, ruleBroken: -8 };
 
 /* ── State (today's working set) ── */
 let viewDate = new Date().toISOString().slice(0, 10);
-let ruleFollows = {};   // { ruleId: true/false } for the day
-let checklistState = new Set();
+let ruleFollows = {};      // { ruleId: true } for the day
+let checklistDone = {};    // { checklistItemId: true } for the day
 let violationState = {};   // { key: true }
 let editingRuleId = null;
+let editingChecklistId = null;
 
 /* ══════════════════════════════════════════════════════════
    STORAGE
@@ -869,52 +996,62 @@ function getRules() {
 function setRules(rules) { localStorage.setItem(RULES_KEY, JSON.stringify(rules)); }
 function getEntries() { try { return JSON.parse(localStorage.getItem(ENTRIES_KEY)) || []; } catch (e) { return []; } }
 function setEntries(entries) { localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries)); }
+function getChecklist() {
+  const raw = localStorage.getItem(CHECKLIST_KEY);
+  if (raw) { try { return JSON.parse(raw); } catch (e) {} }
+  localStorage.setItem(CHECKLIST_KEY, JSON.stringify(DEFAULT_CHECKLIST));
+  return [...DEFAULT_CHECKLIST];
+}
+function setChecklist(items) { localStorage.setItem(CHECKLIST_KEY, JSON.stringify(items)); }
 
 /* ══════════════════════════════════════════════════════════
    SCORE ENGINE (auto-calculated, never manual)
 ══════════════════════════════════════════════════════════ */
 function computeScore() {
   const enabledRules = getRules().filter(r => r.enabled);
-  const checkDone = checklistState.size;
-  const checkSkip = CHECKLIST_ITEMS.length - checkDone;
+  const enabledChecklist = getChecklist().filter(c => c.enabled);
+
   const rulesFollowed = enabledRules.filter(r => ruleFollows[r.id]).length;
   const rulesBroken = enabledRules.length - rulesFollowed;
-  const journalDone = checklistState.has(CHECKLIST_ITEMS.indexOf('Journal Updated'));
+
+  // Split enabled checklist by required/optional and done/skipped
+  let reqDone = 0, reqSkip = 0, optDone = 0, optSkip = 0;
+  enabledChecklist.forEach(c => {
+    const done = !!checklistDone[c.id];
+    if (c.required) { if (done) reqDone++; else reqSkip++; }
+    else { if (done) optDone++; else optSkip++; }
+  });
+  const checkDone = reqDone + optDone;
 
   const factors = [];
   let raw = 0;
-
   const addPts = (label, count, per) => {
-    if (count === 0) return;
+    if (count === 0 || per === 0) return;
     const pts = count * per;
     raw += pts;
     factors.push({ label: `${label} (${count})`, pts });
   };
-  addPts('Checklist items completed', checkDone, PTS.checkDone);
+  addPts('Required items completed', reqDone, PTS.reqDone);
+  addPts('Optional items completed', optDone, PTS.optDone);
   addPts('Personal rules followed', rulesFollowed, PTS.ruleFollowed);
-  if (checkSkip > 0) addPts('Checklist items skipped', checkSkip, PTS.checkSkip);
+  if (reqSkip > 0) addPts('Required items skipped', reqSkip, PTS.reqSkip);
   if (rulesBroken > 0) addPts('Personal rules broken', rulesBroken, PTS.ruleBroken);
-  if (journalDone) { raw += PTS.journalDone; factors.push({ label: 'Trading journal completed', pts: PTS.journalDone }); }
 
   // Violation penalties
-  let violationPenalty = 0;
   VIOLATIONS.forEach(v => {
-    if (violationState[v.key]) {
-      violationPenalty += v.penalty;
-      factors.push({ label: v.label, pts: -v.penalty });
-    }
+    if (violationState[v.key]) { raw -= v.penalty; factors.push({ label: v.label, pts: -v.penalty }); }
   });
-  raw -= violationPenalty;
 
   // Normalize to 0-100 against the max achievable for the day
   const maxPossible =
-    CHECKLIST_ITEMS.length * PTS.checkDone +
-    enabledRules.length * PTS.ruleFollowed +
-    PTS.journalDone;
+    enabledChecklist.filter(c => c.required).length * PTS.reqDone +
+    enabledChecklist.filter(c => !c.required).length * PTS.optDone +
+    enabledRules.length * PTS.ruleFollowed;
   let score = maxPossible > 0 ? Math.round(raw / maxPossible * 100) : 0;
   score = Math.max(0, Math.min(100, score));
 
-  return { score, factors, rulesFollowed, rulesTotal: enabledRules.length, checkDone };
+  return { score, factors, rulesFollowed, rulesTotal: enabledRules.length,
+           checkDone, checkTotal: enabledChecklist.length };
 }
 
 function scoreTier(score) {
@@ -1082,21 +1219,129 @@ function deleteRule(id) {
 ══════════════════════════════════════════════════════════ */
 function renderChecklist() {
   const grid = document.getElementById('checklistGrid');
-  grid.innerHTML = CHECKLIST_ITEMS.map((item, i) => `
-    <div class="check-item ${checklistState.has(i) ? 'checked' : ''}" onclick="toggleCheck(${i})">
-      <div class="check-box"><svg viewBox="0 0 11 11"><polyline points="1.5,6 4,8.5 9.5,2.5"/></svg></div>
-      <span class="check-item-label">${item}</span>
-    </div>`).join('');
-  const done = checklistState.size;
-  const pct = Math.round(done / CHECKLIST_ITEMS.length * 100);
-  document.getElementById('checklistLabel').textContent = done + ' / ' + CHECKLIST_ITEMS.length + ' Complete';
+  const items = getChecklist();
+
+  if (!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">No checklist items yet. Add your first item to build your pre-trade process.</div>';
+  } else {
+    grid.innerHTML = items.map(c => {
+      const cat = CL_CATEGORIES[c.category] || CL_CATEGORIES['Custom'];
+      const done = !!checklistDone[c.id];
+      return `<div class="checklist-card ${done ? 'done' : ''} ${c.enabled ? '' : 'disabled'}">
+        <div class="checklist-card-top">
+          <div class="cl-check" onclick="toggleCheck(${c.id})" title="Mark as completed">
+            <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+          </div>
+          <div class="cl-info">
+            <div class="cl-title">${escapeHtml(c.title)}</div>
+            ${c.desc ? `<div class="cl-desc">${escapeHtml(c.desc)}</div>` : ''}
+            <div class="cl-meta-row">
+              <span class="cl-cat-badge" style="background:${hexToRgba(cat.color,0.12)};color:${cat.color};"><span class="cl-cat-dot" style="background:${cat.color};"></span>${c.category}</span>
+              ${c.required ? '<span class="cl-required-badge">Required</span>' : ''}
+            </div>
+          </div>
+          <div class="cl-actions">
+            <div class="cl-toggle ${c.enabled ? 'on' : ''}" onclick="toggleChecklistEnabled(${c.id})" title="Enable / disable"><div class="cl-toggle-knob"></div></div>
+          </div>
+        </div>
+        <div class="rule-meta-row" style="margin-top:10px;justify-content:flex-end;">
+          <button class="rule-icon-btn" onclick="openChecklistModal(${c.id})" title="Edit">
+            <svg viewBox="0 0 12 12"><path d="M8.5 1.5l2 2L4 10l-2.5.5L2 8z"/></svg>
+          </button>
+          <button class="rule-icon-btn danger" onclick="deleteChecklistItem(${c.id})" title="Delete">
+            <svg viewBox="0 0 12 12"><polyline points="1.5,3 10.5,3"/><path d="M4 3V1.5h4V3M9.5 3l-.5 7.5h-6L2.5 3"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const enabled = items.filter(c => c.enabled);
+  const done = enabled.filter(c => checklistDone[c.id]).length;
+  const pct = enabled.length ? Math.round(done / enabled.length * 100) : 0;
+  document.getElementById('checklistLabel').textContent = done + ' / ' + enabled.length + ' Complete';
   document.getElementById('checklistPct').textContent = pct + '%';
   document.getElementById('checklistFill').style.width = pct + '%';
+  document.getElementById('checklistMeta').textContent = enabled.length + ' / ' + items.length + ' enabled';
 }
-function toggleCheck(i) {
-  if (checklistState.has(i)) checklistState.delete(i); else checklistState.add(i);
+
+function toggleCheck(id) {
+  const item = getChecklist().find(c => c.id === id);
+  if (!item || !item.enabled) return;
+  if (checklistDone[id]) delete checklistDone[id]; else checklistDone[id] = true;
   renderChecklist();
   renderScore();
+}
+function toggleChecklistEnabled(id) {
+  const items = getChecklist();
+  const item = items.find(c => c.id === id);
+  if (!item) return;
+  item.enabled = !item.enabled;
+  if (!item.enabled) delete checklistDone[id];
+  setChecklist(items);
+  renderChecklist();
+  renderScore();
+}
+
+/* Checklist item modal (add / edit) */
+function openChecklistModal(id) {
+  editingChecklistId = id || null;
+  const item = id ? getChecklist().find(c => c.id === id) : null;
+  document.getElementById('clModalTitle').textContent = id ? 'Edit Checklist Item' : 'Add Checklist Item';
+  document.getElementById('clModalSaveBtn').textContent = id ? 'Update Item' : 'Add Item';
+  document.getElementById('clTitleInput').value = item ? item.title : '';
+  document.getElementById('clTitleInput').classList.remove('invalid');
+  document.getElementById('clDescInput').value = item && item.desc ? item.desc : '';
+  document.getElementById('clCategoryInput').value = item ? item.category : 'Pre-Market';
+  const reqToggle = document.getElementById('clRequiredToggle');
+  if (item ? item.required : true) reqToggle.classList.add('on'); else reqToggle.classList.remove('on');
+  document.getElementById('checklistModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('clTitleInput').focus(), 100);
+}
+function closeChecklistModal() {
+  document.getElementById('checklistModal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingChecklistId = null;
+}
+function closeChecklistModalOutside(e) {
+  if (e.target === document.getElementById('checklistModal')) closeChecklistModal();
+}
+function saveChecklistItem() {
+  const title = document.getElementById('clTitleInput').value.trim();
+  if (!title) { document.getElementById('clTitleInput').classList.add('invalid'); showToast('Please enter a checklist title.', false); return; }
+  const desc = document.getElementById('clDescInput').value.trim();
+  const category = document.getElementById('clCategoryInput').value;
+  const required = document.getElementById('clRequiredToggle').classList.contains('on');
+
+  const items = getChecklist();
+  if (editingChecklistId) {
+    const c = items.find(x => x.id === editingChecklistId);
+    if (c) { c.title = title; c.desc = desc; c.category = category; c.required = required; }
+    showToast('Checklist item updated.', true);
+  } else {
+    const newId = items.length ? Math.max(...items.map(c => c.id || 0)) + 1 : 1;
+    items.push({ id: newId, title, desc, category, required, enabled: true });
+    showToast('Checklist item added.', true);
+  }
+  setChecklist(items);
+  closeChecklistModal();
+  renderChecklist();
+  renderScore();
+}
+function deleteChecklistItem(id) {
+  if (!confirm('Delete this checklist item? This cannot be undone.')) return;
+  setChecklist(getChecklist().filter(c => c.id !== id));
+  delete checklistDone[id];
+  renderChecklist();
+  renderScore();
+  showToast('Checklist item deleted.', true);
+}
+
+/* hex -> rgba helper for category badge tints */
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1128,10 +1373,10 @@ function onDateChange() {
 }
 function loadEntryForDate(date) {
   const entry = getEntries().find(e => e.date === date);
-  ruleFollows = {}; checklistState = new Set(); violationState = {};
+  ruleFollows = {}; checklistDone = {}; violationState = {};
   if (entry) {
     ruleFollows = { ...(entry.ruleFollows || {}) };
-    checklistState = new Set(entry.checklist || []);
+    checklistDone = { ...(entry.checklistDone || {}) };
     violationState = { ...(entry.violations || {}) };
     document.getElementById('f-executed-well').value = entry.executedWell || '';
     document.getElementById('f-mistake').value = entry.mistake || '';
@@ -1152,7 +1397,7 @@ async function saveEntry() {
   await new Promise(r => setTimeout(r, 500));
 
   try {
-    const { score, rulesFollowed, rulesTotal, checkDone } = computeScore();
+    const { score, rulesFollowed, rulesTotal, checkDone, checkTotal } = computeScore();
     const entries = getEntries();
     const d = new Date(viewDate + 'T00:00:00');
     const violCount = Object.values(violationState).filter(Boolean).length;
@@ -1162,10 +1407,10 @@ async function saveEntry() {
       displayDate: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
       score,
       rulesFollowed, rulesTotal,
-      checklistDone: checkDone, checklistTotal: CHECKLIST_ITEMS.length,
+      checklistCompleted: checkDone, checklistTotal: checkTotal,
       violationsCount: violCount,
       ruleFollows: { ...ruleFollows },
-      checklist: Array.from(checklistState),
+      checklistDone: { ...checklistDone },
       violations: { ...violationState },
       executedWell: document.getElementById('f-executed-well').value.trim(),
       mistake: document.getElementById('f-mistake').value.trim(),
@@ -1325,7 +1570,7 @@ function renderHistory() {
       </div>
       <div class="entry-stats">
         <div class="entry-stat"><span class="entry-stat-val green">${e.rulesFollowed}/${e.rulesTotal}</span><span class="entry-stat-label">Rules</span></div>
-        <div class="entry-stat"><span class="entry-stat-val">${e.checklistDone}/${e.checklistTotal}</span><span class="entry-stat-label">Checklist</span></div>
+        <div class="entry-stat"><span class="entry-stat-val">${e.checklistCompleted != null ? e.checklistCompleted : 0}/${e.checklistTotal || 0}</span><span class="entry-stat-label">Checklist</span></div>
         <div class="entry-stat"><span class="entry-stat-val ${e.violationsCount ? 'red' : 'green'}">${e.violationsCount}</span><span class="entry-stat-label">Violations</span></div>
       </div>
       <div class="entry-actions">
