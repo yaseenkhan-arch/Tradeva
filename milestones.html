@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Milestones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --amber:        #F59E0B;
+  --amber-bg:     #FFFBEB;
+  --purple:       #8B5CF6;
+  --purple-bg:    #F5F3FF;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --amber-bg:     #1E1503;
+  --purple-bg:    #170D2E;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; max-width: 1160px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; max-width: 640px; line-height: 1.55; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Card system */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.card-head { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.card-head-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-head-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.card-head-meta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.section-heading { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 26px 0 4px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); display: flex; align-items: center; gap: 10px; }
+.section-heading .count-chip { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); }
+.section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   HERO — LEVEL CARD
+══════════════════════════════════════════════════════════ */
+.hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 55%, #2563EB 100%); border-radius: 20px; padding: 32px; color: #fff; box-shadow: 0 10px 30px rgba(37,99,235,0.28); margin-bottom: 18px; }
+[data-theme="dark"] .hero { background: linear-gradient(135deg, #0B1E45 0%, #12315F 55%, #0D2E63 100%); box-shadow: 0 10px 36px rgba(0,0,0,0.5); }
+.hero::before { content: ''; position: absolute; top: -60px; right: -40px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%); pointer-events: none; }
+.hero::after { content: ''; position: absolute; bottom: -80px; left: 30%; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%); pointer-events: none; }
+.hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center; }
+.hero-badge-wrap { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
+.hero-ring { width: 132px; height: 132px; transform: rotate(-90deg); }
+.hero-ring-bg { fill: none; stroke: rgba(255,255,255,0.18); stroke-width: 9; }
+.hero-ring-fg { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-dasharray: 383; stroke-dashoffset: 383; transition: stroke-dashoffset 1.1s var(--ease); }
+.hero-badge-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.hero-level-num { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+.hero-level-cap { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; margin-top: 3px; }
+.hero-info { flex: 1; min-width: 0; }
+.hero-tier-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,0.18); backdrop-filter: blur(4px); margin-bottom: 12px; }
+.hero-tier-pill svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2; }
+.hero-title { font-size: 27px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 6px; line-height: 1.1; }
+.hero-xp-line { font-size: 13.5px; opacity: 0.9; margin-bottom: 18px; font-weight: 500; }
+.hero-xp-line b { font-weight: 800; }
+.hero-progress { position: relative; }
+.hero-progress-track { height: 12px; border-radius: 10px; background: rgba(255,255,255,0.2); overflow: hidden; }
+.hero-progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #fff, #DBEAFE); box-shadow: 0 0 14px rgba(255,255,255,0.5); width: 0; transition: width 1.1s var(--ease); }
+.hero-progress-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; font-weight: 600; opacity: 0.85; }
+.hero-next { display: flex; align-items: center; gap: 6px; }
+
+/* ══════════════════════════════════════════════════════════
+   LIFETIME JOURNEY STATS
+══════════════════════════════════════════════════════════ */
+.journey-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.journey-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.journey-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.journey-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.journey-ic { width: 28px; height: 28px; border-radius: 8px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.journey-ic svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.journey-ic.green { background: var(--green-bg); } .journey-ic.green svg { stroke: var(--green); }
+.journey-ic.amber { background: var(--amber-bg); } .journey-ic.amber svg { stroke: var(--amber); }
+.journey-ic.purple { background: var(--purple-bg); } .journey-ic.purple svg { stroke: var(--purple); }
+.journey-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
+.journey-val { font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.6px; line-height: 1; transition: color var(--t) var(--ease); }
+.journey-val.green { color: var(--green); } .journey-val.red { color: var(--red); }
+.journey-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   NEXT MILESTONES
+══════════════════════════════════════════════════════════ */
+.next-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.next-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 15px; padding: 20px; box-shadow: var(--shadow-card); transition: all var(--t) var(--ease); position: relative; overflow: hidden; }
+.next-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--accent); }
+.next-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.next-ic { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.next-ic svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.next-title { font-size: 14.5px; font-weight: 700; color: var(--text-primary); line-height: 1.25; transition: color var(--t) var(--ease); }
+.next-remaining { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; transition: color var(--t) var(--ease); }
+.next-bar-row { display: flex; align-items: center; gap: 10px; }
+.next-bar { flex: 1; height: 8px; border-radius: 8px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.next-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent), #60A5FA); transition: width 800ms var(--ease); }
+.next-pct { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; min-width: 34px; text-align: right; }
+.next-frac { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 10px; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   ACHIEVEMENT GRID
+══════════════════════════════════════════════════════════ */
+.ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.ach-card { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: 15px; padding: 20px; box-shadow: var(--shadow-card); transition: all var(--t) var(--ease); overflow: hidden; }
+.ach-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+.ach-card.locked { opacity: 0.62; }
+.ach-card.locked:hover { opacity: 0.85; }
+.ach-card.unlocked { border-color: var(--accent); }
+.ach-card.unlocked::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #60A5FA); }
+.ach-top { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 14px; }
+.ach-ic { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--border-light); transition: all var(--t) var(--ease); }
+.ach-ic svg { width: 22px; height: 22px; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; stroke: var(--text-faint); }
+.ach-card.unlocked .ach-ic { background: var(--accent-bg); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.ach-card.unlocked .ach-ic svg { stroke: var(--accent); }
+.ach-head-txt { flex: 1; min-width: 0; }
+.ach-title { font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.25; margin-bottom: 3px; transition: color var(--t) var(--ease); }
+.ach-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; transition: color var(--t) var(--ease); }
+.ach-status { position: absolute; top: 16px; right: 16px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ach-status.done { background: var(--accent); }
+.ach-status.done svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ach-status.lock svg { width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 1.8; }
+.ach-progress-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.ach-bar { flex: 1; height: 7px; border-radius: 7px; background: var(--border-light); overflow: hidden; transition: background var(--t) var(--ease); }
+.ach-bar-fill { height: 100%; border-radius: 7px; background: var(--accent); transition: width 800ms var(--ease); }
+.ach-card.unlocked .ach-bar-fill { background: linear-gradient(90deg, var(--accent), #60A5FA); }
+.ach-frac { font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; transition: color var(--t) var(--ease); }
+.ach-foot { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ach-xp { font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 20px; }
+.ach-unlocked-date { font-size: 10.5px; font-weight: 600; color: var(--green); display: flex; align-items: center; gap: 4px; }
+.ach-unlocked-date svg { width: 11px; height: 11px; stroke: var(--green); fill: none; stroke-width: 2; }
+.ach-remaining { font-size: 10.5px; font-weight: 600; color: var(--text-faint); }
+
+/* Category filter tabs */
+.cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.cat-tab { padding: 8px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all var(--t) var(--ease); display: flex; align-items: center; gap: 7px; }
+.cat-tab:hover { border-color: var(--text-faint); color: var(--text-primary); transform: translateY(-1px); }
+.cat-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow-btn); }
+.cat-tab .tab-count { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); }
+.cat-tab.active .tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* ══════════════════════════════════════════════════════════
+   TIMELINE
+══════════════════════════════════════════════════════════ */
+.timeline { position: relative; padding-left: 8px; }
+.timeline::before { content: ''; position: absolute; left: 15px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--accent), var(--border)); border-radius: 2px; }
+.tl-item { position: relative; padding-left: 42px; padding-bottom: 22px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot { position: absolute; left: 8px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-card); box-shadow: 0 0 0 2px var(--accent); z-index: 1; }
+.tl-month { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 8px; }
+.tl-ach-row { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-page); margin-bottom: 8px; transition: all var(--t) var(--ease); }
+.tl-ach-row:last-child { margin-bottom: 0; }
+.tl-ach-row:hover { border-color: var(--accent); transform: translateX(3px); box-shadow: var(--shadow-card); }
+.tl-ach-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tl-ach-ic svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tl-ach-info { flex: 1; min-width: 0; }
+.tl-ach-title { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.tl-ach-cat { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.tl-ach-xp { font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   AI PLACEHOLDER
+══════════════════════════════════════════════════════════ */
+.ai-card { background: linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-card) 70%); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 28px; box-shadow: var(--shadow-card); margin-bottom: 16px; position: relative; overflow: hidden; }
+.ai-card::after { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,0.12), transparent 70%); pointer-events: none; }
+.ai-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; z-index: 1; }
+.ai-card-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59,130,246,0.35); flex-shrink: 0; }
+.ai-card-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ai-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.soon-badge-inline { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); margin-left: auto; }
+.ai-card-text { font-size: 13.5px; line-height: 1.65; color: var(--text-muted); max-width: 620px; position: relative; z-index: 1; transition: color var(--t) var(--ease); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 54px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-card); transition: all var(--t) var(--ease); }
+.empty-icon { width: 62px; height: 62px; margin: 0 auto 16px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; }
+.empty-icon svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.empty-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); max-width: 420px; margin: 0 auto; line-height: 1.6; transition: color var(--t) var(--ease); }
+.section-empty { padding: 28px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 13px; background: var(--bg-page); }
+.section-empty-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+/* Mobile shell */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .journey-grid { grid-template-columns: repeat(3, 1fr); }
+  .next-grid { grid-template-columns: 1fr; }
+  .ach-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; max-width: 100%; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .hero { padding: 24px; }
+  .hero-inner { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; }
+  .hero-progress { width: 100%; }
+  .journey-grid { grid-template-columns: repeat(2, 1fr); }
+  .ach-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .journey-grid { grid-template-columns: 1fr 1fr; }
+  .hero-title { font-size: 23px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="discipline-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="reviews.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="milestones.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Milestones</h1>
+        <p class="page-subtitle">Your complete trading journey. Every trade, review, mood check-in and disciplined decision compounds into measurable growth — this is where that progress is celebrated.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="milestonesRoot"><!-- everything injected --></div>
+
+</main>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="reviews.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+    Reviews
+  </a>
+  <a href="milestones.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+    Milestones
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+</nav>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — MILESTONES
+   The only page with XP · Levels · Achievements · Progression.
+   Reads (never mutates) every module; caches unlock dates in
+   tradeva_milestones so an achievement's unlock date is stable.
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR / PROFILE ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const initials = (fname.charAt(0) + ((p.lname || '').charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = p.account || 'Pro Trader';
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE READERS
+══════════════════════════════════════════════════════════ */
+function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function getTrades()            { return readJSON('tradeva_trades', []) || []; }
+function getPlans()             { return readJSON('tradeva_weekly_plans', []) || []; }
+function getMoodEntries()       { return readJSON('tradeva_mood_entries', []) || []; }
+function getDisciplineEntries() { return readJSON('tradeva_discipline_entries', []) || []; }
+function getReviews()           { return readJSON('tradeva_reviews', []) || []; }
+const MS_KEY = 'tradeva_milestones';
+function getMSCache() { return readJSON(MS_KEY, { unlocks: {} }) || { unlocks: {} }; }
+function setMSCache(c) { localStorage.setItem(MS_KEY, JSON.stringify(c)); }
+
+/* ══════════════════════════════════════════════════════════
+   DATE HELPERS
+══════════════════════════════════════════════════════════ */
+function parseAnyDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) { const d = new Date(v + (v.length === 10 ? 'T00:00:00' : '')); return isNaN(d) ? null : d; }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+function monthKey(d) { return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
+function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+/* ══════════════════════════════════════════════════════════
+   AGGREGATE — the single source of truth for this page
+══════════════════════════════════════════════════════════ */
+function aggregate() {
+  const trades = getTrades();
+  const plans = getPlans();
+  const moods = getMoodEntries();
+  const disc = getDisciplineEntries();
+  const reviews = getReviews();
+
+  // trade-derived
+  let netRR = 0, rrCount = 0, netPnl = 0, wins = 0, decided = 0;
+  const tradeDates = [];
+  trades.forEach(t => {
+    const rr = Number(t.rr); if (!isNaN(rr) && rr !== 0) { netRR += rr; rrCount++; }
+    const pnl = Number(t.pnl) || 0; netPnl += pnl;
+    const isWin = t.outcome === 'Win' || (t.outcome == null && pnl > 0);
+    const isLoss = t.outcome === 'Loss' || (t.outcome == null && pnl < 0);
+    if (isWin || isLoss) { decided++; if (isWin) wins++; }
+    const d = parseAnyDate(t.date); if (d) tradeDates.push(d);
+  });
+  const winRate = decided ? (wins / decided) * 100 : 0;
+
+  // distinct trading days + consecutive streak
+  const dayset = [...new Set(tradeDates.map(d => d.toISOString().slice(0,10)))].sort();
+  const distinctDays = dayset.length;
+  let maxConsec = 0, curConsec = 0, prev = null;
+  dayset.forEach(ds => {
+    const d = new Date(ds + 'T00:00:00');
+    if (prev && (d - prev) === 86400000) curConsec++; else curConsec = 1;
+    if (curConsec > maxConsec) maxConsec = curConsec;
+    prev = d;
+  });
+
+  // trading-since = earliest trade date
+  let since = null;
+  tradeDates.forEach(d => { if (!since || d < since) since = d; });
+  const daysTrading = since ? Math.max(1, Math.floor((Date.now() - since.getTime()) / 86400000) + 1) : 0;
+
+  // discipline
+  let perfectDisciplineDays = 0, totalViolations = 0, checklistsCompleted = 0, disciplineScoreSum = 0, perfectDisciplineWeeks = 0;
+  const perfectDates = [];
+  disc.forEach(e => {
+    const perfect = (e.score === 100) || (e.rulesFollowed != null && e.rulesTotal != null && e.rulesFollowed === e.rulesTotal && (e.violationsCount || 0) === 0);
+    if (perfect) { perfectDisciplineDays++; const d = parseAnyDate(e.date); if (d) perfectDates.push(d); }
+    totalViolations += (e.violationsCount || 0);
+    if (e.checklistTotal && e.checklistDone === e.checklistTotal) checklistsCompleted++;
+    disciplineScoreSum += (e.score || 0);
+  });
+  const avgDiscipline = disc.length ? Math.round(disciplineScoreSum / disc.length) : 0;
+  // longest perfect-discipline streak (consecutive calendar days)
+  const pset = [...new Set(perfectDates.map(d => d.toISOString().slice(0,10)))].sort();
+  let maxPerfectStreak = 0, cp = 0, pv = null;
+  pset.forEach(ds => { const d = new Date(ds+'T00:00:00'); if (pv && (d-pv)===86400000) cp++; else cp=1; if (cp>maxPerfectStreak) maxPerfectStreak=cp; pv=d; });
+
+  // mood
+  let moodScoreSum = 0, moodScoreN = 0;
+  const moodDates = [];
+  moods.forEach(e => {
+    const s = e.scores || {};
+    if (typeof s.mood === 'number') { moodScoreSum += s.mood; moodScoreN++; }
+    const d = parseAnyDate(e.date); if (d) moodDates.push(d);
+  });
+  const avgMood = moodScoreN ? moodScoreSum / moodScoreN : 0;
+  const mset = [...new Set(moodDates.map(d => d.toISOString().slice(0,10)))].sort();
+  let maxMoodStreak = 0, cm = 0, mv = null;
+  mset.forEach(ds => { const d = new Date(ds+'T00:00:00'); if (mv && (d-mv)===86400000) cm++; else cm=1; if (cm>maxMoodStreak) maxMoodStreak=cm; mv=d; });
+
+  // weekly winning weeks (group trades by ISO week -> net pnl > 0)
+  const weekPnl = {};
+  trades.forEach(t => {
+    const d = parseAnyDate(t.date); if (!d) return;
+    const dow = (d.getDay() + 6) % 7; const monday = new Date(d); monday.setDate(d.getDate() - dow); monday.setHours(0,0,0,0);
+    const k = monday.toISOString().slice(0,10);
+    weekPnl[k] = (weekPnl[k] || 0) + (Number(t.pnl) || 0);
+  });
+  const winningWeeks = Object.values(weekPnl).filter(v => v > 0).length;
+
+  // reviews by type
+  const weeklyReviews = reviews.filter(r => r.period === 'weekly').length;
+  const monthlyReviews = reviews.filter(r => r.period === 'monthly').length;
+
+  return {
+    trades, plans, moods, disc, reviews,
+    tradeCount: trades.length, netRR, rrCount, netPnl, winRate,
+    distinctDays, maxConsec, since, daysTrading,
+    perfectDisciplineDays, totalViolations, checklistsCompleted, avgDiscipline, maxPerfectStreak, maxPerfectWeeks: perfectDisciplineWeeks,
+    moodCount: moods.length, avgMood, maxMoodStreak,
+    planCount: plans.length,
+    reviewCount: reviews.length, weeklyReviews, monthlyReviews,
+    winningWeeks,
+  };
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACHIEVEMENT DEFINITIONS
+   value(a) returns current progress; target is the goal.
+   category drives filtering + section grouping.
+══════════════════════════════════════════════════════════ */
+const ICON = {
+  trophy: '<svg viewBox="0 0 22 22"><path d="M6 3h10v3a5 5 0 01-10 0V3z"/><path d="M6 5H3.5a2 2 0 002 3.5M16 5h2.5a2 2 0 01-2 3.5"/><path d="M8.5 12.5L8 16h6l-.5-3.5M6.5 19h9"/></svg>',
+  chart: '<svg viewBox="0 0 22 22"><polyline points="2,15 8,9 12,12 20,4"/><polyline points="15,4 20,4 20,9"/></svg>',
+  stack: '<svg viewBox="0 0 22 22"><polygon points="11,2 20,7 11,12 2,7"/><polyline points="2,12 11,17 20,12"/></svg>',
+  money: '<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9"/><path d="M11 6v10M8.5 8.5C8.5 7.1 9.6 6 11 6s2.5 1.1 2.5 2.2c0 1-.7 1.6-1.8 1.9l-1.4.4c-1.1.3-1.8.9-1.8 1.9 0 1.1 1.1 2.2 2.5 2.2s2.5-1.1 2.5-2.5"/></svg>',
+  shield: '<svg viewBox="0 0 22 22"><path d="M11 2l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V5z"/><polyline points="7.5,11 10,13.5 15,8"/></svg>',
+  check: '<svg viewBox="0 0 22 22"><rect x="3" y="3" width="16" height="16" rx="3"/><polyline points="7,11 10,14 15,8"/></svg>',
+  flame: '<svg viewBox="0 0 22 22"><path d="M11 2c1 3-1.5 4.5-1.5 7A2.5 2.5 0 0011 11.5c1.4 0 2.3-1 2.3-2.3 2 1.5 3.2 3.4 3.2 5.6a5.5 5.5 0 01-11 0c0-3.2 2.5-5 3.5-8.8z"/></svg>',
+  calendar: '<svg viewBox="0 0 22 22"><rect x="3" y="4" width="16" height="15" rx="2"/><line x1="3" y1="9" x2="19" y2="9"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="15" y1="2" x2="15" y2="5"/></svg>',
+  brain: '<svg viewBox="0 0 22 22"><path d="M9 3a3 3 0 00-3 3 3 3 0 00-1.5 5.5A3 3 0 006 17a3 3 0 003 2V3z"/><path d="M13 3a3 3 0 013 3 3 3 0 011.5 5.5A3 3 0 0116 17a3 3 0 01-3 2V3z"/></svg>',
+  smile: '<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9"/><path d="M7 13a4.5 4.5 0 008 0"/><circle cx="8" cy="9" r="0.6" fill="currentColor"/><circle cx="14" cy="9" r="0.6" fill="currentColor"/></svg>',
+  clipboard: '<svg viewBox="0 0 22 22"><rect x="5" y="4" width="12" height="16" rx="2"/><rect x="8" y="2" width="6" height="4" rx="1"/><line x1="8" y1="10" x2="14" y2="10"/><line x1="8" y1="13.5" x2="12" y2="13.5"/></svg>',
+  star: '<svg viewBox="0 0 22 22"><polygon points="11,2 13.6,8 20,8.6 15,13 16.5,19.5 11,16 5.5,19.5 7,13 2,8.6 8.4,8"/></svg>',
+  crown: '<svg viewBox="0 0 22 22"><path d="M3 7l3.5 3L11 4l4.5 6L19 7l-1.5 10h-13z"/></svg>',
+  book: '<svg viewBox="0 0 22 22"><path d="M4 4h6a2 2 0 012 2v12a2 2 0 00-2-2H4z"/><path d="M18 4h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></svg>',
+  bolt: '<svg viewBox="0 0 22 22"><polygon points="12,2 4,13 10,13 9,20 17,8 11,8"/></svg>',
+  target: '<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5"/><circle cx="11" cy="11" r="5"/><circle cx="11" cy="11" r="1.6" fill="currentColor"/></svg>',
+  medal: '<svg viewBox="0 0 22 22"><circle cx="11" cy="13" r="5.5"/><path d="M7.5 8L5 2h4l2 4M14.5 8L17 2h-4l-2 4"/></svg>',
+};
+
+function buildAchievements(A) {
+  const defs = [
+    // ── TRADING ──
+    { id:'first_trade', cat:'Trading', icon:ICON.chart, title:'First Trade Logged', desc:'Log your very first trade in Tradeva.', target:1, value:A.tradeCount, xp:50 },
+    { id:'trades_10', cat:'Trading', icon:ICON.chart, title:'10 Trades', desc:'Build the habit — log 10 trades.', target:10, value:A.tradeCount, xp:50 },
+    { id:'trades_50', cat:'Trading', icon:ICON.stack, title:'50 Trades', desc:'A growing track record of 50 trades.', target:50, value:A.tradeCount, xp:50 },
+    { id:'trades_100', cat:'Trading', icon:ICON.stack, title:'100 Trades', desc:'Triple digits — 100 trades logged.', target:100, value:A.tradeCount, xp:50 },
+    { id:'trades_500', cat:'Trading', icon:ICON.stack, title:'500 Trades', desc:'Serious sample size — 500 trades.', target:500, value:A.tradeCount, xp:50 },
+    { id:'trades_1000', cat:'Trading', icon:ICON.trophy, title:'1000 Trades', desc:'Elite volume — 1000 trades logged.', target:1000, value:A.tradeCount, xp:50 },
+    { id:'rr_10', cat:'Trading', icon:ICON.bolt, title:'10R Club', desc:'Accumulate +10R across your trades.', target:10, value:Math.max(0,A.netRR), xp:50, unit:'R' },
+    { id:'rr_50', cat:'Trading', icon:ICON.bolt, title:'50R Club', desc:'Accumulate +50R across your trades.', target:50, value:Math.max(0,A.netRR), xp:50, unit:'R' },
+    { id:'rr_100', cat:'Trading', icon:ICON.bolt, title:'100R Club', desc:'Accumulate +100R — outstanding.', target:100, value:Math.max(0,A.netRR), xp:50, unit:'R' },
+    { id:'profit_1k', cat:'Trading', icon:ICON.money, title:'$1,000 Profit', desc:'Reach $1,000 in lifetime profit.', target:1000, value:Math.max(0,A.netPnl), xp:50, unit:'$' },
+    { id:'profit_10k', cat:'Trading', icon:ICON.money, title:'$10,000 Profit', desc:'Reach $10,000 in lifetime profit.', target:10000, value:Math.max(0,A.netPnl), xp:50, unit:'$' },
+    { id:'profit_50k', cat:'Trading', icon:ICON.money, title:'$50,000 Profit', desc:'Reach $50,000 in lifetime profit.', target:50000, value:Math.max(0,A.netPnl), xp:50, unit:'$' },
+
+    // ── DISCIPLINE ──
+    { id:'perfect_1', cat:'Discipline', icon:ICON.shield, title:'Perfect Discipline Day', desc:'Complete a day with a flawless discipline score.', target:1, value:A.perfectDisciplineDays, xp:50 },
+    { id:'perfect_7', cat:'Discipline', icon:ICON.shield, title:'7 Days Perfect Discipline', desc:'Log 7 perfect discipline days.', target:7, value:A.perfectDisciplineDays, xp:50 },
+    { id:'perfect_30', cat:'Discipline', icon:ICON.shield, title:'30 Days Perfect Discipline', desc:'Log 30 perfect discipline days.', target:30, value:A.perfectDisciplineDays, xp:50 },
+    { id:'perfect_100', cat:'Discipline', icon:ICON.shield, title:'100 Days Perfect Discipline', desc:'Log 100 perfect discipline days.', target:100, value:A.perfectDisciplineDays, xp:50 },
+    { id:'no_viol_streak', cat:'Discipline', icon:ICON.flame, title:'No Rule Violations', desc:'String together 14 straight perfect-discipline days.', target:14, value:A.maxPerfectStreak, xp:50 },
+    { id:'checklists_100', cat:'Discipline', icon:ICON.check, title:'100 Completed Checklists', desc:'Fully complete your pre-trade checklist 100 times.', target:100, value:A.checklistsCompleted, xp:50 },
+    { id:'disc_week', cat:'Discipline', icon:ICON.shield, title:'100% Discipline Week', desc:'Achieve 7 consecutive perfect-discipline days.', target:7, value:A.maxPerfectStreak, xp:50 },
+
+    // ── CONSISTENCY ──
+    { id:'days_7', cat:'Consistency', icon:ICON.calendar, title:'7 Trading Days', desc:'Trade on 7 distinct days.', target:7, value:A.distinctDays, xp:50 },
+    { id:'days_30', cat:'Consistency', icon:ICON.calendar, title:'30 Trading Days', desc:'Trade on 30 distinct days.', target:30, value:A.distinctDays, xp:50 },
+    { id:'days_100', cat:'Consistency', icon:ICON.calendar, title:'100 Trading Days', desc:'Trade on 100 distinct days.', target:100, value:A.distinctDays, xp:50 },
+    { id:'days_250', cat:'Consistency', icon:ICON.calendar, title:'250 Trading Days', desc:'Trade on 250 distinct days.', target:250, value:A.distinctDays, xp:50 },
+    { id:'days_365', cat:'Consistency', icon:ICON.calendar, title:'365 Trading Days', desc:'Trade on 365 distinct days.', target:365, value:A.distinctDays, xp:50 },
+    { id:'winweeks_5', cat:'Consistency', icon:ICON.chart, title:'5 Winning Weeks', desc:'Finish 5 weeks net positive.', target:5, value:A.winningWeeks, xp:50 },
+    { id:'winweeks_10', cat:'Consistency', icon:ICON.chart, title:'10 Winning Weeks', desc:'Finish 10 weeks net positive.', target:10, value:A.winningWeeks, xp:50 },
+    { id:'winweeks_25', cat:'Consistency', icon:ICON.chart, title:'25 Winning Weeks', desc:'Finish 25 weeks net positive.', target:25, value:A.winningWeeks, xp:50 },
+    { id:'weekly_reviews_50', cat:'Consistency', icon:ICON.medal, title:'50 Weekly Reviews', desc:'Complete 50 weekly reviews.', target:50, value:A.weeklyReviews, xp:50 },
+    { id:'journal_100', cat:'Consistency', icon:ICON.book, title:'100 Journal Entries', desc:'Log 100 trades with journal notes.', target:100, value:A.tradeCount, xp:50 },
+
+    // ── PSYCHOLOGY ──
+    { id:'mood_30', cat:'Psychology', icon:ICON.smile, title:'30 Mood Check-ins', desc:'Record 30 mood check-ins.', target:30, value:A.moodCount, xp:50 },
+    { id:'mood_100', cat:'Psychology', icon:ICON.smile, title:'100 Mood Check-ins', desc:'Record 100 mood check-ins.', target:100, value:A.moodCount, xp:50 },
+    { id:'mood_365', cat:'Psychology', icon:ICON.smile, title:'365 Mood Entries', desc:'Record 365 mood entries.', target:365, value:A.moodCount, xp:50 },
+    { id:'mood_avg4', cat:'Psychology', icon:ICON.brain, title:'Average Mood Above 4', desc:'Keep your average mood above 4.0 (min 10 entries).', target:100, value:(A.moodCount>=10 && A.avgMood>4)?100:Math.min(99,Math.round((A.avgMood/4)*100)), xp:50, pctOnly:true },
+    { id:'mood_streak_30', cat:'Psychology', icon:ICON.flame, title:'Mood Tracker 30 Days Straight', desc:'Check in 30 consecutive days.', target:30, value:A.maxMoodStreak, xp:50 },
+    { id:'balanced', cat:'Psychology', icon:ICON.brain, title:'Balanced Trader', desc:'Maintain a healthy average mood across 50+ check-ins.', target:50, value:(A.avgMood>=3.5?A.moodCount:0), xp:50 },
+
+    // ── PLANNER ──
+    { id:'plan_1', cat:'Planner', icon:ICON.clipboard, title:'First Weekly Plan', desc:'Create your first weekly plan.', target:1, value:A.planCount, xp:50 },
+    { id:'plan_10', cat:'Planner', icon:ICON.clipboard, title:'10 Weekly Plans', desc:'Create 10 weekly plans.', target:10, value:A.planCount, xp:50 },
+    { id:'plan_50', cat:'Planner', icon:ICON.clipboard, title:'50 Weekly Plans', desc:'Create 50 weekly plans.', target:50, value:A.planCount, xp:50 },
+    { id:'plan_100', cat:'Planner', icon:ICON.clipboard, title:'100 Weekly Plans', desc:'Create 100 weekly plans.', target:100, value:A.planCount, xp:50 },
+    { id:'plan_streak', cat:'Planner', icon:ICON.flame, title:'Planner Streak', desc:'Plan 4 weeks in a row.', target:4, value:A.planCount, xp:50 },
+    { id:'plan_master', cat:'Planner', icon:ICON.crown, title:'Planning Master', desc:'Complete 25 weekly plans.', target:25, value:A.planCount, xp:50 },
+
+    // ── REVIEW ──
+    { id:'review_1', cat:'Review', icon:ICON.star, title:'First Review', desc:'Complete your first review.', target:1, value:A.reviewCount, xp:50 },
+    { id:'review_10', cat:'Review', icon:ICON.star, title:'10 Reviews', desc:'Complete 10 reviews.', target:10, value:A.reviewCount, xp:50 },
+    { id:'review_50', cat:'Review', icon:ICON.medal, title:'50 Reviews', desc:'Complete 50 reviews.', target:50, value:A.reviewCount, xp:50 },
+    { id:'review_100', cat:'Review', icon:ICON.trophy, title:'100 Reviews', desc:'Complete 100 reviews.', target:100, value:A.reviewCount, xp:50 },
+    { id:'review_weekly_streak', cat:'Review', icon:ICON.flame, title:'Weekly Review Streak', desc:'Complete 8 weekly reviews.', target:8, value:A.weeklyReviews, xp:50 },
+    { id:'review_monthly', cat:'Review', icon:ICON.calendar, title:'Monthly Review Master', desc:'Complete 6 monthly reviews.', target:6, value:A.monthlyReviews, xp:50 },
+    { id:'reflection_master', cat:'Review', icon:ICON.book, title:'Reflection Master', desc:'Complete 25 reviews of any type.', target:25, value:A.reviewCount, xp:50 },
+
+    // ── SPECIAL ──
+    { id:'iron_discipline', cat:'Special', icon:ICON.shield, title:'Iron Discipline', desc:'Complete 30 days without a rule violation.', target:30, value:A.maxPerfectStreak, xp:50 },
+    { id:'journal_master', cat:'Special', icon:ICON.book, title:'Journal Master', desc:'Complete 365 journal entries.', target:365, value:A.tradeCount, xp:50 },
+    { id:'consistency_king', cat:'Special', icon:ICON.crown, title:'Consistency King', desc:'Trade 100 consecutive days.', target:100, value:A.maxConsec, xp:50 },
+    { id:'planner_pro', cat:'Special', icon:ICON.clipboard, title:'Planner Pro', desc:'Complete a weekly plan every week for three months.', target:12, value:A.planCount, xp:50 },
+    { id:'review_champion', cat:'Special', icon:ICON.medal, title:'Review Champion', desc:'Complete every weekly review for twelve consecutive weeks.', target:12, value:A.weeklyReviews, xp:50 },
+    { id:'trading_machine', cat:'Special', icon:ICON.trophy, title:'Trading Machine', desc:'Log 1000 trades.', target:1000, value:A.tradeCount, xp:50 },
+  ];
+
+  return defs.map(d => {
+    const value = Math.max(0, d.value || 0);
+    const pct = d.target ? Math.min(100, (value / d.target) * 100) : 0;
+    const unlocked = value >= d.target;
+    return { ...d, value, pct, unlocked };
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   XP + LEVELS
+══════════════════════════════════════════════════════════ */
+const LEVELS = [
+  { name:'Beginner Trader' },     // 1
+  { name:'Student Trader' },      // 2
+  { name:'Developing Trader' },   // 3
+  { name:'Consistent Trader' },   // 4
+  { name:'Professional Trader' }, // 5
+  { name:'Elite Trader' },        // 6
+  { name:'Master Trader' },       // 7
+];
+/* XP required to *reach* each level (cumulative). Level 1 = 0. */
+const LEVEL_XP = [0, 250, 600, 1100, 1800, 2800, 4200];
+
+function computeXP(A, achievements) {
+  let xp = 0;
+  xp += A.tradeCount * 5;                     // log a trade
+  xp += A.planCount * 20;                     // weekly planner
+  xp += A.moodCount * 10;                     // mood tracker
+  xp += A.disc.length * 15;                   // discipline tracker
+  xp += A.reviewCount * 25;                   // weekly review
+  xp += achievements.filter(a => a.unlocked).length * 50; // unlock achievement
+  xp += A.perfectDisciplineDays * 20;         // perfect discipline day
+  // perfect planner week bonus approximated by winning-week planning discipline is not tracked; omitted to avoid inflation
+  return xp;
+}
+function levelFromXP(xp) {
+  let lvl = 1;
+  for (let i = 0; i < LEVEL_XP.length; i++) { if (xp >= LEVEL_XP[i]) lvl = i + 1; }
+  const idx = lvl - 1;
+  const curFloor = LEVEL_XP[idx];
+  const nextFloor = idx + 1 < LEVEL_XP.length ? LEVEL_XP[idx + 1] : null;
+  const name = LEVELS[Math.min(idx, LEVELS.length - 1)].name;
+  const intoLevel = xp - curFloor;
+  const span = nextFloor != null ? nextFloor - curFloor : null;
+  const pct = span ? Math.min(100, (intoLevel / span) * 100) : 100;
+  return { level: lvl, name, xp, curFloor, nextFloor, intoLevel, span, pct, isMax: nextFloor == null };
+}
+
+/* ══════════════════════════════════════════════════════════
+   UNLOCK-DATE CACHE (stable dates once earned)
+══════════════════════════════════════════════════════════ */
+function syncUnlockDates(achievements) {
+  const cache = getMSCache();
+  cache.unlocks = cache.unlocks || {};
+  let changed = false;
+  const todayISO = new Date().toISOString();
+  achievements.forEach(a => {
+    if (a.unlocked && !cache.unlocks[a.id]) { cache.unlocks[a.id] = todayISO; changed = true; }
+  });
+  if (changed) setMSCache(cache);
+  achievements.forEach(a => { a.unlockedAt = cache.unlocks[a.id] || null; });
+  return achievements;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORMATTERS
+══════════════════════════════════════════════════════════ */
+function fmtVal(v, unit) {
+  if (unit === '$') return '$' + Math.round(v).toLocaleString('en-US');
+  if (unit === 'R') return v.toFixed(1) + 'R';
+  return Math.floor(v).toLocaleString('en-US');
+}
+function escapeHtml(str) { return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ══════════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════════ */
+let ACH = [], AGG = null, LV = null, activeCat = 'All';
+
+function render() {
+  AGG = aggregate();
+  ACH = syncUnlockDates(buildAchievements(AGG));
+  const totalXP = computeXP(AGG, ACH);
+  LV = levelFromXP(totalXP);
+
+  const root = document.getElementById('milestonesRoot');
+  const hasAnyData = AGG.tradeCount || AGG.reviewCount || AGG.moodCount || AGG.disc.length || AGG.planCount;
+
+  if (!hasAnyData) { root.innerHTML = emptyStateHTML(); return; }
+
+  root.innerHTML =
+    heroHTML(LV) +
+    journeyHTML(AGG) +
+    nextMilestonesHTML(ACH) +
+    achievementsHTML(ACH) +
+    timelineHTML(ACH) +
+    aiHTML();
+
+  // animate after paint
+  requestAnimationFrame(() => {
+    const hf = document.getElementById('heroProgressFill'); if (hf) hf.style.width = LV.pct + '%';
+    const hr = document.getElementById('heroRingFg'); if (hr) hr.style.strokeDashoffset = 383 - (383 * LV.pct / 100);
+    document.querySelectorAll('[data-fill]').forEach(el => { el.style.width = el.getAttribute('data-fill') + '%'; });
+  });
+}
+
+function heroHTML(lv) {
+  const nextTxt = lv.isMax
+    ? 'Max level reached — Master Trader'
+    : `<b>${(lv.nextFloor - lv.xp).toLocaleString()}</b> XP to next level`;
+  return `
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge-wrap">
+        <svg class="hero-ring" viewBox="0 0 132 132">
+          <circle class="hero-ring-bg" cx="66" cy="66" r="61"/>
+          <circle class="hero-ring-fg" id="heroRingFg" cx="66" cy="66" r="61"/>
+        </svg>
+        <div class="hero-badge-label">
+          <div class="hero-level-num">${lv.level}</div>
+          <div class="hero-level-cap">Level</div>
+        </div>
+      </div>
+      <div class="hero-info">
+        <span class="hero-tier-pill">
+          <svg viewBox="0 0 14 14"><polygon points="7,1 9,5 13,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 1,5.5 5,5"/></svg>
+          ${escapeHtml(lv.name)}
+        </span>
+        <div class="hero-title">${escapeHtml(lv.name)}</div>
+        <div class="hero-xp-line"><b>${lv.xp.toLocaleString()}</b> XP total${lv.isMax ? '' : ` · <b>${lv.nextFloor.toLocaleString()}</b> XP for Level ${lv.level+1}`}</div>
+        <div class="hero-progress">
+          <div class="hero-progress-track"><div class="hero-progress-fill" id="heroProgressFill"></div></div>
+          <div class="hero-progress-labels">
+            <span>${lv.isMax ? 'Complete' : lv.intoLevel.toLocaleString() + ' / ' + lv.span.toLocaleString() + ' XP'}</span>
+            <span class="hero-next">${nextTxt}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function journeyHTML(A) {
+  const winRate = A.winRate ? A.winRate.toFixed(0) + '%' : '—';
+  const cards = [
+    { ic:'calendar', c:'', label:'Trading Since', val: A.since ? fmtDate(A.since) : '—', sub: A.since ? A.daysTrading + ' days ago' : 'Log a trade to start' },
+    { ic:'calendar', c:'', label:'Days Trading', val: A.distinctDays || 0, sub:'Distinct active days' },
+    { ic:'chart', c:'', label:'Trades Logged', val: A.tradeCount.toLocaleString(), sub:'Lifetime' },
+    { ic:'star', c:'', label:'Reviews Completed', val: A.reviewCount, sub: A.weeklyReviews + ' weekly' },
+    { ic:'smile', c:'purple', label:'Mood Check-ins', val: A.moodCount, sub:'Lifetime' },
+    { ic:'shield', c:'', label:'Discipline Check-ins', val: A.disc.length, sub: A.perfectDisciplineDays + ' perfect' },
+    { ic:'clipboard', c:'', label:'Weekly Plans', val: A.planCount, sub:'Completed' },
+    { ic:'bolt', c:'amber', label:'Lifetime RR', val: (A.netRR>=0?'+':'') + A.netRR.toFixed(1) + 'R', sub: A.rrCount + ' RR-tagged', valClass:(A.netRR>=0?'green':'red') },
+    { ic:'money', c:'green', label:'Lifetime Profit', val: (A.netPnl>=0?'+$':'-$') + Math.abs(A.netPnl).toLocaleString('en-US',{maximumFractionDigits:0}), sub:'Net P/L', valClass:(A.netPnl>=0?'green':'red') },
+    { ic:'target', c:'', label:'Current Win Rate', val: winRate, sub:'Decided trades' },
+  ];
+  const iconMap = { calendar:ICON.calendar, chart:ICON.chart, star:ICON.star, smile:ICON.smile, shield:ICON.shield, clipboard:ICON.clipboard, bolt:ICON.bolt, money:ICON.money, target:ICON.target };
+  return `
+  <h2 class="section-heading">Lifetime Trading Journey</h2>
+  <p class="section-sub">Every metric here updates automatically from your activity across Tradeva.</p>
+  <div class="journey-grid">
+    ${cards.map(c => `
+      <div class="journey-card">
+        <div class="journey-top">
+          <div class="journey-ic ${c.c}">${iconMap[c.ic]}</div>
+          <div class="journey-label">${c.label}</div>
+        </div>
+        <div class="journey-val ${c.valClass||''}">${c.val}</div>
+        <div class="journey-sub">${c.sub}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function nextMilestonesHTML(list) {
+  const candidates = list.filter(a => !a.unlocked && a.pct > 0).sort((a,b) => b.pct - a.pct).slice(0, 3);
+  if (!candidates.length) {
+    const started = list.some(a => a.unlocked);
+    return `
+    <h2 class="section-heading">Next Milestones</h2>
+    <p class="section-sub">The achievements you're closest to unlocking.</p>
+    <div class="section-empty"><div class="section-empty-text">${started ? 'You\'ve made progress on every started milestone — keep logging activity to surface the next targets.' : 'Log trades, plans, moods, discipline and reviews to start progressing toward milestones.'}</div></div>`;
+  }
+  return `
+  <h2 class="section-heading">Next Milestones</h2>
+  <p class="section-sub">The achievements you're closest to unlocking — so you always know what to aim for.</p>
+  <div class="next-grid">
+    ${candidates.map(a => {
+      const remaining = a.pctOnly ? (100 - Math.round(a.pct)) + '%' : fmtVal(a.target - a.value, a.unit) + (a.unit ? '' : '') + ' remaining';
+      const frac = a.pctOnly ? Math.round(a.pct) + '% / 100%' : fmtVal(a.value, a.unit) + ' / ' + fmtVal(a.target, a.unit);
+      return `
+      <div class="next-card">
+        <div class="next-card-top">
+          <div class="next-ic">${a.icon}</div>
+          <div><div class="next-title">${escapeHtml(a.title)}</div><div class="next-remaining">${a.pctOnly ? remaining + ' to go' : remaining}</div></div>
+        </div>
+        <div class="next-bar-row">
+          <div class="next-bar"><div class="next-bar-fill" data-fill="${a.pct}"></div></div>
+          <div class="next-pct">${Math.round(a.pct)}%</div>
+        </div>
+        <div class="next-frac">${frac}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+const CATS = ['All','Trading','Discipline','Consistency','Psychology','Planner','Review','Special'];
+function achievementsHTML(list) {
+  const unlockedCount = list.filter(a => a.unlocked).length;
+  const tabs = CATS.map(cat => {
+    const items = cat === 'All' ? list : list.filter(a => a.cat === cat);
+    const done = items.filter(a => a.unlocked).length;
+    return `<button class="cat-tab ${cat===activeCat?'active':''}" onclick="setCat('${cat}')">${cat}<span class="tab-count">${done}/${items.length}</span></button>`;
+  }).join('');
+  const shown = activeCat === 'All' ? list : list.filter(a => a.cat === activeCat);
+  return `
+  <h2 class="section-heading">Achievements <span class="count-chip">${unlockedCount}/${list.length} unlocked</span></h2>
+  <p class="section-sub">Locked achievements stay muted; unlocked ones light up in Tradeva blue. Progress updates live.</p>
+  <div class="cat-tabs">${tabs}</div>
+  <div class="ach-grid" id="achGrid">${shown.map(achCardHTML).join('')}</div>`;
+}
+function achCardHTML(a) {
+  const status = a.unlocked
+    ? `<div class="ach-status done"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>`
+    : `<div class="ach-status lock"><svg viewBox="0 0 13 13"><rect x="2.5" y="6" width="8" height="6" rx="1.2"/><path d="M4.5 6V4.3a2 2 0 014 0V6"/></svg></div>`;
+  const frac = a.pctOnly ? Math.round(a.pct) + '%' : fmtVal(a.value, a.unit) + ' / ' + fmtVal(a.target, a.unit);
+  const foot = a.unlocked
+    ? `<span class="ach-unlocked-date"><svg viewBox="0 0 11 11"><polyline points="2,5.5 4.5,8 9,3"/></svg>${a.unlockedAt ? 'Unlocked ' + fmtDate(new Date(a.unlockedAt)) : 'Unlocked'}</span>`
+    : `<span class="ach-remaining">${a.pctOnly ? (100-Math.round(a.pct)) + '% to go' : fmtVal(Math.max(0,a.target-a.value), a.unit) + ' to go'}</span>`;
+  return `
+  <div class="ach-card ${a.unlocked ? 'unlocked' : 'locked'}">
+    ${status}
+    <div class="ach-top">
+      <div class="ach-ic">${a.icon}</div>
+      <div class="ach-head-txt">
+        <div class="ach-title">${escapeHtml(a.title)}</div>
+        <div class="ach-desc">${escapeHtml(a.desc)}</div>
+      </div>
+    </div>
+    <div class="ach-progress-row">
+      <div class="ach-bar"><div class="ach-bar-fill" data-fill="${a.pct}"></div></div>
+      <div class="ach-frac">${frac}</div>
+    </div>
+    <div class="ach-foot">
+      <span class="ach-xp">+${a.xp} XP</span>
+      ${foot}
+    </div>
+  </div>`;
+}
+function setCat(cat) {
+  activeCat = cat;
+  const grid = document.getElementById('achGrid');
+  const shown = cat === 'All' ? ACH : ACH.filter(a => a.cat === cat);
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('active', t.textContent.startsWith(cat)));
+  grid.innerHTML = shown.map(achCardHTML).join('');
+  requestAnimationFrame(() => grid.querySelectorAll('[data-fill]').forEach(el => { el.style.width = el.getAttribute('data-fill') + '%'; }));
+}
+
+function timelineHTML(list) {
+  const unlocked = list.filter(a => a.unlocked && a.unlockedAt).sort((a,b) => new Date(b.unlockedAt) - new Date(a.unlockedAt));
+  if (!unlocked.length) {
+    return `
+    <h2 class="section-heading">Achievement Timeline</h2>
+    <p class="section-sub">Your unlocked achievements, newest first.</p>
+    <div class="section-empty"><div class="section-empty-text">No achievements unlocked yet — your timeline will fill in as you hit milestones.</div></div>`;
+  }
+  const groups = {};
+  unlocked.forEach(a => { const k = monthKey(new Date(a.unlockedAt)); (groups[k] = groups[k] || []).push(a); });
+  const body = Object.entries(groups).map(([month, items]) => `
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-month">${month}</div>
+      ${items.map(a => `
+        <div class="tl-ach-row">
+          <div class="tl-ach-ic">${a.icon}</div>
+          <div class="tl-ach-info"><div class="tl-ach-title">${escapeHtml(a.title)}</div><div class="tl-ach-cat">${a.cat} · ${fmtDate(new Date(a.unlockedAt))}</div></div>
+          <div class="tl-ach-xp">+${a.xp} XP</div>
+        </div>`).join('')}
+    </div>`).join('');
+  return `
+  <h2 class="section-heading">Achievement Timeline</h2>
+  <p class="section-sub">Every milestone you've unlocked, newest first.</p>
+  <div class="card"><div class="timeline">${body}</div></div>`;
+}
+
+function aiHTML() {
+  return `
+  <div class="ai-card">
+    <div class="ai-card-top">
+      <div class="ai-card-icon">
+        <svg viewBox="0 0 20 20"><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.2 4.2l2.1 2.1M13.7 13.7l2.1 2.1M15.8 4.2l-2.1 2.1M6.3 13.7l-2.1 2.1"/><circle cx="10" cy="10" r="3"/></svg>
+      </div>
+      <div class="ai-card-title">AI Progress Coach</div>
+      <span class="soon-badge-inline">Coming Soon</span>
+    </div>
+    <p class="ai-card-text">Tradeva AI will analyze your trading journey, identify your strongest habits, predict upcoming milestones, and provide personalized growth recommendations — turning your history into a forward-looking roadmap.</p>
+  </div>`;
+}
+
+function emptyStateHTML() {
+  return `
+  <div class="empty-state">
+    <div class="empty-icon"><svg viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9.5 16.5,14 18,21 12,17 6,21 7.5,14 2,9.5 9,9"/></svg></div>
+    <div class="empty-title">Welcome to your trading journey.</div>
+    <div class="empty-sub">Every trade, review, mood check-in, and disciplined decision moves you closer to becoming a consistently profitable trader. Log your first trade to begin unlocking milestones.</div>
+  </div>`;
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  render();
+});
+</script>
+</body>
+</html>
