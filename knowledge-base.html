@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Knowledge Base</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET — identical to the rest of Tradeva
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --green-border: #6EE7B7;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --red-border:   #FCA5A5;
+  --amber:        #F59E0B;
+  --amber-bg:     #FFFBEB;
+  --purple:       #8B5CF6;
+  --purple-bg:    #F5F3FF;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.28);
+}
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --green-border: #065F46;
+  --red-bg:       #1E0808;
+  --red-border:   #7F1D1D;
+  --amber-bg:     #1E1503;
+  --purple-bg:    #170D2E;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-faint); padding: 0 8px; margin: 16px 0 5px; transition: color var(--t) var(--ease); }
+.nav-section-label:first-child { margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; margin-bottom: 1px; white-space: nowrap; transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+.soon-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); border: 1px solid var(--border); flex-shrink: 0; }
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.sidebar-bottom { padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px); border-top: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.account-switcher { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; margin-bottom: 6px; transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--t) var(--ease); margin-bottom: 2px; }
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN SHELL
+══════════════════════════════════════════════════════════ */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; max-width: 1160px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; max-width: 640px; line-height: 1.55; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 17px; border-radius: var(--radius-btn); border: none; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease); white-space: nowrap; font-family: 'Inter', sans-serif; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-primary svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+
+/* Stat cards */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease); display: flex; align-items: center; gap: 15px; }
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-ic { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--accent-bg); }
+.stat-ic svg { width: 21px; height: 21px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.stat-ic.amber { background: var(--amber-bg); } .stat-ic.amber svg { stroke: var(--amber); }
+.stat-ic.green { background: var(--green-bg); } .stat-ic.green svg { stroke: var(--green); }
+.stat-ic.purple { background: var(--purple-bg); } .stat-ic.purple svg { stroke: var(--purple); }
+.stat-body { min-width: 0; }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.6px; line-height: 1; transition: color var(--t) var(--ease); }
+.stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 5px; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   SEARCH + FILTERS
+══════════════════════════════════════════════════════════ */
+.search-wrap { position: relative; margin-bottom: 16px; }
+.search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.search-input { width: 100%; padding: 14px 44px 14px 44px; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; box-shadow: var(--shadow-card); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
+.search-input::placeholder { color: var(--text-faint); }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: none; background: var(--border-light); border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; transition: background var(--t) var(--ease); }
+.search-clear.show { display: flex; }
+.search-clear:hover { background: var(--border); }
+.search-clear svg { width: 11px; height: 11px; stroke: var(--text-muted); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+
+.filter-pills { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 24px; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all var(--t) var(--ease); }
+.pill:hover { border-color: var(--text-faint); color: var(--text-primary); transform: translateY(-1px); }
+.pill.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow-btn); }
+.pill-count { font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 20px; background: var(--border-light); color: var(--text-faint); }
+.pill.active .pill-count { background: rgba(255,255,255,0.25); color: #fff; }
+.pill.fav .pill-star { color: var(--amber); }
+.pill.active.fav .pill-star { color: #fff; }
+
+/* ══════════════════════════════════════════════════════════
+   SECTIONS + RESOURCE CARDS
+══════════════════════════════════════════════════════════ */
+.section-heading { font-size: 17px; font-weight: 700; color: var(--text-primary); margin: 4px 0 14px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 9px; transition: color var(--t) var(--ease); }
+.section-heading svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.section-heading .count-chip { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); }
+.section-block { margin-bottom: 30px; }
+
+.res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.res-card { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: 15px; padding: 20px; box-shadow: var(--shadow-card); transition: all var(--t) var(--ease); display: flex; flex-direction: column; }
+.res-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); border-color: var(--accent); }
+.res-card.pinned { border-color: var(--accent); }
+.res-card.pinned::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #60A5FA); border-radius: 15px 15px 0 0; }
+.res-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 13px; }
+.res-ic { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.res-ic svg { width: 20px; height: 20px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.res-cat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.res-title { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.3; word-break: break-word; transition: color var(--t) var(--ease); }
+.res-actions-top { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+.icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t) var(--ease); flex-shrink: 0; }
+.icon-btn:hover { border-color: var(--text-faint); transform: translateY(-1px); }
+.icon-btn svg { width: 15px; height: 15px; fill: none; stroke: var(--text-muted); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn.on-fav { background: var(--amber-bg); border-color: var(--amber); }
+.icon-btn.on-fav svg { stroke: var(--amber); fill: var(--amber); }
+.icon-btn.on-pin { background: var(--accent-bg); border-color: var(--accent); }
+.icon-btn.on-pin svg { stroke: var(--accent); fill: var(--accent); }
+.res-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; margin-bottom: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color var(--t) var(--ease); }
+.res-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.res-tag { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: var(--border-light); color: var(--text-muted); transition: background var(--t) var(--ease), color var(--t) var(--ease); }
+.res-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 13px; border-top: 1px solid var(--border-light); transition: border-color var(--t) var(--ease); }
+.res-date { font-size: 11px; color: var(--text-faint); display: flex; align-items: center; gap: 5px; margin-right: auto; }
+.res-date svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.res-btn { padding: 7px 13px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-page); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
+.res-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.res-btn.primary { border-color: var(--accent); color: var(--accent); }
+.res-btn.primary:hover { background: var(--accent-bg); }
+.res-btn.danger:hover { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+/* category colors */
+.c-strategy { background: var(--accent-bg); } .c-strategy svg { stroke: var(--accent); } .t-strategy { color: var(--accent); }
+.c-video { background: var(--red-bg); } .c-video svg { stroke: var(--red); } .t-video { color: var(--red); }
+.c-book { background: var(--green-bg); } .c-book svg { stroke: var(--green); } .t-book { color: var(--green); }
+.c-article { background: var(--amber-bg); } .c-article svg { stroke: var(--amber); } .t-article { color: var(--amber); }
+.c-note { background: var(--purple-bg); } .c-note svg { stroke: var(--purple); } .t-note { color: var(--purple); }
+.c-pdf { background: var(--red-bg); } .c-pdf svg { stroke: var(--red); } .t-pdf { color: var(--red); }
+
+/* ══════════════════════════════════════════════════════════
+   EMPTY STATES
+══════════════════════════════════════════════════════════ */
+.empty-state { text-align: center; padding: 56px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-card); transition: all var(--t) var(--ease); }
+.empty-icon { width: 62px; height: 62px; margin: 0 auto 16px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; }
+.empty-icon svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.empty-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.empty-sub { font-size: 13px; color: var(--text-muted); max-width: 420px; margin: 0 auto 20px; line-height: 1.6; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════ */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(3px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity var(--t) var(--ease); }
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-modal); transform: translateY(16px) scale(0.98); transition: transform var(--t) var(--ease); scrollbar-width: thin; }
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+.modal-head { display: flex; align-items: center; gap: 12px; padding: 22px 24px; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: var(--bg-card); z-index: 1; transition: border-color var(--t) var(--ease), background var(--t) var(--ease); }
+.modal-head-ic { width: 38px; height: 38px; border-radius: 11px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-head-ic svg { width: 19px; height: 19px; stroke: var(--accent); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.modal-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.modal-close { margin-left: auto; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-page); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--t) var(--ease); flex-shrink: 0; }
+.modal-close:hover { background: var(--red-bg); border-color: var(--red); }
+.modal-close:hover svg { stroke: var(--red); }
+.modal-close svg { width: 15px; height: 15px; stroke: var(--text-muted); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.modal-body { padding: 22px 24px; }
+.modal-foot { padding: 16px 24px 22px; display: flex; gap: 10px; }
+
+/* Form */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: block; transition: color var(--t) var(--ease); }
+.field-label .req { color: var(--red); margin-left: 2px; }
+.field-hint { font-size: 11px; color: var(--text-faint); margin-top: 6px; }
+input[type="text"], input[type="url"], select, textarea { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--radius-btn); background: var(--bg-page); color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif; transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
+textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpolyline points='3,5 7,9 11,5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; cursor: pointer; }
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+
+.toggle-field { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; background: var(--bg-page); cursor: pointer; transition: all var(--t) var(--ease); flex: 1; }
+.toggle-field:hover { border-color: var(--text-faint); }
+.toggle-field-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; transition: color var(--t) var(--ease); }
+.toggle-field-label svg { width: 15px; height: 15px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--text-muted); }
+.mini-toggle { width: 38px; height: 22px; background: var(--border); border-radius: 11px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.mini-toggle.on { background: var(--accent); }
+.mini-toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.mini-toggle.on .mini-toggle-knob { transform: translateX(16px); }
+.mini-toggle.fav.on { background: var(--amber); }
+
+.btn-modal { flex: 1; padding: 12px; border-radius: var(--radius-btn); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all var(--t) var(--ease); border: 1px solid var(--border); background: var(--bg-page); color: var(--text-muted); }
+.btn-modal:hover { background: var(--border-light); color: var(--text-primary); }
+.btn-modal.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-modal.primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-btn); }
+.btn-modal.danger { color: var(--red); }
+.btn-modal.danger:hover { background: var(--red-bg); border-color: var(--red); }
+.btn-modal svg { width: 15px; height: 15px; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Detail modal */
+.detail-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.detail-badge { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 11px; border-radius: 20px; }
+.detail-flag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--border-light); color: var(--text-muted); }
+.detail-flag svg { width: 12px; height: 12px; fill: none; stroke-width: 1.9; }
+.detail-flag.fav { background: var(--amber-bg); color: var(--amber); } .detail-flag.fav svg { stroke: var(--amber); fill: var(--amber); }
+.detail-flag.pin { background: var(--accent-bg); color: var(--accent); } .detail-flag.pin svg { stroke: var(--accent); fill: var(--accent); }
+.detail-desc { font-size: 13.5px; color: var(--text-primary); line-height: 1.7; margin-bottom: 18px; white-space: pre-wrap; word-break: break-word; transition: color var(--t) var(--ease); }
+.detail-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 8px; }
+.detail-block { margin-bottom: 18px; }
+.detail-url { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent); text-decoration: none; word-break: break-all; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-page); transition: all var(--t) var(--ease); }
+.detail-url:hover { border-color: var(--accent); background: var(--accent-bg); }
+.detail-url svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2; flex-shrink: 0; }
+.detail-dates { display: flex; gap: 24px; font-size: 12px; color: var(--text-muted); }
+.detail-dates b { color: var(--text-primary); font-weight: 600; display: block; margin-top: 2px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0F172A; color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform var(--t) var(--ease), opacity var(--t) var(--ease); opacity: 0; z-index: 999; pointer-events: none; }
+[data-theme="dark"] .toast { background: #1A2540; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* Mobile shell */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
+.sidebar-overlay.open { opacity: 1; }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .res-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 16px 14px 90px; max-width: 100%; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 21px; }
+  .res-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .field-row { flex-direction: column; gap: 16px; }
+  .modal { max-height: 94vh; }
+}
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar" id="sidebarAvatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Kham</div>
+        <div class="profile-role" id="sidebarRole">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="discipline-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="reviews.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="milestones.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="knowledge-base.html" class="nav-item active">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="#" class="nav-item" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="mob-menu-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title">Knowledge Base</h1>
+        <p class="page-subtitle">Save your trading knowledge in one organized place.</p>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="openAddModal()">
+      <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+      Add Resource
+    </button>
+  </div>
+
+  <div id="kbRoot"><!-- injected --></div>
+
+</main>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="reviews.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+    Reviews
+  </a>
+  <a href="milestones.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+    Milestones
+  </a>
+  <a href="knowledge-base.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+    Learn
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+</nav>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="formModal" onclick="if(event.target===this)closeFormModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-ic">
+        <svg viewBox="0 0 19 19" id="formModalIcon"><line x1="9.5" y1="3" x2="9.5" y2="16"/><line x1="3" y1="9.5" x2="16" y2="9.5"/></svg>
+      </div>
+      <div>
+        <div class="modal-title" id="formModalTitle">Add Resource</div>
+        <div class="modal-sub" id="formModalSub">Save something new to your library</div>
+      </div>
+      <button class="modal-close" onclick="closeFormModal()"><svg viewBox="0 0 15 15"><line x1="3" y1="3" x2="12" y2="12"/><line x1="12" y1="3" x2="3" y2="12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Category</label>
+        <select id="f-category">
+          <option value="Strategy">Strategy</option>
+          <option value="Video">Video</option>
+          <option value="Book">Book</option>
+          <option value="Article">Article</option>
+          <option value="Note">Note</option>
+          <option value="PDF">PDF</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Title<span class="req">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. ICT 2022 Model — London Session" maxlength="140">
+      </div>
+      <div class="field">
+        <label class="field-label">URL</label>
+        <input type="url" id="f-url" placeholder="https://… (optional)">
+      </div>
+      <div class="field">
+        <label class="field-label">Description / Notes</label>
+        <textarea id="f-desc" placeholder="What is this about? Key takeaways, when to use it, why it matters…"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Tags</label>
+        <input type="text" id="f-tags" placeholder="ICT, London, Breaker Block">
+        <div class="field-hint">Separate tags with commas.</div>
+      </div>
+      <div class="field-row">
+        <div class="toggle-field" onclick="toggleMini('f-fav')">
+          <span class="toggle-field-label">
+            <svg viewBox="0 0 15 15"><polygon points="7.5,1.5 9.3,5.4 13.5,5.8 10.3,8.7 11.2,13 7.5,10.6 3.8,13 4.7,8.7 1.5,5.8 5.7,5.4"/></svg>
+            Favorite
+          </span>
+          <div class="mini-toggle fav" id="f-fav"><div class="mini-toggle-knob"></div></div>
+        </div>
+        <div class="toggle-field" onclick="toggleMini('f-pin')">
+          <span class="toggle-field-label">
+            <svg viewBox="0 0 15 15"><line x1="7.5" y1="9" x2="7.5" y2="14"/><path d="M4 2h7l-1 5 2 2H3l2-2z"/></svg>
+            Pin Resource
+          </span>
+          <div class="mini-toggle" id="f-pin"><div class="mini-toggle-knob"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-modal" onclick="closeFormModal()">Cancel</button>
+      <button class="btn-modal primary" id="formSaveBtn" onclick="saveResource()">
+        <svg viewBox="0 0 15 15"><path d="M3 8l3 3 6-7"/></svg>
+        <span>Save Resource</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetailModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-ic" id="detailHeadIc"><svg viewBox="0 0 19 19"><path d="M3 4h13M3 9.5h9M3 15h11"/></svg></div>
+      <div>
+        <div class="modal-title" id="detailTitle">Resource</div>
+        <div class="modal-sub" id="detailSub">Resource details</div>
+      </div>
+      <button class="modal-close" onclick="closeDetailModal()"><svg viewBox="0 0 15 15"><line x1="3" y1="3" x2="12" y2="12"/><line x1="12" y1="3" x2="3" y2="12"/></svg></button>
+    </div>
+    <div class="modal-body" id="detailBody"><!-- injected --></div>
+    <div class="modal-foot">
+      <button class="btn-modal danger" id="detailDeleteBtn"><svg viewBox="0 0 15 15"><polyline points="2.5,4 12.5,4"/><path d="M4 4V2.5h7V4M5 4v8M10 4v8M3.5 4l.5 9h7l.5-9"/></svg>Delete</button>
+      <button class="btn-modal" id="detailEditBtn"><svg viewBox="0 0 15 15"><path d="M10.5 2.5l2 2L5 12l-2.5.5L3 10z"/></svg>Edit</button>
+      <button class="btn-modal primary" id="detailCloseBtn" onclick="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+  <span id="toastText">Saved!</span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — KNOWLEDGE BASE
+   A lightweight, fast place to save trading knowledge.
+   Full CRUD + favorite + pin, stored in localStorage under
+   tradeva_knowledge (consistent with the rest of Tradeva).
+══════════════════════════════════════════════════════════ */
+
+/* ── THEME ── */
+const html = document.documentElement;
+function applyTheme(mode, save) {
+  const dark = mode === 'dark';
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
+  const track = document.getElementById('themeTrack');
+  const label = document.getElementById('themeLabel');
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
+  if (save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
+
+/* ── SIDEBAR / PROFILE ── */
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+  const fname = p.fname || 'Kham';
+  const initials = (fname.charAt(0) + ((p.lname || '').charAt(0) || '')).toUpperCase() || 'KH';
+  document.getElementById('sidebarName').textContent = fname;
+  document.getElementById('sidebarRole').textContent = p.account || 'Pro Trader';
+  const av = document.getElementById('sidebarAvatar');
+  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
+  else av.textContent = initials;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════════════════════ */
+const KB_KEY = 'tradeva_knowledge';
+function getResources() { try { const v = JSON.parse(localStorage.getItem(KB_KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+function setResources(r) { localStorage.setItem(KB_KEY, JSON.stringify(r)); }
+
+/* ══════════════════════════════════════════════════════════
+   CATEGORY META
+══════════════════════════════════════════════════════════ */
+const CAT_ICONS = {
+  Strategy: '<svg viewBox="0 0 20 20"><polyline points="2,13 7,7 11,10 18,3"/><polyline points="13,3 18,3 18,8"/></svg>',
+  Video:    '<svg viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="12" rx="2.5"/><polygon points="8.5,7.5 13,10 8.5,12.5"/></svg>',
+  Book:     '<svg viewBox="0 0 20 20"><path d="M3 3.5h6a2 2 0 012 2V17a2 2 0 00-2-1.7H3z"/><path d="M17 3.5h-6a2 2 0 00-2 2V17a2 2 0 012-1.7h6z"/></svg>',
+  Article:  '<svg viewBox="0 0 20 20"><rect x="3.5" y="2.5" width="13" height="15" rx="2"/><line x1="6.5" y1="6.5" x2="13.5" y2="6.5"/><line x1="6.5" y1="10" x2="13.5" y2="10"/><line x1="6.5" y1="13.5" x2="11" y2="13.5"/></svg>',
+  Note:     '<svg viewBox="0 0 20 20"><path d="M4 2.5h9l4 4V17a1 1 0 01-1 1H4a1 1 0 01-1-1V3.5a1 1 0 011-1z"/><polyline points="12.5,2.5 12.5,7 17,7"/></svg>',
+  PDF:      '<svg viewBox="0 0 20 20"><path d="M5 2.5h7l4 4V17a1 1 0 01-1 1H5a1 1 0 01-1-1V3.5a1 1 0 011-1z"/><path d="M7 12.5h1.5a1.2 1.2 0 000-2.4H7zM7 15v-4.9M11 15v-4.9h1.6M11 12.6h1.4"/></svg>',
+};
+function catClass(cat) { return cat.toLowerCase(); }
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let activeFilter = 'All';
+let searchQuery = '';
+let editingId = null;
+let form = { fav: false, pin: false };
+
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════ */
+function escapeHtml(str) { return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso) { const d = new Date(iso); return isNaN(d) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function parseTags(str) { return (str || '').split(',').map(t => t.trim()).filter(Boolean).slice(0, 12); }
+let toastTimer;
+function showToast(msg, success) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.querySelector('.toast-icon').style.background = success === false ? 'var(--red)' : 'var(--green)';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILTER + SEARCH
+══════════════════════════════════════════════════════════ */
+function matchesSearch(r, q) {
+  if (!q) return true;
+  const hay = [r.title, r.description, r.category, ...(r.tags || [])].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+function filteredResources() {
+  const q = searchQuery.trim().toLowerCase();
+  return getResources().filter(r => {
+    if (activeFilter === 'Favorites') { if (!r.favorite) return false; }
+    else if (activeFilter !== 'All') { if (r.category !== activeFilter) return false; }
+    return matchesSearch(r, q);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════════ */
+const FILTERS = ['All','Strategy','Video','Book','Article','Note','PDF','Favorites'];
+function render() {
+  const all = getResources();
+  const root = document.getElementById('kbRoot');
+
+  if (!all.length) { root.innerHTML = statsHTML(all) + emptyStateHTML(); return; }
+
+  const list = filteredResources();
+  const pinned = list.filter(r => r.pinned);
+  const rest = list.filter(r => !r.pinned);
+
+  let body = statsHTML(all) + searchHTML() + filtersHTML(all);
+
+  if (pinned.length) {
+    body += `<div class="section-block">
+      <div class="section-heading"><svg viewBox="0 0 16 16"><line x1="8" y1="9.5" x2="8" y2="15"/><path d="M4 2h8l-1.2 5.5L13 10H3l2.2-2.5z"/></svg>Pinned Resources <span class="count-chip">${pinned.length}</span></div>
+      <div class="res-grid">${pinned.map(cardHTML).join('')}</div>
+    </div>`;
+  }
+
+  body += `<div class="section-block">
+    <div class="section-heading"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>My Library <span class="count-chip">${rest.length}</span></div>
+    ${rest.length ? `<div class="res-grid">${rest.map(cardHTML).join('')}</div>`
+      : `<div class="empty-state"><div class="empty-title">No matches found</div><div class="empty-sub">Nothing here matches your search or filter. Try a different keyword or category.</div></div>`}
+  </div>`;
+
+  root.innerHTML = body;
+}
+
+function statsHTML(all) {
+  const count = cat => all.filter(r => r.category === cat).length;
+  const cards = [
+    { label: 'Resources', val: all.length, ic: CAT_ICONS.Article, c: '' },
+    { label: 'Strategies', val: count('Strategy'), ic: CAT_ICONS.Strategy, c: '' },
+    { label: 'Videos', val: count('Video'), ic: CAT_ICONS.Video, c: 'amber' },
+    { label: 'Books', val: count('Book'), ic: CAT_ICONS.Book, c: 'green' },
+  ];
+  return `<div class="stats-grid">${cards.map(c => `
+    <div class="stat-card">
+      <div class="stat-ic ${c.c}">${c.ic}</div>
+      <div class="stat-body"><div class="stat-value">${c.val}</div><div class="stat-label">${c.label}</div></div>
+    </div>`).join('')}</div>`;
+}
+
+function searchHTML() {
+  return `<div class="search-wrap">
+    <svg class="search-ic" viewBox="0 0 17 17"><circle cx="7.5" cy="7.5" r="5.5"/><line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/></svg>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search your knowledge..." value="${escapeHtml(searchQuery)}" oninput="onSearch(this.value)">
+    <button class="search-clear ${searchQuery ? 'show' : ''}" id="searchClear" onclick="clearSearch()"><svg viewBox="0 0 11 11"><line x1="2" y1="2" x2="9" y2="9"/><line x1="9" y1="2" x2="2" y2="9"/></svg></button>
+  </div>`;
+}
+
+function filtersHTML(all) {
+  const counts = { All: all.length, Favorites: all.filter(r => r.favorite).length };
+  ['Strategy','Video','Book','Article','Note','PDF'].forEach(c => counts[c] = all.filter(r => r.category === c).length);
+  return `<div class="filter-pills">${FILTERS.map(f => {
+    const isFav = f === 'Favorites';
+    return `<button class="pill ${f===activeFilter?'active':''} ${isFav?'fav':''}" onclick="setFilter('${f}')">
+      ${isFav ? '<span class="pill-star">⭐</span>' : ''}${f}
+      <span class="pill-count">${counts[f]||0}</span>
+    </button>`;
+  }).join('')}</div>`;
+}
+
+function cardHTML(r) {
+  const cc = catClass(r.category);
+  const tags = (r.tags || []).slice(0, 4).map(t => `<span class="res-tag">${escapeHtml(t)}</span>`).join('');
+  const extra = (r.tags || []).length > 4 ? `<span class="res-tag">+${r.tags.length - 4}</span>` : '';
+  return `<div class="res-card ${r.pinned ? 'pinned' : ''}">
+    <div class="res-top">
+      <div class="res-ic c-${cc}">${CAT_ICONS[r.category] || CAT_ICONS.Note}</div>
+      <div style="min-width:0;flex:1;">
+        <div class="res-cat-label t-${cc}">${escapeHtml(r.category)}</div>
+        <div class="res-title">${escapeHtml(r.title)}</div>
+      </div>
+      <div class="res-actions-top">
+        <button class="icon-btn ${r.favorite ? 'on-fav' : ''}" title="Favorite" onclick="toggleFav(${r.id})">
+          <svg viewBox="0 0 15 15"><polygon points="7.5,1.5 9.3,5.4 13.5,5.8 10.3,8.7 11.2,13 7.5,10.6 3.8,13 4.7,8.7 1.5,5.8 5.7,5.4"/></svg>
+        </button>
+        <button class="icon-btn ${r.pinned ? 'on-pin' : ''}" title="Pin" onclick="togglePin(${r.id})">
+          <svg viewBox="0 0 15 15"><line x1="7.5" y1="9" x2="7.5" y2="14"/><path d="M4 2h7l-1 5 2 2H3l2-2z"/></svg>
+        </button>
+      </div>
+    </div>
+    ${r.description ? `<div class="res-desc">${escapeHtml(r.description)}</div>` : '<div class="res-desc" style="color:var(--text-faint);font-style:italic;">No description</div>'}
+    ${tags || extra ? `<div class="res-tags">${tags}${extra}</div>` : ''}
+    <div class="res-foot">
+      <span class="res-date"><svg viewBox="0 0 12 12"><rect x="1" y="2" width="10" height="9" rx="1.5"/><line x1="1" y1="4.5" x2="11" y2="4.5"/><line x1="4" y1="1" x2="4" y2="3"/><line x1="8" y1="1" x2="8" y2="3"/></svg>${fmtDate(r.createdAt)}</span>
+      <button class="res-btn primary" onclick="openDetail(${r.id})">Open</button>
+      <button class="res-btn" onclick="openEditModal(${r.id})">Edit</button>
+      <button class="res-btn danger" onclick="deleteResource(${r.id})">Delete</button>
+    </div>
+  </div>`;
+}
+
+function emptyStateHTML() {
+  return `<div class="empty-state">
+    <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M4 5.5h7a2.5 2.5 0 012.5 2.5v11a2 2 0 00-2-1.5H4z"/><path d="M20 5.5h-7a2.5 2.5 0 00-2.5 2.5v11a2 2 0 012-1.5h7z"/></svg></div>
+    <div class="empty-title">Your knowledge library is empty.</div>
+    <div class="empty-sub">Save your first trading strategy, article, video, or note to begin building your personal trading knowledge.</div>
+    <button class="btn-primary" style="margin:0 auto;" onclick="openAddModal()">
+      <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+      Add First Resource
+    </button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SEARCH / FILTER HANDLERS (instant, no full re-render of input)
+══════════════════════════════════════════════════════════ */
+function onSearch(val) {
+  searchQuery = val;
+  document.getElementById('searchClear').classList.toggle('show', !!val);
+  rerenderResultsOnly();
+}
+function clearSearch() { searchQuery = ''; render(); const si = document.getElementById('searchInput'); if (si) si.focus(); }
+function setFilter(f) { activeFilter = f; rerenderResultsOnly(); updateFilterPillsActive(); }
+function updateFilterPillsActive() {
+  document.querySelectorAll('.filter-pills .pill').forEach(p => {
+    const label = p.textContent.replace(/\d+/g,'').replace('⭐','').trim();
+    p.classList.toggle('active', label === activeFilter);
+  });
+}
+/* Re-render only the sections below search+filters so the input keeps focus/caret */
+function rerenderResultsOnly() {
+  const all = getResources();
+  if (!all.length) { render(); return; }
+  const list = filteredResources();
+  const pinned = list.filter(r => r.pinned);
+  const rest = list.filter(r => !r.pinned);
+  // remove existing dynamic sections + ai
+  document.querySelectorAll('#kbRoot .section-block').forEach(el => el.remove());
+  let frag = '';
+  if (pinned.length) {
+    frag += `<div class="section-block">
+      <div class="section-heading"><svg viewBox="0 0 16 16"><line x1="8" y1="9.5" x2="8" y2="15"/><path d="M4 2h8l-1.2 5.5L13 10H3l2.2-2.5z"/></svg>Pinned Resources <span class="count-chip">${pinned.length}</span></div>
+      <div class="res-grid">${pinned.map(cardHTML).join('')}</div></div>`;
+  }
+  frag += `<div class="section-block">
+    <div class="section-heading"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>My Library <span class="count-chip">${rest.length}</span></div>
+    ${rest.length ? `<div class="res-grid">${rest.map(cardHTML).join('')}</div>`
+      : `<div class="empty-state"><div class="empty-title">No matches found</div><div class="empty-sub">Nothing here matches your search or filter. Try a different keyword or category.</div></div>`}
+  </div>`;
+  document.getElementById('kbRoot').insertAdjacentHTML('beforeend', frag);
+}
+
+/* ══════════════════════════════════════════════════════════
+   FAVORITE / PIN (inline, instant)
+══════════════════════════════════════════════════════════ */
+function toggleFav(id) {
+  const list = getResources(); const r = list.find(x => x.id === id); if (!r) return;
+  r.favorite = !r.favorite; r.updatedAt = new Date().toISOString(); setResources(list);
+  render(); showToast(r.favorite ? 'Added to favorites' : 'Removed from favorites');
+}
+function togglePin(id) {
+  const list = getResources(); const r = list.find(x => x.id === id); if (!r) return;
+  r.pinned = !r.pinned; r.updatedAt = new Date().toISOString(); setResources(list);
+  render(); showToast(r.pinned ? 'Pinned to top' : 'Unpinned');
+}
+
+/* ══════════════════════════════════════════════════════════
+   ADD / EDIT MODAL
+══════════════════════════════════════════════════════════ */
+function toggleMini(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('on');
+  if (id === 'f-fav') form.fav = el.classList.contains('on');
+  if (id === 'f-pin') form.pin = el.classList.contains('on');
+}
+function setMini(id, on) { const el = document.getElementById(id); el.classList.toggle('on', !!on); }
+
+function openAddModal() {
+  editingId = null; form = { fav: false, pin: false };
+  document.getElementById('formModalTitle').textContent = 'Add Resource';
+  document.getElementById('formModalSub').textContent = 'Save something new to your library';
+  document.getElementById('f-category').value = 'Strategy';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-url').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-tags').value = '';
+  setMini('f-fav', false); setMini('f-pin', false);
+  document.getElementById('formSaveBtn').querySelector('span').textContent = 'Save Resource';
+  openOverlay('formModal');
+  setTimeout(() => document.getElementById('f-title').focus(), 150);
+}
+function openEditModal(id) {
+  const r = getResources().find(x => x.id === id); if (!r) return;
+  closeDetailModal();
+  editingId = id; form = { fav: !!r.favorite, pin: !!r.pinned };
+  document.getElementById('formModalTitle').textContent = 'Edit Resource';
+  document.getElementById('formModalSub').textContent = 'Update this resource';
+  document.getElementById('f-category').value = r.category;
+  document.getElementById('f-title').value = r.title;
+  document.getElementById('f-url').value = r.url || '';
+  document.getElementById('f-desc').value = r.description || '';
+  document.getElementById('f-tags').value = (r.tags || []).join(', ');
+  setMini('f-fav', r.favorite); setMini('f-pin', r.pinned);
+  document.getElementById('formSaveBtn').querySelector('span').textContent = 'Save Changes';
+  openOverlay('formModal');
+}
+function closeFormModal() { closeOverlay('formModal'); }
+
+function saveResource() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { showToast('Title is required', false); document.getElementById('f-title').focus(); return; }
+  const category = document.getElementById('f-category').value;
+  const url = document.getElementById('f-url').value.trim();
+  const description = document.getElementById('f-desc').value.trim();
+  const tags = parseTags(document.getElementById('f-tags').value);
+  const now = new Date().toISOString();
+  const list = getResources();
+
+  if (editingId) {
+    const r = list.find(x => x.id === editingId);
+    if (r) { Object.assign(r, { category, title, url, description, tags, favorite: form.fav, pinned: form.pin, updatedAt: now }); }
+    showToast('Resource updated');
+  } else {
+    list.unshift({ id: Date.now(), category, title, url, description, tags, favorite: form.fav, pinned: form.pin, createdAt: now, updatedAt: now });
+    showToast('Resource saved');
+  }
+  setResources(list);
+  editingId = null;
+  closeFormModal();
+  render();
+}
+
+function deleteResource(id) {
+  if (!confirm('Delete this resource? This cannot be undone.')) return;
+  setResources(getResources().filter(x => x.id !== id));
+  closeDetailModal();
+  render();
+  showToast('Resource deleted');
+}
+
+/* ══════════════════════════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════════════════════════ */
+function openDetail(id) {
+  const r = getResources().find(x => x.id === id); if (!r) return;
+  const cc = catClass(r.category);
+  document.getElementById('detailHeadIc').className = 'modal-head-ic c-' + cc;
+  document.getElementById('detailHeadIc').innerHTML = CAT_ICONS[r.category] || CAT_ICONS.Note;
+  document.getElementById('detailTitle').textContent = r.title;
+  document.getElementById('detailSub').textContent = r.category + ' · saved ' + fmtDate(r.createdAt);
+
+  const catColors = { strategy:'var(--accent)', video:'var(--red)', book:'var(--green)', article:'var(--amber)', note:'var(--purple)', pdf:'var(--red)' };
+  const catBg = { strategy:'var(--accent-bg)', video:'var(--red-bg)', book:'var(--green-bg)', article:'var(--amber-bg)', note:'var(--purple-bg)', pdf:'var(--red-bg)' };
+  let body = `<div class="detail-meta-row">
+    <span class="detail-badge" style="background:${catBg[cc]};color:${catColors[cc]}">${escapeHtml(r.category)}</span>
+    ${r.favorite ? '<span class="detail-flag fav"><svg viewBox="0 0 12 12"><polygon points="6,1 7.5,4.3 11,4.6 8.3,7 9,10.5 6,8.7 3,10.5 3.7,7 1,4.6 4.5,4.3"/></svg>Favorite</span>' : ''}
+    ${r.pinned ? '<span class="detail-flag pin"><svg viewBox="0 0 12 12"><line x1="6" y1="7" x2="6" y2="11"/><path d="M3 1.5h6l-1 4 1.5 1.5h-7L4 5.5z"/></svg>Pinned</span>' : ''}
+  </div>`;
+
+  body += r.description
+    ? `<div class="detail-desc">${escapeHtml(r.description)}</div>`
+    : `<div class="detail-desc" style="color:var(--text-faint);font-style:italic;">No description added.</div>`;
+
+  if (r.tags && r.tags.length) {
+    body += `<div class="detail-block"><div class="detail-section-label">Tags</div><div class="res-tags">${r.tags.map(t => `<span class="res-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`;
+  }
+  if (r.url) {
+    const safe = escapeHtml(r.url);
+    body += `<div class="detail-block"><div class="detail-section-label">Link</div><a class="detail-url" href="${safe}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 14 14"><path d="M6 8a3 3 0 004.2 0l2-2a3 3 0 00-4.2-4.2L7 3"/><path d="M8 6a3 3 0 00-4.2 0l-2 2a3 3 0 004.2 4.2L7 11"/></svg>${safe}</a></div>`;
+  }
+  body += `<div class="detail-block"><div class="detail-dates">
+    <div>Created<b>${fmtDate(r.createdAt)}</b></div>
+    <div>Last updated<b>${fmtDate(r.updatedAt || r.createdAt)}</b></div>
+  </div></div>`;
+
+  document.getElementById('detailBody').innerHTML = body;
+  document.getElementById('detailEditBtn').onclick = () => openEditModal(r.id);
+  document.getElementById('detailDeleteBtn').onclick = () => deleteResource(r.id);
+  openOverlay('detailModal');
+}
+function closeDetailModal() { closeOverlay('detailModal'); }
+
+/* ══════════════════════════════════════════════════════════
+   OVERLAY HELPERS
+══════════════════════════════════════════════════════════ */
+function openOverlay(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('open');
+  if (!document.querySelector('.modal-overlay.open')) document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.open').forEach(o => o.classList.remove('open')); document.body.style.overflow = ''; }
+});
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  render();
+});
+</script>
+</body>
+</html>
