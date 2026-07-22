@@ -437,6 +437,30 @@ body {
 </style>
 </head>
 <body>
+<!-- ══ TRADEVA AUTH GUARD (injected — do not duplicate) ══ -->
+<style>
+@keyframes tvspin{to{transform:rotate(360deg);}}
+body.tv-guarding{visibility:hidden;}
+#tvAuthLoading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#F8FAFC;visibility:visible;}
+html[data-theme="dark"] #tvAuthLoading{background:#080C14;}
+body.tv-ready #tvAuthLoading{display:none;}
+</style>
+<div id="tvAuthLoading"><div style="width:34px;height:34px;border-radius:50%;border:3px solid rgba(59,130,246,0.25);border-top-color:#3B82F6;animation:tvspin .7s linear infinite;"></div></div>
+<script>document.body.classList.add("tv-guarding");</script>
+<script type="module">
+import { requireAuth } from "./tradeva-firebase.js";
+try {
+  const user = await requireAuth();      // redirects to login.html if signed out
+  window.tradevaUser = user;
+} catch (e) {
+  console.error("Auth guard error:", e);
+} finally {
+  document.body.classList.remove("tv-guarding");
+  document.body.classList.add("tv-ready");
+}
+</script>
+<!-- ══ END AUTH GUARD ══ -->
+
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -521,7 +545,7 @@ body {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="alert('Account switcher — coming soon')">
+    <div class="account-switcher" onclick="window.location.href='settings.html'">
       <div class="account-dot"></div>
       <span class="account-label">Main Account</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
@@ -533,7 +557,7 @@ body {
       </span>
       <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
     </div>
-    <a href="#" class="nav-item" style="margin-top:4px;">
+    <a href="settings.html" class="nav-item" style="margin-top:4px;">
       <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
       Settings
     </a>
