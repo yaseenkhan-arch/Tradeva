@@ -540,45 +540,33 @@ td:last-child { text-align: right; }
   .page-header { gap: 12px; }
 }
 
-/* ── Auth gate: hide app until Firebase confirms a signed-in user ── */
-body { visibility: hidden; }
-body.auth-ready { visibility: visible; }
-#authLoading {
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg-page, #F8FAFC);
-  visibility: visible;
-}
-body.auth-ready #authLoading { display: none; }
-#authLoading .spin {
-  width: 34px; height: 34px; border-radius: 50%;
-  border: 3px solid rgba(59,130,246,0.25); border-top-color: #3B82F6;
-  animation: authspin 0.7s linear infinite;
-}
-@keyframes authspin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-
-<!-- Auth gate loader (shown until Firebase confirms the session) -->
-<div id="authLoading"><div class="spin"></div></div>
-
-<!-- Auth guard: runs before the app; redirects to login if signed out -->
+<!-- ══ TRADEVA AUTH GUARD (injected — do not duplicate) ══ -->
+<style>
+@keyframes tvspin{to{transform:rotate(360deg);}}
+body.tv-guarding{visibility:hidden;}
+#tvAuthLoading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#F8FAFC;visibility:visible;}
+html[data-theme="dark"] #tvAuthLoading{background:#080C14;}
+body.tv-ready #tvAuthLoading{display:none;}
+</style>
+<div id="tvAuthLoading"><div style="width:34px;height:34px;border-radius:50%;border:3px solid rgba(59,130,246,0.25);border-top-color:#3B82F6;animation:tvspin .7s linear infinite;"></div></div>
+<script>document.body.classList.add("tv-guarding");</script>
 <script type="module">
 import { requireAuth } from "./tradeva-firebase.js";
-const user = await requireAuth();           // redirects to login.html if not signed in
-window.tradevaUser = user;                   // make the signed-in user available to page code
-document.body.classList.add("auth-ready");   // reveal the app
-// Fill the sidebar identity from the real account (name + initial)
 try {
-  const nameEl = document.querySelector('.profile-name');
-  const roleEl = document.querySelector('.profile-role');
-  const avEl   = document.querySelector('.avatar, .profile-avatar');
-  const display = user.displayName || (user.email ? user.email.split('@')[0] : 'Trader');
-  if (nameEl) nameEl.textContent = display;
-  if (avEl && !avEl.style.backgroundImage) avEl.textContent = display.charAt(0).toUpperCase();
-} catch (e) { /* non-fatal cosmetic */ }
+  const user = await requireAuth();      // redirects to login.html if signed out
+  window.tradevaUser = user;
+} catch (e) {
+  console.error("Auth guard error:", e);
+} finally {
+  document.body.classList.remove("tv-guarding");
+  document.body.classList.add("tv-ready");
+}
 </script>
+<!-- ══ END AUTH GUARD ══ -->
+
 
 <!-- Sidebar overlay for mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -686,9 +674,9 @@ try {
   <!-- Bottom: Account switcher + Theme + Settings -->
   <div class="sidebar-bottom">
 
-    <div class="account-switcher" id="accountSwitcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher" onclick="window.location.href='settings.html'">
       <div class="account-dot"></div>
-      <span class="account-label" id="accountSwitcherLabel">No account yet</span>
+      <span class="account-label">Main Account</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
 
@@ -705,10 +693,6 @@ try {
     <a href="settings.html" class="nav-item" style="margin-top:4px;">
       <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
       Settings
-    </a>
-    <a href="#" class="nav-item" id="logoutLink" style="margin-top:1px;">
-      <svg viewBox="0 0 16 16"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3"/><polyline points="10,11 13.5,8 10,5"/><line x1="13.5" y1="8" x2="6" y2="8"/></svg>
-      Log out
     </a>
 
   </div>
@@ -1123,13 +1107,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCharts();
   computeStats();
 });
-</script>
-
-<!-- Logout wiring (module) -->
-<script type="module">
-import { logout } from "./tradeva-firebase.js";
-const link = document.getElementById("logoutLink");
-if (link) link.addEventListener("click", (e) => { e.preventDefault(); logout(); });
 </script>
 </body>
 </html>
