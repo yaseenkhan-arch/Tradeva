@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -674,9 +675,9 @@ try {
   <!-- Bottom: Account switcher + Theme + Settings -->
   <div class="sidebar-bottom">
 
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
 
@@ -1107,6 +1108,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCharts();
   computeStats();
 });
+</script>
+
+<!-- Live account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher } from "./tradeva-accounts.js";
+function whenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+(async () => { await whenAuthed(); await initAccountSwitcher(); })();
 </script>
 </body>
 </html>
