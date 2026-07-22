@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tradeva — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS & RESET
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 200ms;
+  --bg-page:      #F8FAFC;
+  --bg-card:      #FFFFFF;
+  --bg-sidebar:   #FFFFFF;
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --text-faint:   #94A3B8;
+  --accent:       #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-bg:    #EFF6FF;
+  --green:        #10B981;
+  --green-bg:     #ECFDF5;
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --sidebar-w:    248px;
+  --radius-card:  16px;
+  --radius-btn:   10px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
+}
+
+[data-theme="dark"] {
+  --bg-page:      #080C14;
+  --bg-card:      #0F1623;
+  --bg-sidebar:   #0A0F1A;
+  --border:       #1A2540;
+  --border-light: #131E33;
+  --text-primary: #F0F4FF;
+  --text-muted:   #8899B4;
+  --text-faint:   #3D5170;
+  --accent-bg:    #0D2144;
+  --green-bg:     #041E14;
+  --red-bg:       #1E0808;
+  --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR — identical to dashboard
+══════════════════════════════════════════════════════════ */
+.sidebar {
+  position: fixed;
+  top: 0; right: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+  overflow: hidden;
+}
+
+.sidebar-top {
+  padding: 18px 14px 14px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+  transition: border-color var(--t) var(--ease);
+}
+
+.profile-pill {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 12px; cursor: pointer;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+  text-decoration: none;
+}
+.profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
+
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent-bg); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+  transition: border-color var(--t) var(--ease);
+}
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.profile-info { flex: 1; min-width: 0; }
+.chevron-icon { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2; flex-shrink: 0; }
+
+.sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; scrollbar-width: none; }
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+.nav-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--text-faint);
+  padding: 0 8px; margin: 16px 0 5px;
+  transition: color var(--t) var(--ease);
+}
+.nav-section-label:first-child { margin-top: 2px; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 9px;
+  font-size: 13px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; text-decoration: none; margin-bottom: 1px;
+  white-space: nowrap;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item:hover { background: var(--border-light); color: var(--text-primary); transform: translateX(-2px); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-item.active:hover { transform: none; }
+[data-theme="dark"] .nav-item.active { background: #0D2144; }
+
+.soon-badge {
+  margin-left: auto; font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 20px;
+  background: var(--border-light); color: var(--text-faint);
+  border: 1px solid var(--border); flex-shrink: 0; letter-spacing: 0.04em;
+  transition: background var(--t) var(--ease);
+}
+.soon-item { opacity: 0.55; cursor: default !important; pointer-events: none; }
+.soon-item:hover { background: transparent !important; color: var(--text-muted) !important; transform: none !important; }
+
+.sidebar-bottom {
+  padding: 10px 8px calc(env(safe-area-inset-bottom,0px) + 12px);
+  border-top: 1px solid var(--border-light); flex-shrink: 0;
+  transition: border-color var(--t) var(--ease);
+}
+
+.account-switcher {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 11px;
+  border: 1px solid var(--border); background: var(--bg-page);
+  cursor: pointer; margin-bottom: 6px;
+  transition: border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.account-switcher:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); transform: translateY(-1px); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.account-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.account-caret { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+
+.theme-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 9px; cursor: pointer;
+  transition: background var(--t) var(--ease); margin-bottom: 2px;
+}
+.theme-toggle:hover { background: var(--border-light); }
+.theme-label { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 7px; transition: color var(--t) var(--ease); }
+.theme-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.toggle-track { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background var(--t) var(--ease); flex-shrink: 0; }
+.toggle-track.on { background: var(--accent); }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════════════════════ */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  padding: 28px 28px 80px;
+  min-height: 100vh;
+  transition: margin var(--t) var(--ease);
+}
+
+/* ── Page Header ── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-header-left { display: flex; align-items: center; gap: 0; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.card:hover { box-shadow: var(--shadow-hover); }
+
+.card-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 20px;
+  transition: color var(--t) var(--ease);
+}
+
+/* ── Avatar Row ── */
+.avatar-row {
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 28px; flex-wrap: wrap;
+}
+
+.avatar-lg {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: var(--accent-bg);
+  border: 3px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: var(--accent);
+  flex-shrink: 0; position: relative;
+  transition: border-color var(--t) var(--ease), transform var(--t) var(--ease);
+  cursor: pointer;
+}
+.avatar-lg:hover { transform: scale(1.05); }
+.avatar-lg .avatar-edit {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card);
+  transition: background var(--t) var(--ease);
+}
+.avatar-lg .avatar-edit svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+.avatar-details { flex: 1; min-width: 0; }
+.avatar-details h2 { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.avatar-details p { font-size: 13px; color: var(--text-muted); margin-top: 2px; transition: color var(--t) var(--ease); }
+
+.trader-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  background: var(--accent-bg); color: var(--accent);
+  border: 1px solid rgba(59,130,246,0.25);
+  margin-top: 6px;
+  transition: background var(--t) var(--ease);
+}
+.trader-badge svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-page);
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+  white-space: nowrap;
+}
+.btn-outline svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.btn-outline:hover { background: var(--border-light); border-color: var(--text-faint); color: var(--text-primary); transform: translateY(-1px); }
+
+/* ── Form ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-muted);
+  transition: color var(--t) var(--ease);
+}
+
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input, 10px);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 13px; font-family: 'Inter', sans-serif;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  background: var(--bg-card);
+}
+textarea { resize: vertical; min-height: 80px; }
+
+.select-wrap { position: relative; }
+.select-wrap select { width: 100%; padding-right: 32px; cursor: pointer; }
+.select-wrap::after {
+  content: '';
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-faint);
+  pointer-events: none;
+}
+
+.btn-save {
+  margin-top: 20px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 24px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-btn);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.btn-save svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.5; }
+.btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-save:active { transform: translateY(0); box-shadow: none; }
+
+/* ── Trading Stats ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; transition: color var(--t) var(--ease); }
+.stat-value.green { color: var(--green); }
+.stat-value.red   { color: var(--red); }
+
+/* ── Preferences Card ── */
+.pref-list { display: flex; flex-direction: column; gap: 0; }
+.pref-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: border-color var(--t) var(--ease);
+}
+.pref-row:last-child { border-bottom: none; }
+.pref-left { display: flex; flex-direction: column; gap: 2px; }
+.pref-title { font-size: 13px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.pref-desc { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+.pref-toggle { cursor: pointer; }
+.pref-track {
+  width: 36px; height: 20px; background: var(--border);
+  border-radius: 10px; position: relative;
+  transition: background var(--t) var(--ease);
+}
+.pref-track.on { background: var(--accent); }
+.pref-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%; background: #fff;
+  transition: transform var(--t) var(--ease);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.pref-track.on .pref-knob { transform: translateX(16px); }
+
+/* ── Danger Zone ── */
+.danger-card {
+  border-color: #FECACA;
+  background: var(--bg-card);
+}
+[data-theme="dark"] .danger-card { border-color: #7F1D1D; }
+.danger-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap; gap: 12px;
+  transition: border-color var(--t) var(--ease);
+}
+.danger-row:last-child { border-bottom: none; }
+.danger-title { font-size: 13px; font-weight: 500; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.danger-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; transition: color var(--t) var(--ease); }
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 9px;
+  border: 1px solid #FECACA; background: var(--red-bg);
+  color: var(--red); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease);
+  white-space: nowrap;
+}
+.btn-danger svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+.btn-danger:hover { background: #FEE2E2; border-color: var(--red); transform: translateY(-1px); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: #0F172A; color: #fff;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform var(--t) var(--ease), opacity var(--t) var(--ease);
+  opacity: 0; z-index: 999; white-space: nowrap;
+}
+[data-theme="dark"] .toast { background: #1A2540; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-icon { width: 18px; height: 18px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+/* ── Mobile Overlay & Hamburger ── */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 98; opacity: 0;
+  transition: opacity var(--t) var(--ease);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { opacity: 1; }
+
+.mob-menu-btn {
+  display: none; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg-card);
+  cursor: pointer; margin-right: 12px; flex-shrink: 0;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
+.mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* ── Mobile Bottom Nav ── */
+.mobile-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card); border-top: 1px solid var(--border);
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 200; justify-content: space-around;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.mob-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; text-decoration: none;
+  transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px;
+}
+.mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.mob-item:hover { transform: translateY(-2px); }
+.mob-item.active { color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform var(--t) var(--ease), background var(--t) var(--ease);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.15);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: block; pointer-events: none; }
+  .sidebar-overlay.open { pointer-events: auto; }
+  .main { margin-right: 0; padding: 20px 16px 90px; }
+  .mobile-nav { display: flex; }
+  .mob-menu-btn { display: flex; }
+  .page-title { font-size: 22px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .avatar-row { gap: 14px; }
+  .btn-outline { display: none; }
+  .avatar-lg .avatar-edit { display: flex; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-value { font-size: 20px; }
+  .danger-row { flex-direction: column; align-items: flex-start; }
+}
+
+
+/* ── Settings page ── */
+.tabs { display:flex; gap:6px; margin-bottom:22px; border-bottom:1px solid var(--border); }
+.tab { padding:10px 16px; font-size:13.5px; font-weight:600; color:var(--text-muted); cursor:pointer; border:none; background:none; font-family:'Inter',sans-serif; border-bottom:2px solid transparent; margin-bottom:-1px; transition:color var(--t) var(--ease), border-color var(--t) var(--ease); }
+.tab:hover { color:var(--text-primary); }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-card); padding:24px; box-shadow:var(--shadow-card); transition:background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.card-title { font-size:16px; font-weight:700; margin-bottom:3px; }
+.card-sub { font-size:13px; color:var(--text-muted); margin-bottom:18px; }
+.btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--accent); color:#fff; font-size:13px; font-weight:600; padding:10px 17px; border-radius:var(--radius-btn); border:none; cursor:pointer; font-family:'Inter',sans-serif; transition:background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:var(--shadow-btn); }
+.btn-primary:disabled { opacity:0.6; cursor:default; transform:none; box-shadow:none; }
+.btn-primary svg { width:15px; height:15px; stroke:#fff; fill:none; stroke-width:2.4; stroke-linecap:round; }
+.acct-list { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+.acct-row { display:flex; align-items:center; gap:14px; padding:15px 17px; border:1px solid var(--border); border-radius:13px; background:var(--bg-page); transition:all var(--t) var(--ease); }
+.acct-row:hover { border-color:var(--accent); box-shadow:var(--shadow-card); }
+.acct-badge { width:42px; height:42px; border-radius:11px; background:var(--accent-bg); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; flex-shrink:0; }
+.acct-main { flex:1; min-width:0; }
+.acct-name { font-size:14.5px; font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.acct-tag { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:2px 8px; border-radius:20px; background:var(--border-light); color:var(--text-muted); }
+.acct-tag.active { background:var(--green-bg); color:var(--green); }
+.acct-tag.archived { background:var(--red-bg); color:var(--red); }
+.acct-meta { font-size:12px; color:var(--text-muted); margin-top:3px; }
+.acct-bal { text-align:right; flex-shrink:0; }
+.acct-bal-val { font-size:15px; font-weight:800; }
+.acct-bal-label { font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+.acct-actions { display:flex; gap:6px; flex-shrink:0; }
+.icon-btn { width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--bg-card); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all var(--t) var(--ease); }
+.icon-btn:hover { border-color:var(--text-faint); transform:translateY(-1px); }
+.icon-btn svg { width:15px; height:15px; fill:none; stroke:var(--text-muted); stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.icon-btn.danger:hover { border-color:var(--red); background:var(--red-bg); }
+.icon-btn.danger:hover svg { stroke:var(--red); }
+.empty { text-align:center; padding:48px 20px; border:1px dashed var(--border); border-radius:var(--radius-card); background:var(--bg-page); }
+.empty-ic { width:56px; height:56px; margin:0 auto 14px; border-radius:50%; background:var(--accent-bg); display:flex; align-items:center; justify-content:center; }
+.empty-ic svg { width:26px; height:26px; stroke:var(--accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.empty-title { font-size:15px; font-weight:700; margin-bottom:6px; }
+.empty-sub { font-size:13px; color:var(--text-muted); max-width:360px; margin:0 auto 18px; line-height:1.5; }
+.logout-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; border:1px solid var(--border); border-radius:13px; margin-top:16px; }
+.logout-info-title { font-size:14px; font-weight:700; }
+.logout-info-sub { font-size:12.5px; color:var(--text-muted); margin-top:2px; }
+.btn-outline { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:var(--radius-btn); border:1px solid var(--border); background:var(--bg-page); color:var(--text-primary); font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all var(--t) var(--ease); }
+.btn-outline:hover { background:var(--border-light); }
+.btn-outline.danger { color:var(--red); border-color:var(--red); }
+.btn-outline.danger:hover { background:var(--red-bg); }
+.btn-outline svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+/* Modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(3px); z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity var(--t) var(--ease); }
+.modal-overlay.open { opacity:1; pointer-events:auto; }
+.modal { background:var(--bg-card); border:1px solid var(--border); border-radius:18px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.28); transform:translateY(16px) scale(0.98); transition:transform var(--t) var(--ease); }
+.modal-overlay.open .modal { transform:none; }
+.modal-head { display:flex; align-items:center; gap:12px; padding:22px 24px; border-bottom:1px solid var(--border-light); position:sticky; top:0; background:var(--bg-card); }
+.modal-head-ic { width:38px; height:38px; border-radius:11px; background:var(--accent-bg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.modal-head-ic svg { width:19px; height:19px; stroke:var(--accent); fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.modal-title { font-size:17px; font-weight:700; }
+.modal-close { margin-left:auto; width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--bg-page); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--red-bg); border-color:var(--red); }
+.modal-close svg { width:15px; height:15px; stroke:var(--text-muted); fill:none; stroke-width:2.2; stroke-linecap:round; }
+.modal-close:hover svg { stroke:var(--red); }
+.modal-body { padding:22px 24px; }
+.modal-foot { padding:16px 24px 22px; display:flex; gap:10px; }
+.field { margin-bottom:16px; }
+.field-row { display:flex; gap:12px; }
+.field-row .field { flex:1; }
+.field label { font-size:12.5px; font-weight:600; margin-bottom:7px; display:block; }
+.field label .req { color:var(--red); margin-left:2px; }
+.field input, .field select, .field textarea { width:100%; padding:11px 13px; border:1px solid var(--border); border-radius:var(--radius-btn); background:var(--bg-page); color:var(--text-primary); font-size:13px; font-family:'Inter',sans-serif; outline:none; transition:border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.12); background:var(--bg-card); }
+.field textarea { resize:vertical; min-height:70px; }
+.field select { appearance:none; -webkit-appearance:none; cursor:pointer; }
+.field-hint { font-size:11px; color:var(--text-faint); margin-top:6px; }
+.btn-modal { flex:1; padding:12px; border-radius:var(--radius-btn); font-size:14px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; border:1px solid var(--border); background:var(--bg-page); color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:8px; transition:all var(--t) var(--ease); }
+.btn-modal:hover { background:var(--border-light); color:var(--text-primary); }
+.btn-modal.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn-modal.primary:hover { background:var(--accent-hover); }
+.btn-modal.primary:disabled { opacity:0.6; cursor:default; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#0F172A; color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,0.2); opacity:0; z-index:999; transition:transform var(--t) var(--ease), opacity var(--t) var(--ease); pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+.tv-loading-rows { padding:30px; text-align:center; color:var(--text-muted); font-size:13px; }
+
+</style>
+</head>
+<body>
+<!-- ══ TRADEVA AUTH GUARD (injected — do not duplicate) ══ -->
+<style>
+@keyframes tvspin{to{transform:rotate(360deg);}}
+body.tv-guarding{visibility:hidden;}
+#tvAuthLoading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#F8FAFC;visibility:visible;}
+html[data-theme="dark"] #tvAuthLoading{background:#080C14;}
+body.tv-ready #tvAuthLoading{display:none;}
+</style>
+<div id="tvAuthLoading"><div style="width:34px;height:34px;border-radius:50%;border:3px solid rgba(59,130,246,0.25);border-top-color:#3B82F6;animation:tvspin .7s linear infinite;"></div></div>
+<script>document.body.classList.add("tv-guarding");</script>
+<script type="module">
+import { requireAuth } from "./tradeva-firebase.js";
+try { const user = await requireAuth(); window.tradevaUser = user; }
+catch (e) { console.error("Auth guard error:", e); }
+finally { document.body.classList.remove("tv-guarding"); document.body.classList.add("tv-ready"); }
+</script>
+<!-- ══ END AUTH GUARD ══ -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<aside class="sidebar">
+
+  <div class="sidebar-top">
+    <a href="profile.html" class="profile-pill">
+      <div class="avatar">KH</div>
+      <div class="profile-info">
+        <div class="profile-name">Kham</div>
+        <div class="profile-role">Pro Trader</div>
+      </div>
+      <svg class="chevron-icon" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Command Center</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="trades.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
+      Trades
+    </a>
+    <a href="analytics.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+      Analytics
+    </a>
+    <a href="profit-calendar.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
+      Profit Calendar
+    </a>
+
+    <div class="nav-section-label">Planning</div>
+    <a href="weekly-planner.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="4.5" y1="10" x2="9" y2="10"/></svg>
+      Weekly Planner
+    </a>
+    <a href="mood-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mood Tracker
+    </a>
+    <a href="discipline-tracker.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M3.5 8.5l2.5 2.5 6-6"/><rect x="1.5" y="1.5" width="13" height="13" rx="2"/></svg>
+      Discipline Tracker
+    </a>
+
+    <div class="nav-section-label">Growth</div>
+    <a href="reviews.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-5.5"/></svg>
+      Reviews
+    </a>
+    <a href="milestones.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><polygon points="8,1.5 10,6 14.5,6.5 11,10 12,14.5 8,12 4,14.5 5,10 1.5,6.5 6,6"/></svg>
+      Milestones
+    </a>
+    <a href="knowledge-base.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Knowledge Base
+    </a>
+
+    <div class="nav-section-label">Coming Soon</div>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M6.5 6.2C6.5 5.2 7.2 4.5 8 4.5s1.5.7 1.5 1.7c0 .8-.5 1.4-1.2 1.7L8 10"/><circle cx="8" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      AI Trade Review
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><polyline points="1,13 4,9 7,11 10,6 13,8 15,4"/><rect x="1" y="1" width="14" height="14" rx="2" stroke-dasharray="2 2"/></svg>
+      Backtesting
+      <span class="soon-badge">Soon</span>
+    </a>
+    <a href="#" class="nav-item soon-item" onclick="return false;">
+      <svg viewBox="0 0 16 16"><path d="M4 8a4 4 0 018 0"/><path d="M1.5 8a6.5 6.5 0 0113 0"/><line x1="8" y1="8" x2="8" y2="13"/><circle cx="8" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Auto Sync
+      <span class="soon-badge">Soon</span>
+    </a>
+
+    <!-- Profile active -->
+    <div class="nav-section-label">Account</div>
+    <a href="profile.html" class="nav-item">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="account-switcher" >
+      <div class="account-dot"></div>
+      <span class="account-label">Main Account</span>
+      <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span class="theme-label" id="themeLabel">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg>
+        Light mode
+      </span>
+      <div class="toggle-track" id="themeTrack"><div class="toggle-knob"></div></div>
+    </div>
+    <a href="settings.html" class="nav-item active" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16"><line x1="1" y1="4.5" x2="15" y2="4.5"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="11.5" x2="15" y2="11.5"/><circle cx="5" cy="4.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="10" cy="8" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/><circle cx="6" cy="11.5" r="1.5" fill="var(--bg-card,#fff)" stroke="currentColor"/></svg>
+      Settings
+    </a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <button class="mob-menu-btn" onclick="openSidebar()" aria-label="Open menu">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+    </button>
+    <div>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Manage your trading accounts and preferences.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="accounts" onclick="switchTab('accounts')">Accounts</button>
+    <button class="tab" data-tab="general" onclick="switchTab('general')">General</button>
+  </div>
+
+  <!-- ACCOUNTS TAB -->
+  <div id="tab-accounts">
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div class="card-title">Trading Accounts</div>
+          <div class="card-sub">Create the accounts you journal against. Every trade belongs to one account.</div>
+        </div>
+        <button class="btn-primary" onclick="openAddAccount()">
+          <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+          Add Account
+        </button>
+      </div>
+      <div id="acctList" class="acct-list"><div class="tv-loading-rows">Loading accounts…</div></div>
+    </div>
+  </div>
+
+  <!-- GENERAL TAB -->
+  <div id="tab-general" style="display:none;">
+    <div class="card">
+      <div class="card-title">Session</div>
+      <div class="card-sub">You are signed in to Tradeva.</div>
+      <div class="logout-row">
+        <div>
+          <div class="logout-info-title" id="sessionEmail">—</div>
+          <div class="logout-info-sub">Sign out of your Tradeva account on this device.</div>
+        </div>
+        <button class="btn-outline danger" id="logoutBtn">
+          <svg viewBox="0 0 16 16"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3"/><polyline points="10,11 13.5,8 10,5"/><line x1="13.5" y1="8" x2="6" y2="8"/></svg>
+          Log out
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Home
+  </a>
+  <a href="trades.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
+    Trades
+  </a>
+  <a href="trades-new.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+    Add
+  </a>
+  <a href="analytics.html" class="mob-item">
+    <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
+    Analytics
+  </a>
+  <a href="profile.html" class="mob-item active">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14.5c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+    Profile
+  </a>
+</nav>
+
+<div class="modal-overlay" id="acctModal" onclick="if(event.target===this)closeAcctModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-ic"><svg viewBox="0 0 19 19"><rect x="2.5" y="4" width="14" height="11" rx="2"/><line x1="2.5" y1="8" x2="16.5" y2="8"/></svg></div>
+      <div class="modal-title" id="acctModalTitle">Add Account</div>
+      <button class="modal-close" onclick="closeAcctModal()"><svg viewBox="0 0 15 15"><line x1="3" y1="3" x2="12" y2="12"/><line x1="12" y1="3" x2="3" y2="12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Account Name<span class="req">*</span></label>
+        <input type="text" id="a-name" placeholder="e.g. FTMO 100k / Main Personal" maxlength="60">
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Broker / Prop Firm</label><input type="text" id="a-broker" placeholder="e.g. FTMO, IC Markets"></div>
+        <div class="field"><label>Account Type</label>
+          <select id="a-type"><option>Personal</option><option>Prop Firm</option><option>Demo</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Platform</label>
+          <select id="a-platform"><option>Manual</option><option>MT5</option><option>MT4</option><option>cTrader</option><option>TradingView</option><option>DXTrade</option><option>Match Trader</option></select>
+        </div>
+        <div class="field"><label>Currency</label>
+          <select id="a-currency"><option>USD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>CAD</option><option>JPY</option><option>PKR</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Leverage</label>
+          <select id="a-leverage"><option>1:10</option><option>1:20</option><option>1:30</option><option>1:50</option><option selected>1:100</option><option>1:200</option><option>1:500</option></select>
+        </div>
+        <div class="field"><label>Starting Balance<span class="req">*</span></label><input type="number" id="a-start" placeholder="10000" min="0" step="any"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Account Number</label><input type="text" id="a-number" placeholder="optional"></div>
+        <div class="field"><label>Challenge Phase</label><input type="text" id="a-phase" placeholder="e.g. Phase 1 (optional)"></div>
+      </div>
+      <div class="field"><label>Broker Server</label><input type="text" id="a-server" placeholder="optional"></div>
+      <div class="field"><label>Notes</label><textarea id="a-notes" placeholder="optional"></textarea></div>
+      <div class="field" id="a-status-wrap" style="display:none;">
+        <label>Status</label>
+        <select id="a-status"><option value="active">Active</option><option value="archived">Archived</option></select>
+        <div class="field-hint">Archived accounts stay in history but are hidden from the Add Trade dropdown.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-modal" onclick="closeAcctModal()">Cancel</button>
+      <button class="btn-modal primary" id="acctSaveBtn" onclick="saveAccount()"><svg viewBox="0 0 15 15" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3 3 6-7"/></svg><span>Create Account</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText">Saved!</span></div>
+
+
+<script>
+const html = document.documentElement;
+function applyTheme(mode, save){
+  const dark = mode === 'dark';
+  if(dark) html.setAttribute('data-theme','dark'); else html.removeAttribute('data-theme');
+  const track=document.getElementById('themeTrack'); const label=document.getElementById('themeLabel');
+  if(track){ if(dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if(label){ label.innerHTML = dark
+    ? '<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode'
+    : '<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode'; }
+  if(save) localStorage.setItem('tradeva_theme', mode);
+}
+function toggleTheme(){ applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark', true); }
+applyTheme(localStorage.getItem('tradeva_theme')||'light', false);
+function openSidebar(){ document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeSidebar(){ document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow=''; }
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.getElementById('tab-accounts').style.display = name==='accounts'?'':'none';
+  document.getElementById('tab-general').style.display = name==='general'?'':'none';
+}
+</script>
+
+<!-- ACCOUNTS LOGIC -->
+<!-- ACCOUNTS LOGIC -->
+<script type="module">
+import { auth, logout } from "./tradeva-firebase.js";
+import {
+  createAccount, updateAccount, deleteAccount, listAccounts, getAccount,
+  initAccountSwitcher, setSelectedAccount, getSelectedAccountId
+} from "./tradeva-accounts.js";
+
+let editingId = null;
+
+// wait until auth guard has resolved a user
+function whenAuthed() {
+  return new Promise(res => {
+    if (auth.currentUser) return res(auth.currentUser);
+    const t = setInterval(() => { if (auth.currentUser) { clearInterval(t); res(auth.currentUser); } }, 60);
+  });
+}
+
+const $ = id => document.getElementById(id);
+let toastTimer;
+function toast(msg, ok = true) {
+  const t = $("toast"); $("toastText").textContent = msg;
+  t.style.background = ok ? "#0F172A" : "#B91C1C";
+  t.classList.add("show"); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function money(v, cur){
+  const sym = {USD:"$",EUR:"€",GBP:"£",AUD:"A$",CAD:"C$",JPY:"¥",PKR:"₨"}[cur] || "";
+  return sym + Number(v||0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+// ── Render list ──
+async function renderAccounts() {
+  const wrap = $("acctList");
+  wrap.innerHTML = `<div class="tv-loading-rows">Loading accounts…</div>`;
+  let accounts = [];
+  try { accounts = await listAccounts({ includeArchived: true }); }
+  catch (e) { console.error(e); wrap.innerHTML = `<div class="tv-loading-rows">Couldn't load accounts. ${esc(e.message)}</div>`; return; }
+
+  if (!accounts.length) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="empty-ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><line x1="2.5" y1="10" x2="21.5" y2="10"/></svg></div>
+        <div class="empty-title">No accounts yet</div>
+        <div class="empty-sub">Create your first trading account to start journaling. Every trade you log will belong to an account.</div>
+        <button class="btn-primary" style="margin:0 auto;" onclick="openAddAccount()">
+          <svg viewBox="0 0 15 15"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+          Add First Account
+        </button>
+      </div>`;
+    return;
+  }
+
+  const sel = getSelectedAccountId();
+  wrap.innerHTML = accounts.map(a => {
+    const initial = (a.name || "?").charAt(0).toUpperCase();
+    const statusTag = a.status === "archived"
+      ? `<span class="acct-tag archived">Archived</span>`
+      : `<span class="acct-tag active">Active</span>`;
+    const selTag = a.id === sel ? `<span class="acct-tag" style="background:var(--accent-bg);color:var(--accent);">Selected</span>` : "";
+    const meta = [a.broker, a.type, a.platform, a.leverage].filter(Boolean).join(" · ");
+    return `<div class="acct-row">
+      <div class="acct-badge">${esc(initial)}</div>
+      <div class="acct-main">
+        <div class="acct-name">${esc(a.name)} ${statusTag} ${selTag}</div>
+        <div class="acct-meta">${esc(meta || "—")}</div>
+      </div>
+      <div class="acct-bal">
+        <div class="acct-bal-val">${money(a.startingBalance, a.currency)}</div>
+        <div class="acct-bal-label">Starting · ${esc(a.currency||"USD")}</div>
+      </div>
+      <div class="acct-actions">
+        <button class="icon-btn" title="Select" data-select="${a.id}"><svg viewBox="0 0 15 15"><polyline points="3,8 6,11 12,4"/></svg></button>
+        <button class="icon-btn" title="Edit" data-edit="${a.id}"><svg viewBox="0 0 15 15"><path d="M10.5 2.5l2 2L5 12l-2.5.5L3 10z"/></svg></button>
+        <button class="icon-btn danger" title="Delete" data-del="${a.id}"><svg viewBox="0 0 15 15"><polyline points="2.5,4 12.5,4"/><path d="M4 4V2.5h7V4M5 4v8M10 4v8M3.5 4l.5 9h7l.5-9"/></svg></button>
+      </div>
+    </div>`;
+  }).join("");
+
+  // wire row actions
+  wrap.querySelectorAll("[data-select]").forEach(b => b.addEventListener("click", () => {
+    setSelectedAccount(b.getAttribute("data-select"));
+    toast("Account selected");
+    renderAccounts();
+    initAccountSwitcher(); // refresh sidebar label
+  }));
+  wrap.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openEditAccount(b.getAttribute("data-edit"))));
+  wrap.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => confirmDelete(b.getAttribute("data-del"))));
+}
+
+// ── Modal open/close ──
+function openOverlay(){ $("acctModal").classList.add("open"); document.body.style.overflow="hidden"; }
+function closeAcctModal(){ $("acctModal").classList.remove("open"); document.body.style.overflow=""; }
+window.closeAcctModal = closeAcctModal;
+
+function fillForm(a){
+  $("a-name").value = a?.name || "";
+  $("a-broker").value = a?.broker || "";
+  $("a-type").value = a?.type || "Personal";
+  $("a-platform").value = a?.platform || "Manual";
+  $("a-currency").value = a?.currency || "USD";
+  $("a-leverage").value = a?.leverage || "1:100";
+  $("a-start").value = (a && a.startingBalance != null) ? a.startingBalance : "";
+  $("a-number").value = a?.accountNumber || "";
+  $("a-phase").value = a?.challengePhase || "";
+  $("a-server").value = a?.brokerServer || "";
+  $("a-notes").value = a?.notes || "";
+  $("a-status").value = a?.status || "active";
+}
+
+function openAddAccount(){
+  editingId = null;
+  $("acctModalTitle").textContent = "Add Account";
+  $("acctSaveBtn").querySelector("span").textContent = "Create Account";
+  $("a-status-wrap").style.display = "none";
+  fillForm(null);
+  openOverlay();
+  setTimeout(() => $("a-name").focus(), 120);
+}
+window.openAddAccount = openAddAccount;
+
+async function openEditAccount(id){
+  const a = await getAccount(id);
+  if (!a) { toast("Account not found", false); return; }
+  editingId = id;
+  $("acctModalTitle").textContent = "Edit Account";
+  $("acctSaveBtn").querySelector("span").textContent = "Save Changes";
+  $("a-status-wrap").style.display = "";
+  fillForm(a);
+  openOverlay();
+}
+
+async function saveAccount(){
+  const name = $("a-name").value.trim();
+  const start = $("a-start").value;
+  if (!name) { toast("Account name is required", false); $("a-name").focus(); return; }
+  if (start === "" || isNaN(Number(start))) { toast("Starting balance is required", false); $("a-start").focus(); return; }
+
+  const data = {
+    name, broker: $("a-broker").value.trim(), type: $("a-type").value,
+    platform: $("a-platform").value, currency: $("a-currency").value, leverage: $("a-leverage").value,
+    startingBalance: Number(start), accountNumber: $("a-number").value.trim(),
+    challengePhase: $("a-phase").value.trim(), brokerServer: $("a-server").value.trim(),
+    notes: $("a-notes").value.trim(), status: $("a-status").value
+  };
+
+  const btn = $("acctSaveBtn"); btn.disabled = true;
+  try {
+    if (editingId) { await updateAccount(editingId, data); toast("Account updated"); }
+    else {
+      const id = await createAccount(data);
+      if (!getSelectedAccountId()) setSelectedAccount(id); // auto-select first account
+      toast("Account created");
+    }
+    closeAcctModal();
+    await renderAccounts();
+    await initAccountSwitcher();
+  } catch (e) {
+    console.error(e); toast(e.message || "Couldn't save", false);
+  } finally { btn.disabled = false; }
+}
+window.saveAccount = saveAccount;
+
+async function confirmDelete(id){
+  const a = await getAccount(id);
+  if (!a) return;
+  const ok = confirm(`Delete "${a.name}"?\n\nThis permanently deletes the account AND all of its trades. This cannot be undone.`);
+  if (!ok) return;
+  try {
+    await deleteAccount(id);
+    toast("Account deleted");
+    await renderAccounts();
+    await initAccountSwitcher();
+  } catch (e) { console.error(e); toast(e.message || "Couldn't delete", false); }
+}
+
+// ── init ──
+(async () => {
+  const user = await whenAuthed();
+  const emailEl = document.getElementById("sessionEmail");
+  if (emailEl) emailEl.textContent = user.email || user.displayName || "Signed in";
+  const lo = document.getElementById("logoutBtn");
+  if (lo) lo.addEventListener("click", () => logout());
+  await renderAccounts();
+  await initAccountSwitcher();
+})();
+
+</script>
+</body>
+</html>
