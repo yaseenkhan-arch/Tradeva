@@ -1,6 +1,5 @@
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -8,322 +7,214 @@
 <title>Tradeva - Create Account</title>
 
 <style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
+body {
+  background:#f8fafc;
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh; padding:20px;
 }
+.container {
+  width:100%; max-width:450px;
+  background:white; padding:40px;
+  border-radius:24px; border:1px solid #e5e7eb;
+  box-shadow:0 20px 60px rgba(0,0,0,0.08);
+}
+.logo { text-align:center; margin-bottom:20px; }
+.logo img { width:90px; height:auto; }
+h1 { color:#111827; text-align:center; margin-bottom:8px; font-size:32px; font-weight:700; }
+.subtitle { text-align:center; color:#6b7280; font-size:15px; margin-bottom:30px; }
 
-body{
-background:#f8fafc;
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-padding:20px;
+input {
+  width:100%; padding:15px; margin-bottom:15px;
+  background:white; border:1px solid #d1d5db;
+  border-radius:12px; color:#111827; font-size:15px;
 }
-.container{
-width:100%;
-max-width:450px;
-background:white;
-padding:40px;
-border-radius:24px;
-border:1px solid #e5e7eb;
-box-shadow:
-0 20px 60px rgba(0,0,0,0.08);
-}
-.logo{
-text-align:center;
-margin-bottom:20px;
-}
+input:focus { outline:none; border-color:#2563eb; }
 
-.logo img{
-width:90px;
-height:auto;
+button {
+  width:100%; padding:14px;
+  background:#2563eb; border:none; border-radius:10px;
+  color:white; font-size:16px; font-weight:bold;
+  cursor:pointer; transition:0.3s;
 }
+button:hover { background:#1d4ed8; }
+button:disabled { opacity:0.65; cursor:default; }
 
-h1{
-color:#111827;
-text-align:center;
-margin-bottom:8px;
-font-size:32px;
-font-weight:700;
-}
-.subtitle{
-text-align:center;
-color:#6b7280;
-font-size:15px;
-margin-bottom:30px;
-}
+/* Divider */
+.divider { display:flex; align-items:center; gap:12px; margin:20px 0; }
+.divider::before, .divider::after { content:""; flex:1; height:1px; background:#e5e7eb; }
+.divider span { font-size:13px; color:#94a3b8; font-weight:600; }
 
-input{
-width:100%;
-padding:15px;
-margin-bottom:15px;
-background:white;
-border:1px solid #d1d5db;
-border-radius:12px;
-color:#111827;
-font-size:15px;
+/* Google button */
+.btn-google {
+  width:100%; padding:13px;
+  background:white; border:1px solid #d1d5db; border-radius:10px;
+  color:#111827; font-size:15px; font-weight:600;
+  cursor:pointer; transition:0.2s;
+  display:flex; align-items:center; justify-content:center; gap:10px;
 }
-  input:focus{
-outline:none;
-border-color:#2563eb;
-}
+.btn-google:hover { background:#f9fafb; border-color:#9ca3af; }
+.btn-google:disabled { opacity:0.65; cursor:default; }
+.btn-google svg { width:18px; height:18px; flex-shrink:0; }
 
-button{
-width:100%;
-padding:14px;
-background:#2563eb;
-border:none;
-border-radius:10px;
-color:white;
-font-size:16px;
-font-weight:bold;
-cursor:pointer;
-transition:0.3s;
-}
+.message { margin-top:15px; text-align:center; font-size:14px; }
+.footer { margin-top:20px; text-align:center; color:#94a3b8; font-size:14px; }
+.footer a { color:#60a5fa; text-decoration:none; font-weight:bold; }
+.footer a:hover { text-decoration:underline; }
 
-button:hover{
-background:#1d4ed8;
+.pw-toggle {
+  position:absolute; right:15px; top:16px;
+  cursor:pointer; font-size:13px; font-weight:600; color:#64748b;
+  user-select:none;
 }
-
-.message{
-margin-top:15px;
-text-align:center;
-font-size:14px;
-}
-
-.footer{
-margin-top:20px;
-text-align:center;
-color:#94a3b8;
-font-size:14px;
-}
-
-.footer a{
-color:#60a5fa;
-text-decoration:none;
-font-weight:bold;
-}
-
-.footer a:hover{
-text-decoration:underline;
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<div class="logo">
-<img src="logo-transparent.png" alt="Tradeva Logo">
-</div>
+  <div class="logo">
+    <img src="logo-transparent.png" alt="Tradeva Logo">
+  </div>
 
-<h1>Create Account</h1>
+  <h1>Create Account</h1>
+  <p class="subtitle">Start tracking your trades like a professional trader.</p>
 
-<p class="subtitle">
-Start tracking your trades like a professional trader.
-</p>
+  <form id="registerForm">
+    <input id="fullname" type="text" placeholder="Full Name" required>
+    <input id="email" type="email" placeholder="Email Address" required>
 
-<form id="registerForm">
+    <div style="position:relative;">
+      <input id="password" type="password" placeholder="Password" required>
+      <span class="pw-toggle" id="showPassword">Show</span>
+    </div>
 
-<input
-id="fullname"
-type="text"
-placeholder="Full Name"
-required>
+    <div style="position:relative;">
+      <input id="confirmPassword" type="password" placeholder="Confirm Password" required>
+      <span class="pw-toggle" id="showConfirmPassword">Show</span>
+    </div>
 
-<input
-id="email"
-type="email"
-placeholder="Email Address"
-required>
+    <button type="submit" id="createBtn">Create Account</button>
+    <div id="message" class="message"></div>
+  </form>
 
-<div style="position:relative;">
+  <div class="divider"><span>or</span></div>
 
-<input
-id="password"
-type="password"
-placeholder="Password"
-required>
+  <button type="button" class="btn-google" id="googleBtn">
+    <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.62z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A9 9 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.9 11.43 0 9 0A9 9 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+    </svg>
+    Continue with Google
+  </button>
 
-<span
-id="showPassword"
-onclick="togglePassword()"
-style="
-position:absolute;
-right:15px;
-top:16px;
-cursor:pointer;
-font-size:13px;
-font-weight:600;
-color:#64748b;">
-Show
-</span>
+  <div class="footer">
+    Already have an account? <a href="login.html">Login</a>
+  </div>
 
 </div>
 
-<div style="position:relative;">
-
-<input
-id="confirmPassword"
-type="password"
-placeholder="Confirm Password"
-required>
-
-<span
-id="showConfirmPassword"
-onclick="toggleConfirmPassword()"
-style="
-position:absolute;
-right:15px;
-top:16px;
-cursor:pointer;
-font-size:13px;
-font-weight:600;
-color:#64748b;">
-Show
-</span>
-
-</div>  
-<button type="submit">
-Create Account
-</button>
-
-<div id="message" class="message"></div>
-
-</form>
-
-<div class="footer">
-Already have an account?
-<a href="login.html">Login</a>
-</div>
-
-</div>
+<!-- Password show/hide (plain script, no imports — safe as non-module) -->
 <script>
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+function wireToggle(spanId, inputId){
+  var span = document.getElementById(spanId);
+  var input = document.getElementById(inputId);
+  span.addEventListener("click", function(){
+    if(input.type === "password"){ input.type = "text"; span.innerText = "Hide"; }
+    else { input.type = "password"; span.innerText = "Show"; }
+  });
+}
+wireToggle("showPassword", "password");
+wireToggle("showConfirmPassword", "confirmPassword");
+</script>
 
+<!-- Auth logic (module — imports shared Firebase foundation) -->
+<script type="module">
 import {
-getAuth,
-createUserWithEmailAndPassword,
-sendEmailVerification,
-updateProfile
+  auth,
+  ensureUserDoc,
+  signInWithGoogle
+} from "./tradeva-firebase.js";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-
-const firebaseConfig = {
-apiKey: "AIzaSyDsaMzX6_NlzwsD3ibeYghv3q8HTbytmmU",
-authDomain: "tradeva-app.firebaseapp.com",
-projectId: "tradeva-app",
-storageBucket: "tradeva-app.firebasestorage.app",
-messagingSenderId: "682302343296",
-appId: "1:682302343296:web:9643bf7b4b6664482e3e65"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 
 const form = document.getElementById("registerForm");
 const message = document.getElementById("message");
+const createBtn = document.getElementById("createBtn");
+const googleBtn = document.getElementById("googleBtn");
 
+function showMsg(text, ok){
+  message.style.color = ok ? "#22c55e" : "#ef4444";
+  message.innerText = text;
+}
+
+// ── Email / password signup ──
 form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-e.preventDefault();
+  const fullname = document.getElementById("fullname").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
 
-const fullname = document.getElementById("fullname").value;
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
-const confirmPassword = document.getElementById("confirmPassword").value;
+  if (password !== confirmPassword) { showMsg("Passwords do not match", false); return; }
+  if (password.length < 6) { showMsg("Password must be at least 6 characters.", false); return; }
 
-if(password !== confirmPassword){
-message.style.color = "#ef4444";
-message.innerText = "Passwords do not match";
-return;
-}
+  createBtn.disabled = true;
+  createBtn.innerText = "Creating…";
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: fullname });
+    await ensureUserDoc(cred.user, { displayName: fullname });
+    await sendEmailVerification(cred.user);
 
-try {
-
-const userCredential =
-await createUserWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-await updateProfile(
-userCredential.user,
-{
-displayName: fullname
-}
-);
-
-await sendEmailVerification(
-userCredential.user
-);
-
-message.style.color = "#22c55e";
-message.innerText =
-"Account created successfully! Check your email for verification.";
-
-form.reset();
-
-}
-catch(error){
-
-message.style.color = "#ef4444";
-message.innerText = error.message;
-
-}
-
+    showMsg("Account created! Check your email to verify, then log in.", true);
+    form.reset();
+  } catch (error) {
+    console.error("Signup error:", error);
+    showMsg(friendly(error), false);
+  } finally {
+    createBtn.disabled = false;
+    createBtn.innerText = "Create Account";
+  }
 });
-function togglePassword(){
 
-const password =
-document.getElementById("password");
+// ── Google signup / signin ──
+googleBtn.addEventListener("click", async () => {
+  googleBtn.disabled = true;
+  try {
+    await signInWithGoogle(); // creates user doc inside
+    showMsg("Signed in with Google…", true);
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 700);
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    // popup-closed is a normal user action, not an error worth shouting about
+    if (error && error.code === "auth/popup-closed-by-user") {
+      showMsg("", false);
+    } else {
+      showMsg(friendly(error), false);
+    }
+    googleBtn.disabled = false;
+  }
+});
 
-const button =
-document.getElementById("showPassword");
-
-if(password.type === "password"){
-
-password.type = "text";
-button.innerText = "Hide";
-
-}else{
-
-password.type = "password";
-button.innerText = "Show";
-
-}
-
-}
-
-function toggleConfirmPassword(){
-
-const password =
-document.getElementById("confirmPassword");
-
-const button =
-document.getElementById("showConfirmPassword");
-
-if(password.type === "password"){
-
-password.type = "text";
-button.innerText = "Hide";
-
-}else{
-
-password.type = "password";
-button.innerText = "Show";
-
-}
-
+function friendly(error){
+  const code = (error && error.code) || "";
+  if (code === "auth/email-already-in-use") return "That email is already registered. Try logging in.";
+  if (code === "auth/invalid-email") return "That email address looks invalid.";
+  if (code === "auth/weak-password") return "Password is too weak (use at least 6 characters).";
+  if (code === "auth/popup-blocked") return "Popup blocked — allow popups for tradeva.app and try again.";
+  if (code === "auth/network-request-failed") return "Network error — check your connection and try again.";
+  return (error && error.message) ? error.message.replace("Firebase:", "").trim() : "Something went wrong. Please try again.";
 }
 </script>
+
 </body>
 </html>
