@@ -231,7 +231,7 @@ try {
           <svg viewBox="0 0 18 18"><path d="M2 14l4-4 3 3 6-7"/><path d="M11 6h4v4"/></svg>
         </div>
         <div class="qs-label">This Month PnL</div>
-        <div class="qs-value green" data-count="8240" data-prefix="+$">+$8,240</div>
+        <div class="qs-value green" data-stat="monthPnl" data-count="8240" data-prefix="+$">+$8,240</div>
         <div class="qs-sub"><span class="trend-up">↑ 12.4%</span> vs last month</div>
       </div>
       <div class="qs-card">
@@ -239,7 +239,7 @@ try {
           <svg viewBox="0 0 18 18"><polygon points="9,1.5 11,6.5 16.5,7 12.5,10.5 13.5,16 9,13 4.5,16 5.5,10.5 1.5,7 7,6.5"/></svg>
         </div>
         <div class="qs-label">Best Pair</div>
-        <div class="qs-value">EURUSD</div>
+        <div class="qs-value" data-stat="bestPair">EURUSD</div>
         <div class="qs-sub">+$18,900 total profit</div>
       </div>
       <div class="qs-card">
@@ -247,7 +247,7 @@ try {
           <svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7"/><polyline points="9,5 9,9 12,11"/></svg>
         </div>
         <div class="qs-label">Best Session</div>
-        <div class="qs-value">London</div>
+        <div class="qs-value" data-stat="bestSession">London</div>
         <div class="qs-sub">76% win rate</div>
       </div>
       <div class="qs-card qs-warn">
@@ -255,7 +255,7 @@ try {
           <svg viewBox="0 0 18 18"><path d="M9 2l8 14H1z"/><line x1="9" y1="7" x2="9" y2="11"/><circle cx="9" cy="13.5" r="0.8" fill="currentColor" stroke="none"/></svg>
         </div>
         <div class="qs-label">Needs Attention</div>
-        <div class="qs-value red">Friday Trading</div>
+        <div class="qs-value red" data-stat="needsAttention">Friday Trading</div>
         <div class="qs-sub">-$2,380 this range</div>
       </div>
     </div>
@@ -274,7 +274,7 @@ try {
           <span class="mom mom-up">+12.4%</span>
         </div>
         <div class="stat-label-lg">Total PnL</div>
-        <div class="stat-value-lg green" data-count="47320" data-prefix="+$">+$47,320</div>
+        <div class="stat-value-lg green" data-stat="netPnl" data-count="47320" data-prefix="+$">+$47,320</div>
         <div class="stat-desc">Net profit across all trades in range</div>
       </div>
 
@@ -284,7 +284,7 @@ try {
           <span class="mom mom-up">+3.1%</span>
         </div>
         <div class="stat-label-lg">Win Rate</div>
-        <div class="stat-value-lg green" data-count="68.4" data-suffix="%">68.4%</div>
+        <div class="stat-value-lg green" data-stat="winRate" data-count="68.4" data-suffix="%">68.4%</div>
         <div class="stat-desc">158 wins out of 231 trades</div>
       </div>
 
@@ -294,7 +294,7 @@ try {
           <span class="mom mom-up">+0.2</span>
         </div>
         <div class="stat-label-lg">Profit Factor</div>
-        <div class="stat-value-lg" data-count="2.85">2.85</div>
+        <div class="stat-value-lg" data-stat="profitFactor" data-count="2.85">2.85</div>
         <div class="stat-desc">Gross profit ÷ gross loss</div>
       </div>
 
@@ -304,7 +304,7 @@ try {
           <span class="mom mom-up">+$14</span>
         </div>
         <div class="stat-label-lg">Expectancy</div>
-        <div class="stat-value-lg green" data-count="186" data-prefix="+$">+$186</div>
+        <div class="stat-value-lg green" data-stat="expectancy" data-count="186" data-prefix="+$">+$186</div>
         <div class="stat-desc">Average result per trade</div>
       </div>
 
@@ -314,7 +314,7 @@ try {
           <span class="mom mom-up">+$32</span>
         </div>
         <div class="stat-label-lg">Average Win</div>
-        <div class="stat-value-lg green" data-count="620" data-prefix="+$">+$620</div>
+        <div class="stat-value-lg green" data-stat="avgWin" data-count="620" data-prefix="+$">+$620</div>
         <div class="stat-desc">Mean profit on winning trades</div>
       </div>
 
@@ -334,7 +334,7 @@ try {
           <span class="mom mom-up">+0.3</span>
         </div>
         <div class="stat-label-lg">Recovery Factor</div>
-        <div class="stat-value-lg" data-count="4.2">4.2</div>
+        <div class="stat-value-lg" data-stat="recoveryFactor" data-count="4.2">4.2</div>
         <div class="stat-desc">Net profit ÷ max drawdown</div>
       </div>
 
@@ -344,7 +344,7 @@ try {
           <span class="mom mom-up">+4</span>
         </div>
         <div class="stat-label-lg">Edge Score</div>
-        <div class="stat-value-lg accent-text" data-count="87" data-suffix="/100">87/100</div>
+        <div class="stat-value-lg accent-text" data-stat="edgeScore" data-count="87" data-suffix="/100">87/100</div>
         <div class="stat-desc">Composite edge rating</div>
       </div>
 
