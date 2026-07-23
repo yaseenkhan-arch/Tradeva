@@ -406,9 +406,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -584,32 +584,18 @@ function loadProfileSidebar() {
   }
 }
 
-/* ── SAMPLE DATA (fallback if no trades saved yet) ── */
-const SAMPLE_TRADES = [
-  { id:17, date:'Jun 20, 2026', pair:'EURUSD', dir:'Short', pnl:800,  outcome:'Win' },
-  { id:16, date:'Jun 18, 2026', pair:'GBPJPY', dir:'Long',  pnl:560,  outcome:'Win' },
-  { id:15, date:'Jun 16, 2026', pair:'XAUUSD', dir:'Long',  pnl:2250, outcome:'Win' },
-  { id:14, date:'Jun 10, 2026', pair:'GBPUSD', dir:'Short', pnl:750,  outcome:'Win' },
-  { id:13, date:'Jun 05, 2026', pair:'XAUUSD', dir:'Short', pnl:1750, outcome:'Win' },
-  { id:12, date:'Jun 02, 2026', pair:'EURUSD', dir:'Long',  pnl:800,  outcome:'Win' },
-  { id:11, date:'May 29, 2026', pair:'GBPUSD', dir:'Long',  pnl:900,  outcome:'Win' },
-  { id:10, date:'May 22, 2026', pair:'XAUUSD', dir:'Long',  pnl:1500, outcome:'Win' },
-  { id:9,  date:'May 21, 2026', pair:'EURUSD', dir:'Short', pnl:900,  outcome:'Win' },
-  { id:8,  date:'May 19, 2026', pair:'GBPJPY', dir:'Short', pnl:560,  outcome:'Win' },
-  { id:7,  date:'May 14, 2026', pair:'XAUUSD', dir:'Short', pnl:1500, outcome:'Win' },
-  { id:6,  date:'May 12, 2026', pair:'GBPUSD', dir:'Long',  pnl:900,  outcome:'Win' },
-];
+/* ── TRADE STORE (populated from Firestore by the module below) ── */
+let TRADES = [];        // real trades for the selected account
+let TRADES_LOADED = false;
 
-function getTrades() {
-  const stored = localStorage.getItem('tradeva_trades');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (parsed.length) return parsed;
-    } catch(e) {}
-  }
-  return SAMPLE_TRADES;
-}
+function getTrades() { return TRADES; }
+
+/* Called by the Firestore module once data arrives */
+window.__tvSetTrades = function (rows) {
+  TRADES = Array.isArray(rows) ? rows : [];
+  TRADES_LOADED = true;
+  renderTrades();
+};
 
 /* ── FORMAT PNL ── */
 function fmtPnl(v) {
@@ -621,8 +607,8 @@ function fmtPnl(v) {
 function renderTrades() {
   let trades = getTrades();
 
-  // Sort newest first by id (fallback to array order)
-  trades = [...trades].sort((a,b) => (b.id||0) - (a.id||0));
+  // Already sorted newest-first by the Firestore loader
+  trades = [...trades];
 
   // Apply filters
   const search = (document.getElementById('searchInput').value || '').toUpperCase();
@@ -642,7 +628,7 @@ function renderTrades() {
   if (!trades.length) {
     tbody.innerHTML = '';
     mobileList.innerHTML = '';
-    emptyState.style.display = 'block';
+    emptyState.style.display = TRADES_LOADED ? 'block' : 'none';
     return;
   }
   emptyState.style.display = 'none';
@@ -651,13 +637,13 @@ function renderTrades() {
   tbody.innerHTML = trades.map(t => {
     const isLong = t.dir === 'Long';
     const pos = t.pnl >= 0;
-    return `<tr onclick="viewTrade(${t.id})" style="cursor:pointer;">
+    return `<tr onclick="viewTrade('${t.id}')" style="cursor:pointer;">
       <td class="td-date">${t.date}</td>
       <td class="td-pair">${t.pair}</td>
       <td class="${isLong ? 'td-dir-long' : 'td-dir-short'}">${t.dir}</td>
       <td class="${pos ? 'pnl-pos' : 'pnl-neg'}">${fmtPnl(t.pnl)}</td>
       <td>
-        <button class="view-btn" onclick="event.stopPropagation(); viewTrade(${t.id})">
+        <button class="view-btn" onclick="event.stopPropagation(); viewTrade('${t.id}')">
           View
           <svg viewBox="0 0 13 13"><polyline points="5,2 10,6.5 5,11"/></svg>
         </button>
@@ -669,7 +655,7 @@ function renderTrades() {
   mobileList.innerHTML = trades.map(t => {
     const isLong = t.dir === 'Long';
     const pos = t.pnl >= 0;
-    return `<div class="mobile-trade-card" onclick="viewTrade(${t.id})">
+    return `<div class="mobile-trade-card" onclick="viewTrade('${t.id}')">
       <div class="mtc-left">
         <div class="mtc-pair">${t.pair}</div>
         <div class="mtc-meta">
@@ -687,14 +673,51 @@ function renderTrades() {
 
 /* ── NAVIGATE TO TRADE DETAIL ── */
 function viewTrade(id) {
-  window.location.href = 'trade-detail.html?id=' + id;
+  window.location.href = 'trade-detail.html?id=' + encodeURIComponent(id);
 }
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  renderTrades();
+  // trades render once Firestore data arrives (see module below)
 });
 </script>
+<!-- Trades data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+
+  const empty = document.getElementById("emptyState");
+  try {
+    const acc = await resolveSelectedAccount();
+    if (!acc) {
+      // No trading account yet → point the user at Settings
+      window.TRADES = [];
+      window.TRADES_LOADED = true;
+      if (empty) {
+        empty.style.display = "block";
+        const t = empty.querySelector("h3, .empty-title");
+        const s = empty.querySelector("p, .empty-sub");
+        if (t) t.textContent = "No trading account yet";
+        if (s) s.innerHTML = 'Create an account in <a href="settings.html" style="color:var(--accent);font-weight:600;">Settings</a> before logging trades.';
+      }
+      return;
+    }
+    const rows = await listTrades(acc.id);
+    // hand the data to the page script
+    window.__tvSetTrades(rows);
+  } catch (e) {
+    console.error("Loading trades failed:", e);
+    window.__tvSetTrades([]);
+  }
+})();
+</script>
 </body>
+
 </html>
