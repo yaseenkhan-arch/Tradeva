@@ -119,9 +119,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -152,6 +152,13 @@ try {
       <div>
         <h1 class="page-title">Analytics</h1>
         <p class="page-subtitle">Advanced trading analytics to discover your edge and improve your trading performance.</p>
+        <div id="demoBadge" style="display:none;margin-top:10px;">
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:5px 11px;border-radius:20px;background:var(--amber-bg,#FFFBEB);color:var(--amber,#F59E0B);border:1px solid var(--amber,#F59E0B);">
+            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="5"/><line x1="6" y1="3.5" x2="6" y2="6.5"/><circle cx="6" cy="8.6" r="0.6" fill="currentColor" stroke="none"/></svg>
+            Demo Data
+          </span>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:7px;max-width:520px;line-height:1.5;">Add your first trade to replace this sample data with your own analytics.</div>
+        </div>
       </div>
     </div>
     <div class="select-wrap range-select-wrap">
@@ -664,5 +671,29 @@ try {
 </nav>
 
 <script src="analytics.js"></script>
+<!-- Analytics data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+function tvWhenReady(){ return new Promise(res=>{ if(window.__tvSetAnalytics) return res(); const t=setInterval(()=>{ if(window.__tvSetAnalytics){ clearInterval(t); res(); } },40); }); }
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  await tvWhenReady();
+  try {
+    const acc = await resolveSelectedAccount();
+    if (!acc) { window.__tvSetAnalytics([], null); return; }
+    const rows = await listTrades(acc.id);
+    window.__tvSetAnalytics(rows, acc);
+  } catch (e) {
+    console.error("Analytics load failed:", e);
+    window.__tvSetAnalytics([], null);
+  }
+})();
+</script>
 </body>
+
 </html>
