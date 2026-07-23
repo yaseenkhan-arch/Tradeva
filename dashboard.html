@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -713,6 +712,13 @@ try {
       <div>
         <h1 class="page-title">Dashboard</h1>
         <p class="page-subtitle">All stats update automatically when a trade is added.</p>
+        <div id="demoBadge" style="display:none;margin-top:10px;">
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:5px 11px;border-radius:20px;background:var(--amber-bg,#FFFBEB);color:var(--amber,#F59E0B);border:1px solid var(--amber,#F59E0B);">
+            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="5"/><line x1="6" y1="3.5" x2="6" y2="6.5"/><circle cx="6" cy="8.6" r="0.6" fill="currentColor" stroke="none"/></svg>
+            Demo Data
+          </span>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:7px;max-width:520px;line-height:1.5;">Add your first trade to replace this sample data with your own trading statistics.</div>
+        </div>
       </div>
     </div>
     <a href="trades-new.html" class="btn-primary">
@@ -887,7 +893,22 @@ function toggleTheme() {
 // Init theme
 applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
 
-/* ── SAMPLE TRADE DATA ───────────────────────────────────── */
+/* ── TRADE STORE (filled from Firestore by the module below) ── */
+let TRADES = [];        // real trades for the selected account
+let DEMO_MODE = true;   // true until the account has its first real trade
+
+/* Called by the Firestore module once data arrives */
+window.__tvSetDashboardTrades = function (rows) {
+  TRADES = Array.isArray(rows) ? rows : [];
+  DEMO_MODE = TRADES.length === 0;      // demo disappears permanently once a trade exists
+  const badge = document.getElementById('demoBadge');
+  if (badge) badge.style.display = DEMO_MODE ? '' : 'none';
+  renderTrades();
+  renderCharts();
+  computeStats();
+};
+
+/* ── SAMPLE TRADE DATA (demo only — replaced by real trades) ── */
 const SAMPLE_TRADES = [
   { date:'Jun 20, 2026', pair:'EURUSD', dir:'Short', session:'London',   pnl:  800  },
   { date:'Jun 18, 2026', pair:'GBPJPY', dir:'Long',  session:'London',   pnl:  560  },
@@ -904,8 +925,11 @@ const SAMPLE_TRADES = [
 /* ── RENDER TRADES TABLE ─────────────────────────────────── */
 function renderTrades() {
   const tbody = document.getElementById('recentTradesBody');
-  const stored = localStorage.getItem('tradeva_trades');
-  const trades = stored ? JSON.parse(stored) : SAMPLE_TRADES;
+  const trades = (TRADES && TRADES.length) ? TRADES : (DEMO_MODE ? SAMPLE_TRADES : []);
+  if (!trades.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-muted);font-size:13px;">No trades yet. <a href="trades-new.html" style="color:var(--accent);font-weight:600;">Add your first trade</a></td></tr>';
+    return;
+  }
 
   const fmt = v =>
     (v >= 0 ? '+' : '') +
@@ -929,6 +953,25 @@ let chartGrowth, chartDrawdown;
 
 function isDark() { return html.getAttribute('data-theme') === 'dark'; }
 
+/* Build equity + drawdown series from real trades (chronological). */
+function buildChartSeries() {
+  const src = (TRADES && TRADES.length) ? TRADES : [];
+  if (!src.length) return null;
+  const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
+  const chron = [...src].reverse();   // our store is newest-first
+  const labels = [], equity = [], ddPct = [];
+  let cum = 0, peak = 0;
+  chron.forEach(t => {
+    cum += num(t.pnl);
+    if (cum > peak) peak = cum;
+    labels.push(t.date || t.rawDate || '');
+    equity.push(Math.round(cum * 100) / 100);
+    const dd = peak > 0 ? ((cum - peak) / peak) * 100 : 0;
+    ddPct.push(Math.round(dd * 100) / 100);
+  });
+  return { labels, equity, ddPct };
+}
+
 function renderCharts() {
   if (chartGrowth)   chartGrowth.destroy();
   if (chartDrawdown) chartDrawdown.destroy();
@@ -947,9 +990,9 @@ function renderCharts() {
   chartGrowth = new Chart(gCtx, {
     type: 'line',
     data: {
-      labels: ['May 2','May 6','May 12','May 19','May 22','Jun 2','Jun 10','Jun 20'],
+      labels: (buildChartSeries()?.labels) || ['May 2','May 6','May 12','May 19','May 22','Jun 2','Jun 10','Jun 20'],
       datasets: [{
-        data: [1200, 1800, 3200, 5400, 6100, 8900, 12400, 15700],
+        data: (buildChartSeries()?.equity) || [1200, 1800, 3200, 5400, 6100, 8900, 12400, 15700],
         borderColor: '#10B981',
         borderWidth: 2.5,
         backgroundColor: gGrad,
@@ -1000,9 +1043,9 @@ function renderCharts() {
   chartDrawdown = new Chart(dCtx, {
     type: 'line',
     data: {
-      labels: ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'],
+      labels: (buildChartSeries()?.labels) || ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'],
       datasets: [{
-        data: [0, -6.5, -3.8, -1.2, 0, 0, 0, 0, 0],
+        data: (buildChartSeries()?.ddPct) || [0, -6.5, -3.8, -1.2, 0, 0, 0, 0, 0],
         borderColor: '#EF4444',
         borderWidth: 2.5,
         backgroundColor: dGrad,
@@ -1045,31 +1088,268 @@ function renderCharts() {
 
 /* ── COMPUTE STATS FROM LOCALSTORAGE ─────────────────────── */
 function computeStats() {
-  const raw = localStorage.getItem('tradeva_trades');
-  if (!raw) return;
-  const trades = JSON.parse(raw);
-  if (!trades.length) return;
+  const trades = (TRADES && TRADES.length) ? TRADES : (DEMO_MODE ? SAMPLE_TRADES : []);
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
 
-  const wins   = trades.filter(t => (t.pnl || 0) > 0);
-  const losses = trades.filter(t => (t.pnl || 0) < 0);
-  const total  = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  if (!trades.length) {
+    set('totalTrades', '0');
+    set('winRate', '0%');
+    set('profitFactor', '0');
+    set('avgRR', '0');
+    set('netRR', '0');
+    set('largestWin', '—');
+    set('largestLoss', '—');
+    set('winStreak', '0');
+    set('loseStreak', '0');
+    set('winLoss', '0 wins · 0 losses');
+    set('profitableDays', '0 profitable days');
+    const n0 = document.getElementById('netPnl');
+    if (n0) { n0.textContent = '$0'; n0.className = 'stat-value'; }
+    return;
+  }
+
+  const wins   = trades.filter(t => num(t.pnl) > 0);
+  const losses = trades.filter(t => num(t.pnl) < 0);
+  const total  = trades.reduce((s, t) => s + num(t.pnl), 0);
   const wr     = ((wins.length / trades.length) * 100).toFixed(1);
-  const fmt    = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString();
+  const money  = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-  document.getElementById('totalTrades').textContent  = trades.length;
-  document.getElementById('winRate').textContent      = wr + '%';
-  document.getElementById('winLoss').textContent      = wins.length + ' wins · ' + losses.length + ' losses';
-  document.getElementById('netPnl').textContent       = fmt(total);
-  document.getElementById('netPnl').className         = 'stat-value ' + (total >= 0 ? 'green' : 'red');
+  set('totalTrades', trades.length);
+  set('winRate', wr + '%');
+  set('winLoss', wins.length + ' wins · ' + losses.length + ' losses');
 
-  if (wins.length) {
-    const maxWin = Math.max(...wins.map(t => t.pnl));
-    document.getElementById('largestWin').textContent = '+$' + maxWin.toLocaleString();
+  const netEl = document.getElementById('netPnl');
+  if (netEl) { netEl.textContent = money(total); netEl.className = 'stat-value ' + (total >= 0 ? 'green' : 'red'); }
+
+  const grossWin  = wins.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
+  const grossLoss = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
+  const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
+  set('profitFactor', pf === Infinity ? '∞' : pf.toFixed(2));
+
+  const rrVals = trades.map(t => num(t.rr)).filter(v => v !== 0);
+  const avgRR  = rrVals.length ? (rrVals.reduce((s, v) => s + v, 0) / rrVals.length) : 0;
+  const netRR  = rrVals.reduce((s, v) => s + v, 0);
+  set('avgRR', avgRR.toFixed(2));
+  set('netRR', netRR.toFixed(2));
+
+  set('largestWin',  wins.length   ? '+$' + Math.max(...wins.map(t => num(t.pnl))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
+  set('largestLoss', losses.length ? '$-' + Math.abs(Math.min(...losses.map(t => num(t.pnl)))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
+
+  const chron = [...trades].reverse();
+  let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
+  chron.forEach(t => {
+    const p = num(t.pnl);
+    if (p > 0) { curWin++; curLose = 0; if (curWin > bestWin) bestWin = curWin; }
+    else if (p < 0) { curLose++; curWin = 0; if (curLose > bestLose) bestLose = curLose; }
+  });
+  set('winStreak', bestWin);
+  set('loseStreak', bestLose);
+
+  const byDay = {};
+  trades.forEach(t => { const d = t.rawDate || t.date || ''; if (!d) return; byDay[d] = (byDay[d] || 0) + num(t.pnl); });
+  set('profitableDays', Object.values(byDay).filter(v => v > 0).length + ' profitable days');
+}
+
+/* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+
+  const fname    = p.fname   || 'Kham';
+  const lname    = p.lname   || '';
+  const account  = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+
+  // Update sidebar profile pill
+  const nameEl = document.querySelector('.profile-name');
+  const roleEl = document.querySelector('.profile-role');
+  const avatarEl = document.querySelector('.avatar');
+  if (nameEl) nameEl.textContent = fname;
+  if (roleEl) roleEl.textContent = account;
+  if (avatarEl) {
+    if (photo) {
+      avatarEl.style.backgroundImage    = 'url(' + photo + ')';
+      avatarEl.style.backgroundSize     = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.color              = 'transparent';
+      avatarEl.textContent              = '';
+    } else {
+      avatarEl.textContent = initials;
+    }
   }
-  if (losses.length) {
-    const maxLoss = Math.min(...losses.map(t => t.pnl));
-    document.getElementById('largestLoss').textContent = '$−' + Math.abs(maxLoss).toLocaleString();
+}
+
+/* ── INIT ────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  // dashboard renders once Firestore data arrives (see module below)
+});
+</script>
+
+<!-- Dashboard data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  try {
+    const acc = await resolveSelectedAccount();
+    if (!acc) { window.__tvSetDashboardTrades([]); return; }   // no account → demo view
+    const rows = await listTrades(acc.id);
+    window.__tvSetDashboardTrades(rows);
+  } catch (e) {
+    console.error("Dashboard load failed:", e);
+    window.__tvSetDashboardTrades([]);
   }
+})();
+</script>
+</body>
+</html>
+ : '-
+
+/* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+
+  const fname    = p.fname   || 'Kham';
+  const lname    = p.lname   || '';
+  const account  = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+
+  // Update sidebar profile pill
+  const nameEl = document.querySelector('.profile-name');
+  const roleEl = document.querySelector('.profile-role');
+  const avatarEl = document.querySelector('.avatar');
+  if (nameEl) nameEl.textContent = fname;
+  if (roleEl) roleEl.textContent = account;
+  if (avatarEl) {
+    if (photo) {
+      avatarEl.style.backgroundImage    = 'url(' + photo + ')';
+      avatarEl.style.backgroundSize     = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.color              = 'transparent';
+      avatarEl.textContent              = '';
+    } else {
+      avatarEl.textContent = initials;
+    }
+  }
+}
+
+/* ── INIT ────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  renderTrades();
+  renderCharts();
+  computeStats();
+});
+</script>
+
+<!-- Live account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher } from "./tradeva-accounts.js";
+function whenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+(async () => { await whenAuthed(); await initAccountSwitcher(); })();
+</script>
+</body>
+</html>
+) + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits:0});
+
+  set('totalTrades', trades.length);
+  set('winRate', wr + '%');
+  set('winLoss', wins.length + ' wins · ' + losses.length + ' losses');
+
+  const netEl = document.getElementById('netPnl');
+  if (netEl) { netEl.textContent = fmt(total); netEl.className = 'stat-value ' + (total >= 0 ? 'green' : 'red'); }
+
+  // Profit factor
+  const grossWin  = wins.reduce((s,t) => s + Math.abs(num(t.pnl)), 0);
+  const grossLoss = losses.reduce((s,t) => s + Math.abs(num(t.pnl)), 0);
+  const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
+  set('profitFactor', pf === Infinity ? '∞' : pf.toFixed(2));
+
+  // RR
+  const rrVals = trades.map(t => num(t.rr)).filter(v => v !== 0);
+  const avgRR  = rrVals.length ? (rrVals.reduce((s,v)=>s+v,0) / rrVals.length) : 0;
+  const netRR  = rrVals.reduce((s,v)=>s+v,0);
+  set('avgRR', avgRR.toFixed(2));
+  set('netRR', (netRR >= 0 ? '' : '') + netRR.toFixed(2));
+
+  // Largest win / loss
+  set('largestWin',  wins.length   ? '+
+
+/* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
+function loadProfileSidebar() {
+  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
+  const photo = localStorage.getItem('tradeva_photo');
+
+  const fname    = p.fname   || 'Kham';
+  const lname    = p.lname   || '';
+  const account  = p.account || 'Pro Trader';
+  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
+
+  // Update sidebar profile pill
+  const nameEl = document.querySelector('.profile-name');
+  const roleEl = document.querySelector('.profile-role');
+  const avatarEl = document.querySelector('.avatar');
+  if (nameEl) nameEl.textContent = fname;
+  if (roleEl) roleEl.textContent = account;
+  if (avatarEl) {
+    if (photo) {
+      avatarEl.style.backgroundImage    = 'url(' + photo + ')';
+      avatarEl.style.backgroundSize     = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.color              = 'transparent';
+      avatarEl.textContent              = '';
+    } else {
+      avatarEl.textContent = initials;
+    }
+  }
+}
+
+/* ── INIT ────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfileSidebar();
+  renderTrades();
+  renderCharts();
+  computeStats();
+});
+</script>
+
+<!-- Live account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher } from "./tradeva-accounts.js";
+function whenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+(async () => { await whenAuthed(); await initAccountSwitcher(); })();
+</script>
+</body>
+</html>
+ + Math.max(...wins.map(t=>num(t.pnl))).toLocaleString('en-US',{maximumFractionDigits:0}) : '—');
+  set('largestLoss', losses.length ? '$−' + Math.abs(Math.min(...losses.map(t=>num(t.pnl)))).toLocaleString('en-US',{maximumFractionDigits:0}) : '—');
+
+  // Streaks (chronological: our list is newest-first, so walk it reversed)
+  const chron = [...trades].reverse();
+  let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
+  chron.forEach(t => {
+    const p = num(t.pnl);
+    if (p > 0) { curWin++; curLose = 0; if (curWin > bestWin) bestWin = curWin; }
+    else if (p < 0) { curLose++; curWin = 0; if (curLose > bestLose) bestLose = curLose; }
+  });
+  set('winStreak', bestWin);
+  set('loseStreak', bestLose);
+
+  // Profitable days
+  const byDay = {};
+  trades.forEach(t => { const d = t.rawDate || t.date || ''; if (!d) return; byDay[d] = (byDay[d] || 0) + num(t.pnl); });
+  const profitableDays = Object.values(byDay).filter(v => v > 0).length;
+  set('profitableDays', profitableDays + ' profitable days');
 }
 
 /* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
