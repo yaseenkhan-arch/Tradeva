@@ -280,23 +280,25 @@ function computeDatasets() {
   });
 }
 
-/* Update every headline stat from real trades. Each element carries a
-   data-stat attribute; animateCounters() then animates data-count values. */
+/* Update every headline stat, sub-label and insight from real trades. */
 function updateCounters() {
   const el = k => document.querySelector('[data-stat="' + k + '"]');
   const setCount = (k, v) => { const e = el(k); if (e) e.setAttribute('data-count', v); };
   const setText  = (k, v) => { const e = el(k); if (e) { e.removeAttribute('data-count'); e.textContent = v; } };
+  const setHTML  = (k, v) => { const e = el(k); if (e) { e.removeAttribute('data-count'); e.innerHTML = v; } };
   const tone = (k, positive) => {
     const e = el(k); if (!e) return;
     e.classList.remove('green', 'red');
     if (positive === true) e.classList.add('green');
     else if (positive === false) e.classList.add('red');
   };
+  const money = v => (v >= 0 ? '+$' : '-$') + Math.abs(Math.round(v)).toLocaleString('en-US');
 
   if (!TRADES.length) return;   // demo values stay in place
 
   const wins    = TRADES.filter(t => outcomeOf(t) === 'Win');
   const losses  = TRADES.filter(t => outcomeOf(t) === 'Loss');
+  const bes     = TRADES.filter(t => outcomeOf(t) === 'BE');
   const net     = TRADES.reduce((s, t) => s + num(t.pnl), 0);
   const gw      = wins.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
   const gl      = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
@@ -304,68 +306,88 @@ function updateCounters() {
   const winRate = decided ? (wins.length / decided * 100) : 0;
   const avgWin  = wins.length ? gw / wins.length : 0;
   const avgLoss = losses.length ? gl / losses.length : 0;
+  const pf      = gl > 0 ? gw / gl : (gw > 0 ? Infinity : 0);
 
-  /* Total P&L */
-  setCount('netPnl', Math.round(net));
+  /* ── Performance Overview ── */
+  setCount('netPnl', Math.abs(Math.round(net)));
+  { const e = el('netPnl'); if (e) e.setAttribute('data-prefix', net >= 0 ? '+$' : '-$'); }
   tone('netPnl', net >= 0);
-  const npEl = el('netPnl');
-  if (npEl) npEl.setAttribute('data-prefix', net >= 0 ? '+$' : '-$');
-  if (npEl && net < 0) setCount('netPnl', Math.abs(Math.round(net)));
 
-  /* Win rate / profit factor */
   setCount('winRate', winRate.toFixed(1));
   tone('winRate', winRate >= 50);
-  setCount('profitFactor', gl > 0 ? (gw / gl).toFixed(2) : (gw > 0 ? 99 : 0));
+  setText('winRateDesc', wins.length + ' wins out of ' + TRADES.length + ' trades');
 
-  /* Expectancy = average P&L per trade */
+  setCount('profitFactor', pf === Infinity ? 99 : Number(pf.toFixed(2)));
+  tone('profitFactor', pf >= 1);
+
   const expectancy = TRADES.length ? net / TRADES.length : 0;
-  setCount('expectancy', Math.round(Math.abs(expectancy)));
-  const exEl = el('expectancy');
-  if (exEl) exEl.setAttribute('data-prefix', expectancy >= 0 ? '+$' : '-$');
+  setCount('expectancy', Math.abs(Math.round(expectancy)));
+  { const e = el('expectancy'); if (e) e.setAttribute('data-prefix', expectancy >= 0 ? '+$' : '-$'); }
   tone('expectancy', expectancy >= 0);
 
-  /* Average win */
   setCount('avgWin', Math.round(avgWin));
-  tone('avgWin', avgWin > 0);
+  { const e = el('avgWin'); if (e) e.setAttribute('data-prefix', '+$'); }
+  tone('avgWin', true);
 
-  /* Recovery factor = net profit / max drawdown (currency) */
+  // Average loss: store the magnitude and let the prefix carry the sign
+  setCount('avgLoss', Math.round(avgLoss));
+  { const e = el('avgLoss'); if (e) { e.setAttribute('data-prefix', '-$'); e.removeAttribute('data-suffix'); } }
+  tone('avgLoss', false);
+
+  /* Recovery factor + max drawdown (equity based) */
   const chron = chronological(TRADES);
   const base = START_BALANCE > 0 ? START_BALANCE : 0;
-  let cum = 0, peak = base, maxDD = 0;
+  let cum = 0, peak = base, maxDD = 0, maxDDPct = 0;
   chron.forEach(t => {
     cum += num(t.pnl);
     const eq = base + cum;
     if (eq > peak) peak = eq;
     const dd = peak - eq;
-    if (dd > maxDD) maxDD = dd;
+    if (dd > maxDD) { maxDD = dd; maxDDPct = peak > 0 ? (dd / peak) * 100 : 0; }
   });
-  setCount('recoveryFactor', maxDD > 0 ? (net / maxDD).toFixed(1) : (net > 0 ? 99 : 0));
+  setCount('recoveryFactor', maxDD > 0 ? Number((net / maxDD).toFixed(1)) : (net > 0 ? 99 : 0));
 
-  /* Edge score: blended 0-100 view of win rate, profit factor and expectancy */
-  const pf = gl > 0 ? gw / gl : (gw > 0 ? 3 : 0);
+  /* Edge score — one number, used by BOTH the stat card and the ring */
   const wrScore = Math.min(winRate, 100);
-  const pfScore = Math.min(pf / 3 * 100, 100);
+  const pfScore = Math.min((pf === Infinity ? 3 : pf) / 3 * 100, 100);
   const exScore = expectancy > 0 ? Math.min(expectancy / (avgLoss || 1) * 50, 100) : 0;
-  const edge = Math.round(wrScore * 0.4 + pfScore * 0.35 + exScore * 0.25);
-  setCount('edgeScore', Math.max(0, Math.min(100, edge)));
+  const edge = Math.max(0, Math.min(100, Math.round(wrScore * 0.4 + pfScore * 0.35 + exScore * 0.25)));
+  setCount('edgeScore', edge);
+  window.__tvEdgeScore = edge;   // consumed by animateEdgeRing()
 
-  /* This month's P&L */
+  /* ── Quick stats (top row) ── */
   const now = new Date();
   const monthNet = TRADES.reduce((s, t) => {
     const d = tradeDate(t);
-    return (d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
-      ? s + num(t.pnl) : s;
+    return (d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) ? s + num(t.pnl) : s;
   }, 0);
-  setCount('monthPnl', Math.round(Math.abs(monthNet)));
-  const mpEl = el('monthPnl');
-  if (mpEl) mpEl.setAttribute('data-prefix', monthNet >= 0 ? '+$' : '-$');
+  setCount('monthPnl', Math.abs(Math.round(monthNet)));
+  { const e = el('monthPnl'); if (e) e.setAttribute('data-prefix', monthNet >= 0 ? '+$' : '-$'); }
   tone('monthPnl', monthNet >= 0);
 
-  /* Best pair / best session / weakest area — these are text, not counters */
-  setText('bestPair',    PAIRS_DATA.labels.length   ? PAIRS_DATA.labels[0]   : '—');
-  setText('bestSession', SESSION_DATA.labels.length ? SESSION_DATA.labels[0] : '—');
+  // previous month, for the delta line
+  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevNet = TRADES.reduce((s, t) => {
+    const d = tradeDate(t);
+    return (d && d.getFullYear() === pm.getFullYear() && d.getMonth() === pm.getMonth()) ? s + num(t.pnl) : s;
+  }, 0);
+  if (prevNet !== 0) {
+    const pct = ((monthNet - prevNet) / Math.abs(prevNet)) * 100;
+    setHTML('monthDelta', '<span class="' + (pct >= 0 ? 'trend-up' : 'trend-down') + '">' +
+      (pct >= 0 ? '↑ ' : '↓ ') + Math.abs(pct).toFixed(1) + '%</span> vs last month');
+  } else {
+    setText('monthDelta', 'No prior month to compare');
+  }
 
-  // Weakest area = the worst-performing session, pair or weekday
+  /* Best pair / session, and the weakest area */
+  const bestPair = PAIRS_DATA.labels.length ? PAIRS_DATA.labels[0] : '—';
+  setText('bestPair', bestPair);
+  setText('bestPairSub', PAIRS_DATA.values.length ? money(PAIRS_DATA.values[0]) + ' total profit' : '—');
+
+  const bestSession = SESSION_DATA.labels.length ? SESSION_DATA.labels[0] : '—';
+  setText('bestSession', bestSession);
+  setText('bestSessionSub', SESSION_DATA.winRates.length ? SESSION_DATA.winRates[0] + '% win rate' : '—');
+
   const candidates = [];
   if (SESSION_DATA.labels.length) {
     const i = SESSION_DATA.values.indexOf(Math.min(...SESSION_DATA.values));
@@ -381,7 +403,139 @@ function updateCounters() {
   }
   const worst = candidates.sort((a, b) => a.v - b.v)[0];
   setText('needsAttention', (worst && worst.v < 0) ? worst.label : 'Nothing yet');
-  tone('needsAttention', (worst && worst.v < 0) ? false : null);
+  setText('needsAttentionSub', (worst && worst.v < 0) ? money(worst.v) + ' this range' : 'No losing areas');
+
+  /* ── Chart header pills ── */
+  const eqMin = Math.min(...EQUITY_DATA), eqMax = Math.max(...EQUITY_DATA);
+  setText('equityRange', money(eqMax - eqMin) + ' range');
+  setText('ddMax', (DRAWDOWN_DATA.length ? Math.min(...DRAWDOWN_DATA).toFixed(1) : '0') + '% max');
+  const greenMonths = MONTHLY_PNL.filter(v => v > 0).length;
+  setText('monthsGreen', greenMonths + ' of ' + MONTHLY_PNL.length + ' green');
+  if (WINRATE_TREND.length >= 2) {
+    const up = WINRATE_TREND[WINRATE_TREND.length - 1] >= WINRATE_TREND[0];
+    setText('wrTrend', up ? 'Trending up' : 'Trending down');
+  } else {
+    setText('wrTrend', winRate.toFixed(0) + '% overall');
+  }
+
+  /* ── Edge Analysis insights ── */
+  if (SESSION_DATA.labels.length) {
+    const bi = 0, wi = SESSION_DATA.values.length - 1;
+    setHTML('sessionInsight', '<strong>' + SESSION_DATA.labels[bi] + '</strong> is your strongest session at ' +
+      SESSION_DATA.winRates[bi] + '% win rate (' + money(SESSION_DATA.values[bi]) + ').' +
+      (SESSION_DATA.labels.length > 1 ? ' Weakest: <strong>' + SESSION_DATA.labels[wi] + '</strong> (' + money(SESSION_DATA.values[wi]) + ').' : ''));
+  }
+  if (DAY_DATA.labels.length) {
+    const losing = DAY_DATA.labels.filter((_, i) => DAY_DATA.values[i] < 0);
+    if (losing.length) {
+      const wi = DAY_DATA.values.indexOf(Math.min(...DAY_DATA.values));
+      setHTML('dayInsight', '<strong>' + DAY_DATA.labels[wi] + '</strong> is your worst day (' +
+        money(DAY_DATA.values[wi]) + '). Consider reducing size or sitting it out.');
+    } else {
+      setHTML('dayInsight', 'Every weekday is net positive so far — no day is costing you money.');
+    }
+  }
+  if (PAIRS_DATA.labels.length && net !== 0) {
+    const share = Math.round((PAIRS_DATA.values[0] / Math.abs(net)) * 100);
+    const pairCount = TRADES.filter(t => t.pair === bestPair).length;
+    const pairShare = Math.round((pairCount / TRADES.length) * 100);
+    setHTML('pairInsight', '<strong>' + bestPair + '</strong> drives ' + share +
+      '% of total profit from ' + pairShare + '% of your trades.');
+  }
+  if (SESSION_DATA.labels.length) {
+    setHTML('timeInsight', 'Your most profitable session is <strong>' + SESSION_DATA.labels[0] +
+      '</strong>. Log entry times to unlock hour-by-hour analysis.');
+  }
+
+  /* ── Long vs Short ── */
+  const longs  = TRADES.filter(t => (t.dir || '').toLowerCase() === 'long');
+  const shorts = TRADES.filter(t => (t.dir || '').toLowerCase() === 'short');
+  const side = (list) => {
+    const w = list.filter(t => outcomeOf(t) === 'Win').length;
+    const l = list.filter(t => outcomeOf(t) === 'Loss').length;
+    const d = w + l;
+    return { wr: d ? Math.round(w / d * 100) : 0, pnl: list.reduce((s, t) => s + num(t.pnl), 0), n: list.length };
+  };
+  const L = side(longs), S = side(shorts);
+  setText('longWR', L.n ? L.wr + '%' : '—');   tone('longWR', L.n ? L.wr >= 50 : null);
+  setText('longPnl', L.n ? money(L.pnl) : '—'); tone('longPnl', L.n ? L.pnl >= 0 : null);
+  setText('longCount', L.n);
+  setText('shortWR', S.n ? S.wr + '%' : '—');   tone('shortWR', S.n ? S.wr >= 50 : null);
+  setText('shortPnl', S.n ? money(S.pnl) : '—'); tone('shortPnl', S.n ? S.pnl >= 0 : null);
+  setText('shortCount', S.n);
+  if (L.n || S.n) {
+    const better = L.pnl >= S.pnl ? 'Long' : 'Short';
+    setHTML('lsInsight', 'You have taken <strong>' + L.n + ' long</strong> and <strong>' + S.n +
+      ' short</strong> trades. <strong>' + better + '</strong> setups are currently more profitable.');
+  }
+
+  /* ── Trade statistics ── */
+  const holds = TRADES.map(t => parseFloat(t.timeInPos)).filter(v => !isNaN(v) && v > 0);
+  if (holds.length) {
+    const avgH = holds.reduce((a, b) => a + b, 0) / holds.length;
+    const h = Math.floor(avgH), m = Math.round((avgH - h) * 60);
+    setText('avgHold', h + 'h ' + m + 'm');
+    setText('avgHoldSub', 'Across ' + holds.length + ' logged trades');
+  } else {
+    setText('avgHold', '—');
+    setText('avgHoldSub', 'Log time-in-position to see this');
+  }
+  if (START_BALANCE > 0 && avgLoss > 0) {
+    setText('avgRisk', ((avgLoss / START_BALANCE) * 100).toFixed(2) + '%');
+    setText('avgRiskSub', '≈ $' + Math.round(avgLoss).toLocaleString('en-US') + ' per position');
+  } else {
+    setText('avgRisk', '—');
+    setText('avgRiskSub', 'Set a starting balance in Settings');
+  }
+
+  /* ── Trade breakdown cards ── */
+  const byPnl = [...TRADES].sort((a, b) => num(b.pnl) - num(a.pnl));
+  const top = byPnl[0], bottom = byPnl[byPnl.length - 1];
+  if (top) {
+    setText('bdLargestWin', money(num(top.pnl)));
+    setText('bdLargestWinSub', (top.pair || '—') + ' · ' + (top.date || top.rawDate || ''));
+  }
+  if (bottom) {
+    setText('bdLargestLoss', money(num(bottom.pnl)));
+    setText('bdLargestLossSub', (bottom.pair || '—') + ' · ' + (bottom.date || bottom.rawDate || ''));
+  }
+  const byRR = [...TRADES].sort((a, b) => num(b.rr) - num(a.rr));
+  if (byRR[0]) {
+    setText('bdHighestRR', num(byRR[0].rr).toFixed(1) + 'R');
+    setText('bdHighestRRSub', (byRR[0].pair || '—') + ' · ' + (byRR[0].date || byRR[0].rawDate || ''));
+  }
+  setText('bdBestPair', bestPair);
+  setText('bdBestPairSub', PAIRS_DATA.values.length ? money(PAIRS_DATA.values[0]) + ' total' : '—');
+
+  /* ── Strengths / Needs Improvement (derived, not hardcoded) ── */
+  const strengths = [], weaknesses = [];
+  if (SESSION_DATA.labels.length && SESSION_DATA.values[0] > 0) strengths.push(SESSION_DATA.labels[0] + ' session');
+  if (PAIRS_DATA.labels.length && PAIRS_DATA.values[0] > 0) strengths.push(PAIRS_DATA.labels[0]);
+  if (DAY_DATA.labels.length) {
+    const bi = DAY_DATA.values.indexOf(Math.max(...DAY_DATA.values));
+    if (DAY_DATA.values[bi] > 0) strengths.push(DAY_DATA.labels[bi]);
+  }
+  if (winRate >= 50) strengths.push('Win rate above 50%');
+  if (pf >= 1.5) strengths.push('Profit factor above 1.5');
+  if (L.n && S.n && Math.max(L.wr, S.wr) >= 60) strengths.push((L.wr >= S.wr ? 'Long' : 'Short') + ' setups');
+
+  if (worst && worst.v < 0) weaknesses.push(worst.label);
+  if (winRate < 50) weaknesses.push('Win rate below 50%');
+  if (pf < 1) weaknesses.push('Losing more than you win');
+  if (avgLoss > avgWin && avgWin > 0) weaknesses.push('Losses larger than wins');
+  if (maxDDPct > 10) weaknesses.push('Drawdown over 10%');
+  if (!holds.length) weaknesses.push('Trade durations not logged');
+
+  const sList = document.getElementById('strengthsList');
+  if (sList) {
+    sList.innerHTML = (strengths.length ? strengths.slice(0, 4) : ['Not enough data yet'])
+      .map(x => '<li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>' + x + '</li>').join('');
+  }
+  const wList = document.getElementById('weaknessList');
+  if (wList) {
+    wList.innerHTML = (weaknesses.length ? weaknesses.slice(0, 4) : ['Nothing flagged yet'])
+      .map(x => '<li><span class="bullet-dot"></span>' + x + '</li>').join('');
+  }
 }
 
 /* Entry point called by the Firestore module in analytics.html */
@@ -491,7 +645,9 @@ function renderTables() {
 
 /* ── EDGE SCORE RING ANIMATION ── */
 function animateEdgeRing() {
-  const target = 87;
+  // Uses the same edge score as the stat card (set in updateCounters), so the
+  // ring and the card can never disagree.
+  const target = (typeof window.__tvEdgeScore === 'number') ? window.__tvEdgeScore : 0;
   const circumference = 439.8; // 2 * PI * r(70)
   const ring = document.getElementById('edgeRingFg');
   const numEl = document.getElementById('edgeScoreNum');
