@@ -968,37 +968,50 @@ function buildChartSeries() {
   if (!src.length) return null;
   const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
 
-  // Sort oldest → newest explicitly (don't trust incoming order).
+  // Sort oldest -> newest explicitly (don't trust incoming order).
   const ts = t => (t.createdAt && typeof t.createdAt.seconds === 'number')
     ? t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3
     : null;
   const chron = [...src].sort((a, b) => {
     const ad = a.rawDate || '', bd = b.rawDate || '';
-    if (ad !== bd) return ad.localeCompare(bd);            // oldest date first
+    if (ad !== bd) return ad.localeCompare(bd);
     const at = ts(a), bt = ts(b);
     if (at !== null && bt !== null && at !== bt) return at - bt;
-    // _qi is the Firestore newest-first index → higher index = older
     if (typeof a._qi === 'number' && typeof b._qi === 'number') return b._qi - a._qi;
     return 0;
   });
 
-  const labels = [], equity = [], ddPct = [];
-  // Drawdown is measured on ACCOUNT EQUITY (starting balance + cumulative P&L),
-  // not on profit alone. With a 100k account, +3000 then -1000 leaves you at
-  // 102k — still above the 103k peak by only ~1%, and never below your start.
-  const base = START_BALANCE > 0 ? START_BALANCE : 0;
-  let cum = 0;
-  let peakEq = base;            // peak equity starts at the opening balance
+  // Group by DAY so the curve advances over time instead of per-trade.
+  // Several trades on one date collapse into a single point for that day.
+  const days = [];
+  const seen = {};
   chron.forEach(t => {
-    cum += num(t.pnl);
-    const eq = base + cum;                 // current account equity
-    if (eq > peakEq) peakEq = eq;          // peak only ever rises
-    labels.push(t.date || t.rawDate || '');
-    // The growth chart plots equity when we know the balance, else cumulative P&L
+    const key = t.rawDate || t.date || '';
+    if (!(key in seen)) { seen[key] = days.length; days.push({ key, label: t.date || t.rawDate || '', pnl: 0 }); }
+    days[seen[key]].pnl += num(t.pnl);
+  });
+
+  const base = START_BALANCE > 0 ? START_BALANCE : 0;
+  const labels = [], equity = [], ddPct = [];
+
+  // Seed the curve at the opening balance so growth reads left-to-right from
+  // day zero, and drawdown starts flat at 0% (no drawdown before any trading).
+  labels.push('Start');
+  equity.push(Math.round((base > 0 ? base : 0) * 100) / 100);
+  ddPct.push(0);
+
+  let cum = 0;
+  let peakEq = base;
+  days.forEach(d => {
+    cum += d.pnl;
+    const eq = base + cum;
+    if (eq > peakEq) peakEq = eq;
+    labels.push(d.label);
     equity.push(Math.round((base > 0 ? eq : cum) * 100) / 100);
     const dd = peakEq > 0 ? ((eq - peakEq) / peakEq) * 100 : 0;
     ddPct.push(Math.round(dd * 100) / 100);
   });
+
   return { labels, equity, ddPct };
 }
 
