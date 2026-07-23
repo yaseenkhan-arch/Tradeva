@@ -168,12 +168,22 @@ async function listTrades(accountId) {
     console.warn("listTrades ordered query failed, falling back:", e);
     snap = await getDocs(tradesCol(accountId));
   }
-  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Keep Firestore's returned order as a stable fallback index. The query is
+  // ordered by createdAt desc, so position 0 = newest. This is reliable even
+  // when serverTimestamp() hasn't resolved locally yet (createdAt === null).
+  const rows = snap.docs.map((d, i) => ({ id: d.id, _qi: i, ...d.data() }));
+  const ts = t => {
+    if (t.createdAt && typeof t.createdAt.seconds === 'number') {
+      return t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3;
+    }
+    return null;
+  };
   rows.sort((a, b) => {
-    const ad = a.rawDate || "", bd = b.rawDate || "";
-    if (ad && bd && ad !== bd) return bd.localeCompare(ad);
-    const at = a.createdAt?.seconds || 0, bt = b.createdAt?.seconds || 0;
-    return bt - at;
+    const ad = a.rawDate || '', bd = b.rawDate || '';
+    if (ad !== bd) return bd.localeCompare(ad);                   // different days → date desc
+    const at = ts(a), bt = ts(b);
+    if (at !== null && bt !== null && at !== bt) return bt - at;  // same day → exact time desc
+    return a._qi - b._qi;                                         // else keep Firestore's order
   });
   return rows;
 }
