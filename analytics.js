@@ -280,20 +280,108 @@ function computeDatasets() {
   });
 }
 
-/* Update the headline stat counters from real trades */
+/* Update every headline stat from real trades. Each element carries a
+   data-stat attribute; animateCounters() then animates data-count values. */
 function updateCounters() {
-  const set = (sel, val) => { const el = document.querySelector(sel); if (el) el.setAttribute('data-count', val); };
-  if (!TRADES.length) return;
-  const wins   = TRADES.filter(t => outcomeOf(t) === 'Win');
-  const losses = TRADES.filter(t => outcomeOf(t) === 'Loss');
-  const net    = TRADES.reduce((s, t) => s + num(t.pnl), 0);
-  const gw = wins.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
-  const gl = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
+  const el = k => document.querySelector('[data-stat="' + k + '"]');
+  const setCount = (k, v) => { const e = el(k); if (e) e.setAttribute('data-count', v); };
+  const setText  = (k, v) => { const e = el(k); if (e) { e.removeAttribute('data-count'); e.textContent = v; } };
+  const tone = (k, positive) => {
+    const e = el(k); if (!e) return;
+    e.classList.remove('green', 'red');
+    if (positive === true) e.classList.add('green');
+    else if (positive === false) e.classList.add('red');
+  };
+
+  if (!TRADES.length) return;   // demo values stay in place
+
+  const wins    = TRADES.filter(t => outcomeOf(t) === 'Win');
+  const losses  = TRADES.filter(t => outcomeOf(t) === 'Loss');
+  const net     = TRADES.reduce((s, t) => s + num(t.pnl), 0);
+  const gw      = wins.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
+  const gl      = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
   const decided = wins.length + losses.length;
-  set('[data-stat="netPnl"]', Math.round(net));
-  set('[data-stat="winRate"]', decided ? (wins.length / decided * 100).toFixed(1) : 0);
-  set('[data-stat="profitFactor"]', gl > 0 ? (gw / gl).toFixed(2) : 0);
-  set('[data-stat="totalTrades"]', TRADES.length);
+  const winRate = decided ? (wins.length / decided * 100) : 0;
+  const avgWin  = wins.length ? gw / wins.length : 0;
+  const avgLoss = losses.length ? gl / losses.length : 0;
+
+  /* Total P&L */
+  setCount('netPnl', Math.round(net));
+  tone('netPnl', net >= 0);
+  const npEl = el('netPnl');
+  if (npEl) npEl.setAttribute('data-prefix', net >= 0 ? '+$' : '-$');
+  if (npEl && net < 0) setCount('netPnl', Math.abs(Math.round(net)));
+
+  /* Win rate / profit factor */
+  setCount('winRate', winRate.toFixed(1));
+  tone('winRate', winRate >= 50);
+  setCount('profitFactor', gl > 0 ? (gw / gl).toFixed(2) : (gw > 0 ? 99 : 0));
+
+  /* Expectancy = average P&L per trade */
+  const expectancy = TRADES.length ? net / TRADES.length : 0;
+  setCount('expectancy', Math.round(Math.abs(expectancy)));
+  const exEl = el('expectancy');
+  if (exEl) exEl.setAttribute('data-prefix', expectancy >= 0 ? '+$' : '-$');
+  tone('expectancy', expectancy >= 0);
+
+  /* Average win */
+  setCount('avgWin', Math.round(avgWin));
+  tone('avgWin', avgWin > 0);
+
+  /* Recovery factor = net profit / max drawdown (currency) */
+  const chron = chronological(TRADES);
+  const base = START_BALANCE > 0 ? START_BALANCE : 0;
+  let cum = 0, peak = base, maxDD = 0;
+  chron.forEach(t => {
+    cum += num(t.pnl);
+    const eq = base + cum;
+    if (eq > peak) peak = eq;
+    const dd = peak - eq;
+    if (dd > maxDD) maxDD = dd;
+  });
+  setCount('recoveryFactor', maxDD > 0 ? (net / maxDD).toFixed(1) : (net > 0 ? 99 : 0));
+
+  /* Edge score: blended 0-100 view of win rate, profit factor and expectancy */
+  const pf = gl > 0 ? gw / gl : (gw > 0 ? 3 : 0);
+  const wrScore = Math.min(winRate, 100);
+  const pfScore = Math.min(pf / 3 * 100, 100);
+  const exScore = expectancy > 0 ? Math.min(expectancy / (avgLoss || 1) * 50, 100) : 0;
+  const edge = Math.round(wrScore * 0.4 + pfScore * 0.35 + exScore * 0.25);
+  setCount('edgeScore', Math.max(0, Math.min(100, edge)));
+
+  /* This month's P&L */
+  const now = new Date();
+  const monthNet = TRADES.reduce((s, t) => {
+    const d = tradeDate(t);
+    return (d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
+      ? s + num(t.pnl) : s;
+  }, 0);
+  setCount('monthPnl', Math.round(Math.abs(monthNet)));
+  const mpEl = el('monthPnl');
+  if (mpEl) mpEl.setAttribute('data-prefix', monthNet >= 0 ? '+$' : '-$');
+  tone('monthPnl', monthNet >= 0);
+
+  /* Best pair / best session / weakest area — these are text, not counters */
+  setText('bestPair',    PAIRS_DATA.labels.length   ? PAIRS_DATA.labels[0]   : '—');
+  setText('bestSession', SESSION_DATA.labels.length ? SESSION_DATA.labels[0] : '—');
+
+  // Weakest area = the worst-performing session, pair or weekday
+  const candidates = [];
+  if (SESSION_DATA.labels.length) {
+    const i = SESSION_DATA.values.indexOf(Math.min(...SESSION_DATA.values));
+    candidates.push({ label: SESSION_DATA.labels[i] + ' session', v: SESSION_DATA.values[i] });
+  }
+  if (PAIRS_DATA.labels.length) {
+    const i = PAIRS_DATA.values.indexOf(Math.min(...PAIRS_DATA.values));
+    candidates.push({ label: PAIRS_DATA.labels[i], v: PAIRS_DATA.values[i] });
+  }
+  if (DAY_DATA.labels.length) {
+    const i = DAY_DATA.values.indexOf(Math.min(...DAY_DATA.values));
+    candidates.push({ label: DAY_DATA.labels[i] + ' trading', v: DAY_DATA.values[i] });
+  }
+  const worst = candidates.sort((a, b) => a.v - b.v)[0];
+  setText('needsAttention', (worst && worst.v < 0) ? worst.label : 'Nothing yet');
+  tone('needsAttention', (worst && worst.v < 0) ? false : null);
 }
 
 /* Entry point called by the Firestore module in analytics.html */
