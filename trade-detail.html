@@ -687,9 +687,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -1087,38 +1087,26 @@ function loadProfileSidebar() {
   }
 }
 
-/* ── SAMPLE DATA (fallback) — matches trades.html sample set ── */
-const SAMPLE_TRADES = [
-  { id:17, date:'Jun 20, 2026', pair:'EURUSD', dir:'Short', session:'London', entry:1.09500, exit:1.09100, sl:1.097, tp:1.088, rr:2.0, pips:40, pnl:800, outcome:'Win', tradeType:'Retest / Reentry', htfBias:'Bearish', notes:'Clean break and retest of structure, entered on the 5m confirmation candle.', rulesFollowed:'Yes', timeInPos:'1h 45m' },
-  { id:16, date:'Jun 18, 2026', pair:'GBPJPY', dir:'Long',  session:'London', entry:183.240, exit:183.800, sl:182.9, tp:184.1, rr:1.6, pips:56, pnl:560, outcome:'Win', tradeType:'Trend Following', htfBias:'Bullish', notes:'', rulesFollowed:'Yes', timeInPos:'2h 10m' },
-  { id:15, date:'Jun 16, 2026', pair:'XAUUSD', dir:'Long',  session:'New York', entry:2318.50, exit:2340.75, sl:2310, tp:2345, rr:2.6, pips:225, pnl:2250, outcome:'Win', tradeType:'Breakout', htfBias:'Bullish', notes:'Strong NFP momentum play, held through minor pullback.', rulesFollowed:'Yes', timeInPos:'3h 20m' },
-  { id:14, date:'Jun 10, 2026', pair:'GBPUSD', dir:'Short', session:'London', entry:1.27200, exit:1.26450, sl:1.275, tp:1.262, rr:2.5, pips:75, pnl:750, outcome:'Win', tradeType:'Reversal', htfBias:'Bearish', notes:'', rulesFollowed:'No', timeInPos:'55m' },
-];
+/* ── TRADE STORE (populated from Firestore by the module below) ── */
+let CURRENT_ACCOUNT_ID = null;
 
-function getTrades() {
-  const stored = localStorage.getItem('tradeva_trades');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (parsed.length) return parsed;
-    } catch(e) {}
-  }
-  return SAMPLE_TRADES;
-}
+/* Called by the Firestore module once the trade arrives */
+window.__tvRenderTrade = function (accountId, trade) {
+  CURRENT_ACCOUNT_ID = accountId;
+  renderTradeDetail(trade);
+};
 
 /* ── GET TRADE ID FROM URL ── */
 function getTradeId() {
   const params = new URLSearchParams(window.location.search);
-  return parseInt(params.get('id'), 10);
+  return params.get('id');   // Firestore doc id (string)
 }
 
 let currentTrade = null;
 
 /* ── RENDER TRADE DETAIL ── */
-function renderTradeDetail() {
-  const id = getTradeId();
-  const trades = getTrades();
-  const trade = trades.find(t => t.id === id) || trades[0];
+function renderTradeDetail(tradeArg) {
+  const trade = tradeArg || currentTrade;
   currentTrade = trade;
 
   if (!trade) {
@@ -1222,14 +1210,17 @@ function confirmDelete() {
 function closeDeleteModal() {
   document.getElementById('deleteModal').classList.remove('open');
 }
-function deleteTrade() {
+async function deleteTrade() {
   const id = getTradeId();
-  let trades = JSON.parse(localStorage.getItem('tradeva_trades') || 'null');
-  if (trades) {
-    trades = trades.filter(t => t.id !== id);
-    localStorage.setItem('tradeva_trades', JSON.stringify(trades));
+  if (!id || !CURRENT_ACCOUNT_ID) { window.location.href = 'trades.html'; return; }
+  try {
+    if (typeof window.__tvDeleteTrade !== 'function') throw new Error('Still loading — try again in a moment.');
+    await window.__tvDeleteTrade(CURRENT_ACCOUNT_ID, id);
+    window.location.href = 'trades.html';
+  } catch (e) {
+    console.error('Delete failed:', e);
+    alert(e.message || 'Could not delete this trade. Please try again.');
   }
-  window.location.href = 'trades.html';
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1505,8 +1496,45 @@ async function pnlDownloadCard() {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  renderTradeDetail();
+  // trade renders once Firestore data arrives (see module below)
 });
 </script>
+<!-- Trade detail data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { getTrade, deleteTrade as fsDeleteTrade } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+// expose delete to the page script
+window.__tvDeleteTrade = async function (accountId, tradeId) {
+  return await fsDeleteTrade(accountId, tradeId);
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+
+  const params = new URLSearchParams(location.search);
+  const tradeId = params.get("id");
+
+  try {
+    const acc = await resolveSelectedAccount();
+    if (!acc) { document.getElementById("tradeTitle").textContent = "No trading account"; return; }
+    window.CURRENT_ACCOUNT_ID = acc.id;
+
+    if (!tradeId) { document.getElementById("tradeTitle").textContent = "Trade not found"; return; }
+    const trade = await getTrade(acc.id, tradeId);
+    if (!trade) { document.getElementById("tradeTitle").textContent = "Trade not found"; return; }
+
+    window.__tvRenderTrade(acc.id, trade);
+  } catch (e) {
+    console.error("Loading trade failed:", e);
+    const el = document.getElementById("tradeTitle");
+    if (el) el.textContent = "Couldn't load this trade";
+  }
+})();
+</script>
 </body>
+
 </html>
