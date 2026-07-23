@@ -589,9 +589,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -629,15 +629,27 @@ try {
     </div>
   </div>
 
+  <!-- Trade-gating banner (shown only when the user has no accounts) -->
+  <div id="tvGateBanner" style="display:none;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-card,16px);box-shadow:var(--shadow-card);padding:40px 28px;text-align:center;margin-bottom:20px;">
+      <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><line x1="2.5" y1="10" x2="21.5" y2="10"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">Create an account first</div>
+      <div style="font-size:13px;color:var(--text-muted);max-width:380px;margin:0 auto 20px;line-height:1.55;">You need to create at least one trading account before you can log trades. Add one in Settings, then come back to journal your trades.</div>
+      <a href="settings.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;padding:11px 20px;border-radius:10px;text-decoration:none;">
+        <svg viewBox="0 0 15 15" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="7.5" y1="2" x2="7.5" y2="13"/><line x1="2" y1="7.5" x2="13" y2="7.5"/></svg>
+        Create First Account
+      </a>
+    </div>
+  </div>
+
   <!-- Account -->
-  <div class="account-select-wrap">
+  <div class="account-select-wrap" id="tvAccountSection">
     <span class="account-label-txt">Account</span>
     <div class="select-wrap">
       <select id="f-account">
         <option value="">Select account</option>
-        <option>Main Account</option>
-        <option>Funded Account</option>
-        <option>Demo Account</option>
       </select>
     </div>
   </div>
@@ -1080,12 +1092,21 @@ function toBase64(fileId) {
   });
 }
 
-/* ── SAVE TRADE ── */
+/* ── SAVE TRADE (Firestore) ──
+   The actual write is handled by the module script at the bottom of this
+   page (it has access to the Firebase SDK). This function collects the
+   form values and hands them over. */
 async function saveTrade() {
   const pair = document.getElementById('f-pair').value.trim().toUpperCase();
   const date = document.getElementById('f-date').value;
   if (!pair || !date) {
     alert('Please fill in at least Date and Pair.');
+    return;
+  }
+
+  const accountId = document.getElementById('f-account') ? document.getElementById('f-account').value : '';
+  if (!accountId) {
+    alert('Please select a trading account for this trade.');
     return;
   }
 
@@ -1097,13 +1118,6 @@ async function saveTrade() {
   saveBtn.textContent = 'Saving…';
 
   try {
-    const entryImg = await toBase64('entry-file');
-    const exitImg  = await toBase64('exit-file');
-
-    const KEY = 'tradeva_trades';
-    const trades = JSON.parse(localStorage.getItem(KEY) || '[]');
-    const newId  = trades.length ? Math.max(...trades.map(t => t.id || 0)) + 1 : 1;
-
     const pnlInput = parseFloat(document.getElementById('f-pnl').value);
     const entry    = parseFloat(document.getElementById('f-entry').value) || 0;
     const exitVal  = parseFloat(document.getElementById('f-exit').value)  || 0;
@@ -1117,12 +1131,11 @@ async function saveTrade() {
       if (risk > 0) pnl = parseFloat((reward / risk * 100).toFixed(2));
     }
 
-    // Format date for display
     const dateObj = new Date(date + 'T00:00:00');
     const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
 
-    trades.push({
-      id:        newId,
+    const tradeData = {
+      accountId,
       date:      displayDate,
       rawDate:   date,
       pair,
@@ -1139,20 +1152,16 @@ async function saveTrade() {
       timeInPos: document.getElementById('f-time').value,
       outcome:   selectedOutcome,
       pnl,
-      entryImg,
-      exitImg,
       tvLink:    document.getElementById('f-tv').value.trim(),
       notes:     document.getElementById('f-notes').value.trim(),
       rulesFollowed: selectedRules,
-    });
+    };
 
-    try {
-      localStorage.setItem(KEY, JSON.stringify(trades));
-    } catch (storageErr) {
-      // Storage is full even after compression (very large history / very
-      // many photos) — surface this clearly instead of failing silently.
-      throw new Error('Your saved trades are taking up too much storage space to add this one. Try removing an old screenshot from another trade, or save this trade without photos.');
+    // Hand off to the Firestore module (defined in the module script below)
+    if (typeof window.tvSaveTrade !== 'function') {
+      throw new Error('Save is still initialising. Please wait a moment and try again.');
     }
+    await window.tvSaveTrade(accountId, tradeData);
 
     const toast = document.getElementById('toast');
     toast.classList.add('show');
@@ -1173,5 +1182,55 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
 });
 </script>
+<!-- Live account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, listAccounts, resolveSelectedAccount, getSelectedAccountId } from "./tradeva-accounts.js";
+import { createTrade, compressFromInput } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+// Exposed to the page's saveTrade(): compress screenshots, then write to Firestore.
+window.tvSaveTrade = async function (accountId, tradeData) {
+  const images = {
+    entry: await compressFromInput("entry-file"),
+    exit:  await compressFromInput("exit-file")
+  };
+  return await createTrade(accountId, tradeData, images);
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+
+  // ── Populate account dropdown + trade-gating ──
+  let accounts = [];
+  try { accounts = await listAccounts(); } catch (e) { console.error("listAccounts failed", e); }
+
+  const gate = document.getElementById("tvGateBanner");
+  const acctSection = document.getElementById("tvAccountSection");
+  const saveBtn = document.querySelector(".save-btn");
+  const cards = document.querySelectorAll(".section-card");
+  const sel = document.getElementById("f-account");
+
+  if (!accounts.length) {
+    // No accounts → block journaling, show the banner
+    if (gate) gate.style.display = "";
+    if (acctSection) acctSection.style.display = "none";
+    if (saveBtn) saveBtn.style.display = "none";
+    cards.forEach(c => c.style.display = "none");
+    return;
+  }
+
+  // Have accounts → fill the dropdown, auto-select current
+  const current = await resolveSelectedAccount();
+  const currentId = current ? current.id : getSelectedAccountId();
+  if (sel) {
+    sel.innerHTML = accounts.map(a =>
+      `<option value="${a.id}"${a.id===currentId?" selected":""}>${(a.name||"Account").replace(/</g,"&lt;")}</option>`
+    ).join("");
+  }
+})();
+</script>
 </body>
+
 </html>
