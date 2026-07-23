@@ -977,7 +977,9 @@ function buildChartSeries() {
     if (ad !== bd) return ad.localeCompare(bd);            // oldest date first
     const at = ts(a), bt = ts(b);
     if (at !== null && bt !== null && at !== bt) return at - bt;
-    return String(a.id).localeCompare(String(b.id));
+    // _qi is the Firestore newest-first index → higher index = older
+    if (typeof a._qi === 'number' && typeof b._qi === 'number') return b._qi - a._qi;
+    return 0;
   });
 
   const labels = [], equity = [], ddPct = [];
@@ -1124,6 +1126,8 @@ function renderCharts() {
 function computeStats() {
   const trades = (TRADES && TRADES.length) ? TRADES : (DEMO_MODE ? SAMPLE_TRADES : []);
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  // Restore the green/red colouring on stat values (matches the original design)
+  const tone = (id, kind) => { const el = document.getElementById(id); if (el) el.className = 'stat-value' + (kind ? ' ' + kind : ''); };
   const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
 
   if (!trades.length) {
@@ -1153,7 +1157,9 @@ function computeStats() {
   const money  = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
   set('totalTrades', trades.length);
+  tone('totalTrades', '');
   set('winRate', wr + '%');
+  tone('winRate', parseFloat(wr) >= 50 ? 'green' : 'red');
   set('winLoss', wins.length + ' wins · ' + losses.length + ' losses');
 
   const netEl = document.getElementById('netPnl');
@@ -1163,14 +1169,19 @@ function computeStats() {
   const grossLoss = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
   const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
   set('profitFactor', pf === Infinity ? '∞' : pf.toFixed(2));
+  tone('profitFactor', (pf === Infinity || pf >= 1) ? 'green' : 'red');
   set('pfLabel', pf === Infinity ? 'No losses yet' : (pf >= 2 ? 'Excellent' : pf >= 1.5 ? 'Good' : pf >= 1 ? 'Break-even+' : 'Needs work'));
 
   const rrVals = trades.map(t => num(t.rr)).filter(v => v !== 0);
   const avgRR  = rrVals.length ? (rrVals.reduce((s, v) => s + v, 0) / rrVals.length) : 0;
   const netRR  = rrVals.reduce((s, v) => s + v, 0);
   set('avgRR', avgRR.toFixed(2));
+  tone('avgRR', avgRR >= 0 ? 'green' : 'red');
   set('netRR', netRR.toFixed(2));
+  tone('netRR', netRR >= 0 ? 'green' : 'red');
 
+  tone('largestWin', wins.length ? 'green' : '');
+  tone('largestLoss', losses.length ? 'red' : '');
   set('largestWin',  wins.length   ? '+$' + Math.max(...wins.map(t => num(t.pnl))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
   set('largestLoss', losses.length ? '$-' + Math.abs(Math.min(...losses.map(t => num(t.pnl)))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
 
@@ -1183,7 +1194,8 @@ function computeStats() {
     if (ad !== bd) return ad.localeCompare(bd);
     const at = _ts(a), bt = _ts(b);
     if (at !== null && bt !== null && at !== bt) return at - bt;
-    return String(a.id).localeCompare(String(b.id));
+    if (typeof a._qi === 'number' && typeof b._qi === 'number') return b._qi - a._qi;
+    return 0;
   });
   let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
   chron.forEach(t => {
@@ -1192,6 +1204,7 @@ function computeStats() {
     else if (p < 0) { curLose++; curWin = 0; if (curLose > bestLose) bestLose = curLose; }
   });
   set('winStreak', bestWin);
+  tone('winStreak', bestWin > 0 ? 'green' : '');
   set('loseStreak', bestLose);
 
   const byDay = {};
