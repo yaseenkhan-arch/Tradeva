@@ -232,7 +232,7 @@ try {
         </div>
         <div class="qs-label">This Month PnL</div>
         <div class="qs-value green" data-stat="monthPnl" data-count="8240" data-prefix="+$">+$8,240</div>
-        <div class="qs-sub"><span class="trend-up">↑ 12.4%</span> vs last month</div>
+        <div class="qs-sub" data-stat="monthDelta">—</div>
       </div>
       <div class="qs-card">
         <div class="qs-icon accent">
@@ -240,7 +240,7 @@ try {
         </div>
         <div class="qs-label">Best Pair</div>
         <div class="qs-value" data-stat="bestPair">EURUSD</div>
-        <div class="qs-sub">+$18,900 total profit</div>
+        <div class="qs-sub" data-stat="bestPairSub">—</div>
       </div>
       <div class="qs-card">
         <div class="qs-icon accent">
@@ -248,7 +248,7 @@ try {
         </div>
         <div class="qs-label">Best Session</div>
         <div class="qs-value" data-stat="bestSession">London</div>
-        <div class="qs-sub">76% win rate</div>
+        <div class="qs-sub" data-stat="bestSessionSub">—</div>
       </div>
       <div class="qs-card qs-warn">
         <div class="qs-icon warn">
@@ -256,7 +256,7 @@ try {
         </div>
         <div class="qs-label">Needs Attention</div>
         <div class="qs-value red" data-stat="needsAttention">Friday Trading</div>
-        <div class="qs-sub">-$2,380 this range</div>
+        <div class="qs-sub" data-stat="needsAttentionSub">—</div>
       </div>
     </div>
   </section>
@@ -285,7 +285,7 @@ try {
         </div>
         <div class="stat-label-lg">Win Rate</div>
         <div class="stat-value-lg green" data-stat="winRate" data-count="68.4" data-suffix="%">68.4%</div>
-        <div class="stat-desc">158 wins out of 231 trades</div>
+        <div class="stat-desc" data-stat="winRateDesc">—</div>
       </div>
 
       <div class="stat-card-lg">
@@ -364,7 +364,7 @@ try {
             <div class="chart-card-title">Equity Curve</div>
             <div class="chart-card-sub">Cumulative account growth over time</div>
           </div>
-          <span class="insight-pill green-pill">+$47.3k range</span>
+          <span class="insight-pill green-pill" data-stat="equityRange">—</span>
         </div>
         <div class="chart-wrap-lg"><canvas id="equityChart"></canvas></div>
       </div>
@@ -375,7 +375,7 @@ try {
             <div class="chart-card-title">Drawdown Curve</div>
             <div class="chart-card-sub">Peak-to-trough decline over time</div>
           </div>
-          <span class="insight-pill red-pill">-8.4% max</span>
+          <span class="insight-pill red-pill" data-stat="ddMax">—</span>
         </div>
         <div class="chart-wrap-lg"><canvas id="drawdownChart"></canvas></div>
       </div>
@@ -386,7 +386,7 @@ try {
             <div class="chart-card-title">Monthly Performance</div>
             <div class="chart-card-sub">Profit and loss by month</div>
           </div>
-          <span class="insight-pill blue-pill">10 of 12 green</span>
+          <span class="insight-pill blue-pill" data-stat="monthsGreen">—</span>
         </div>
         <div class="chart-wrap-lg"><canvas id="monthlyChart"></canvas></div>
       </div>
@@ -397,7 +397,7 @@ try {
             <div class="chart-card-title">Rolling Win Rate</div>
             <div class="chart-card-sub">30-day rolling win percentage</div>
           </div>
-          <span class="insight-pill blue-pill">Trending up</span>
+          <span class="insight-pill blue-pill" data-stat="wrTrend">—</span>
         </div>
         <div class="chart-wrap-lg"><canvas id="winRateChart"></canvas></div>
       </div>
@@ -418,7 +418,7 @@ try {
         <div class="chart-wrap-md"><canvas id="sessionChart"></canvas></div>
         <div class="insight-box green-box">
           <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
-          <span><strong>London</strong> is your strongest session at 76% win rate — 2.5x more profitable than Asia.</span>
+          <span data-stat="sessionInsight">—</span>
         </div>
       </div>
 
@@ -427,7 +427,7 @@ try {
         <div class="chart-wrap-md"><canvas id="dayOfWeekChart"></canvas></div>
         <div class="insight-box red-box">
           <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
-          <span><strong>Friday</strong> is your only losing day (-$2,380). Consider reducing size or sitting it out.</span>
+          <span data-stat="dayInsight">—</span>
         </div>
       </div>
 
@@ -436,7 +436,7 @@ try {
         <div class="chart-wrap-md"><canvas id="pairsChart"></canvas></div>
         <div class="insight-box green-box">
           <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
-          <span><strong>EURUSD</strong> alone drives 40% of total profit from just 22% of your trades.</span>
+          <span data-stat="pairInsight">—</span>
         </div>
       </div>
 
@@ -448,23 +448,23 @@ try {
               <svg viewBox="0 0 16 16"><polyline points="2,11 6,6 9,9 14,3"/><line x1="14" y1="3" x2="14" y2="6.5"/><line x1="10.5" y1="3" x2="14" y2="3"/></svg>
               Long
             </div>
-            <div class="ls-stat"><span class="ls-num green">71%</span><span class="ls-tag">Win Rate</span></div>
-            <div class="ls-stat"><span class="ls-num green">+$32,100</span><span class="ls-tag">Total PnL</span></div>
-            <div class="ls-stat"><span class="ls-num">142</span><span class="ls-tag">Trades</span></div>
+            <div class="ls-stat"><span class="ls-num green" data-stat="longWR">—</span><span class="ls-tag">Win Rate</span></div>
+            <div class="ls-stat"><span class="ls-num green" data-stat="longPnl">—</span><span class="ls-tag">Total PnL</span></div>
+            <div class="ls-stat"><span class="ls-num" data-stat="longCount">—</span><span class="ls-tag">Trades</span></div>
           </div>
           <div class="ls-col ls-short">
             <div class="ls-col-head">
               <svg viewBox="0 0 16 16"><polyline points="2,5 6,10 9,7 14,13"/><line x1="14" y1="13" x2="14" y2="9.5"/><line x1="10.5" y1="13" x2="14" y2="13"/></svg>
               Short
             </div>
-            <div class="ls-stat"><span class="ls-num green">62%</span><span class="ls-tag">Win Rate</span></div>
-            <div class="ls-stat"><span class="ls-num green">+$15,220</span><span class="ls-tag">Total PnL</span></div>
-            <div class="ls-stat"><span class="ls-num">89</span><span class="ls-tag">Trades</span></div>
+            <div class="ls-stat"><span class="ls-num green" data-stat="shortWR">—</span><span class="ls-tag">Win Rate</span></div>
+            <div class="ls-stat"><span class="ls-num green" data-stat="shortPnl">—</span><span class="ls-tag">Total PnL</span></div>
+            <div class="ls-stat"><span class="ls-num" data-stat="shortCount">—</span><span class="ls-tag">Trades</span></div>
           </div>
         </div>
         <div class="insight-box blue-box">
           <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8.5"/><circle cx="8" cy="11" r="0.7" fill="currentColor" stroke="none"/></svg>
-          <span>You trade <strong>Long setups 60% more</strong> and they're also your higher-conviction trades.</span>
+          <span data-stat="lsInsight">—</span>
         </div>
       </div>
 
@@ -473,7 +473,7 @@ try {
         <div class="heatmap-row" id="heatmapRow"></div>
         <div class="insight-box red-box">
           <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
-          <span><strong>2PM</strong> is consistently your worst hour. Your best window is <strong>9–10AM</strong>.</span>
+          <span data-stat="timeInsight">—</span>
         </div>
       </div>
 
@@ -515,14 +515,14 @@ try {
         <div class="metric-card">
           <div class="metric-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,9.5"/></svg></div>
           <div class="metric-label">Average Holding Time</div>
-          <div class="metric-value">2h 14m</div>
-          <div class="metric-sub">Across all closed trades</div>
+          <div class="metric-value" data-stat="avgHold">—</div>
+          <div class="metric-sub" data-stat="avgHoldSub">Across all closed trades</div>
         </div>
         <div class="metric-card">
           <div class="metric-icon"><svg viewBox="0 0 16 16"><path d="M8 1.5L2 4.5v4c0 4 2.5 6.5 6 8 3.5-1.5 6-4 6-8v-4z"/></svg></div>
           <div class="metric-label">Average Risk Per Trade</div>
-          <div class="metric-value">1.2%</div>
-          <div class="metric-sub">≈ $620 per position</div>
+          <div class="metric-value" data-stat="avgRisk">—</div>
+          <div class="metric-sub" data-stat="avgRiskSub">—</div>
         </div>
       </div>
 
@@ -549,23 +549,23 @@ try {
     <div class="breakdown-summary-grid">
       <div class="stat-card-sm">
         <div class="stat-label-sm">Largest Win</div>
-        <div class="stat-value-sm green">+$2,250</div>
-        <div class="stat-sub-sm">XAUUSD · Jun 16</div>
+        <div class="stat-value-sm green" data-stat="bdLargestWin">—</div>
+        <div class="stat-sub-sm" data-stat="bdLargestWinSub">—</div>
       </div>
       <div class="stat-card-sm">
         <div class="stat-label-sm">Largest Loss</div>
-        <div class="stat-value-sm red">-$750</div>
-        <div class="stat-sub-sm">EURUSD · May 14</div>
+        <div class="stat-value-sm red" data-stat="bdLargestLoss">—</div>
+        <div class="stat-sub-sm" data-stat="bdLargestLossSub">—</div>
       </div>
       <div class="stat-card-sm">
         <div class="stat-label-sm">Highest RR Trade</div>
-        <div class="stat-value-sm">3.1R</div>
-        <div class="stat-sub-sm">XAUUSD · May 22</div>
+        <div class="stat-value-sm" data-stat="bdHighestRR">—</div>
+        <div class="stat-sub-sm" data-stat="bdHighestRRSub">—</div>
       </div>
       <div class="stat-card-sm">
         <div class="stat-label-sm">Most Profitable Pair</div>
-        <div class="stat-value-sm accent-text">EURUSD</div>
-        <div class="stat-sub-sm">+$18,900 total</div>
+        <div class="stat-value-sm accent-text" data-stat="bdBestPair">—</div>
+        <div class="stat-sub-sm" data-stat="bdBestPairSub">—</div>
       </div>
     </div>
 
@@ -621,7 +621,7 @@ try {
             <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
             Strengths
           </div>
-          <ul class="edge-list">
+          <ul class="edge-list" id="strengthsList">
             <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>London Session</li>
             <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>EURUSD</li>
             <li><svg viewBox="0 0 14 14"><polyline points="2,7 5.5,10.5 12,3"/></svg>Tuesday</li>
@@ -633,7 +633,7 @@ try {
             <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
             Needs Improvement
           </div>
-          <ul class="edge-list edge-list-improve">
+          <ul class="edge-list edge-list-improve" id="weaknessList">
             <li><span class="bullet-dot"></span>Friday trading</li>
             <li><span class="bullet-dot"></span>Gold (XAUUSD volatility)</li>
             <li><span class="bullet-dot"></span>Afternoon trades</li>
