@@ -731,52 +731,52 @@ try {
   <div class="stats-grid" style="margin-bottom:24px;">
     <div class="stat-card">
       <div class="stat-label">Total Trades</div>
-      <div class="stat-value" id="totalTrades">17</div>
-      <div class="stat-sub" id="profitableDays">15 profitable days</div>
+      <div class="stat-value" id="totalTrades">—</div>
+      <div class="stat-sub" id="profitableDays">&nbsp;</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Win Rate</div>
-      <div class="stat-value green" id="winRate">88.2%</div>
-      <div class="stat-sub" id="winLoss">15 wins · 2 losses</div>
+      <div class="stat-value" id="winRate">—</div>
+      <div class="stat-sub" id="winLoss">&nbsp;</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Profit Factor</div>
-      <div class="stat-value green" id="profitFactor">14.69</div>
-      <div class="stat-sub">Excellent</div>
+      <div class="stat-value" id="profitFactor">—</div>
+      <div class="stat-sub" id="pfLabel">—</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Average RR</div>
-      <div class="stat-value green" id="avgRR">2.08</div>
+      <div class="stat-value" id="avgRR">—</div>
       <div class="stat-sub">per trade</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Net RR</div>
-      <div class="stat-value green" id="netRR">35.38</div>
+      <div class="stat-value" id="netRR">—</div>
       <div class="stat-sub">cumulative RR earned</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Net PnL</div>
-      <div class="stat-value green" id="netPnl">+$14,370</div>
-      <div class="stat-sub">Max drawdown: $750</div>
+      <div class="stat-value" id="netPnl">—</div>
+      <div class="stat-sub" id="maxDD">Max drawdown: —</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Largest Win</div>
-      <div class="stat-value green" id="largestWin">+$2,250</div>
+      <div class="stat-value" id="largestWin">—</div>
       <div class="stat-sub">best single trade</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Largest Loss</div>
-      <div class="stat-value red" id="largestLoss">$−750</div>
+      <div class="stat-value" id="largestLoss">—</div>
       <div class="stat-sub">worst single trade</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Winning Streak</div>
-      <div class="stat-value green" id="winStreak">12</div>
-      <div class="stat-sub">Current: 12 in a row</div>
+      <div class="stat-value" id="winStreak">—</div>
+      <div class="stat-sub" id="winStreakSub">best run</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Losing Streak</div>
-      <div class="stat-value" id="loseStreak">1</div>
+      <div class="stat-value" id="loseStreak">—</div>
       <div class="stat-sub">max consecutive losses</div>
     </div>
   </div>
@@ -895,12 +895,18 @@ applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
 
 /* ── TRADE STORE (filled from Firestore by the module below) ── */
 let TRADES = [];        // real trades for the selected account
-let DEMO_MODE = true;   // true until the account has its first real trade
+let DEMO_MODE = false;  // set by the loader: true only when the account has no trades yet
+let DATA_READY = false; // nothing renders until Firestore answers (prevents demo flash)
+let ACCOUNT = null;     // the selected trading account
+let START_BALANCE = 0;  // account starting balance — drawdown is measured against equity, not profit
 
 /* Called by the Firestore module once data arrives */
-window.__tvSetDashboardTrades = function (rows) {
+window.__tvSetDashboardTrades = function (rows, account) {
   TRADES = Array.isArray(rows) ? rows : [];
+  ACCOUNT = account || null;
+  START_BALANCE = account && Number(account.startingBalance) > 0 ? Number(account.startingBalance) : 0;
   DEMO_MODE = TRADES.length === 0;      // demo disappears permanently once a trade exists
+  DATA_READY = true;
   const badge = document.getElementById('demoBadge');
   if (badge) badge.style.display = DEMO_MODE ? '' : 'none';
   renderTrades();
@@ -931,18 +937,21 @@ function renderTrades() {
     return;
   }
 
-  const fmt = v =>
-    (v >= 0 ? '+' : '') +
-    '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = v => {
+    const n = (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
+    return (n >= 0 ? '+$' : '-$') +
+      Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   tbody.innerHTML = trades.slice(0, 10).map(t => {
     const isLong = t.dir === 'Long';
-    const pos    = t.pnl >= 0;
+    const pnlNum = (typeof t.pnl === 'number' && !isNaN(t.pnl)) ? t.pnl : (parseFloat(t.pnl) || 0);
+    const pos    = pnlNum >= 0;
     return `<tr>
       <td class="td-date">${t.date}</td>
       <td class="td-pair">${t.pair}</td>
       <td><span class="dir-badge ${isLong ? 'dir-long' : 'dir-short'}">${isLong ? '▲' : '▼'} ${t.dir}</span></td>
-      <td class="td-session">${t.session}</td>
+      <td class="td-session">${t.session || '—'}</td>
       <td class="${pos ? 'pnl-pos' : 'pnl-neg'}">${fmt(t.pnl)}</td>
     </tr>`;
   }).join('');
@@ -958,15 +967,34 @@ function buildChartSeries() {
   const src = (TRADES && TRADES.length) ? TRADES : [];
   if (!src.length) return null;
   const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
-  const chron = [...src].reverse();   // our store is newest-first
+
+  // Sort oldest → newest explicitly (don't trust incoming order).
+  const ts = t => (t.createdAt && typeof t.createdAt.seconds === 'number')
+    ? t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3
+    : null;
+  const chron = [...src].sort((a, b) => {
+    const ad = a.rawDate || '', bd = b.rawDate || '';
+    if (ad !== bd) return ad.localeCompare(bd);            // oldest date first
+    const at = ts(a), bt = ts(b);
+    if (at !== null && bt !== null && at !== bt) return at - bt;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
   const labels = [], equity = [], ddPct = [];
-  let cum = 0, peak = 0;
+  // Drawdown is measured on ACCOUNT EQUITY (starting balance + cumulative P&L),
+  // not on profit alone. With a 100k account, +3000 then -1000 leaves you at
+  // 102k — still above the 103k peak by only ~1%, and never below your start.
+  const base = START_BALANCE > 0 ? START_BALANCE : 0;
+  let cum = 0;
+  let peakEq = base;            // peak equity starts at the opening balance
   chron.forEach(t => {
     cum += num(t.pnl);
-    if (cum > peak) peak = cum;
+    const eq = base + cum;                 // current account equity
+    if (eq > peakEq) peakEq = eq;          // peak only ever rises
     labels.push(t.date || t.rawDate || '');
-    equity.push(Math.round(cum * 100) / 100);
-    const dd = peak > 0 ? ((cum - peak) / peak) * 100 : 0;
+    // The growth chart plots equity when we know the balance, else cumulative P&L
+    equity.push(Math.round((base > 0 ? eq : cum) * 100) / 100);
+    const dd = peakEq > 0 ? ((eq - peakEq) / peakEq) * 100 : 0;
     ddPct.push(Math.round(dd * 100) / 100);
   });
   return { labels, equity, ddPct };
@@ -1027,7 +1055,13 @@ function renderCharts() {
           ticks: {
             color: tickCol,
             font: { size: 11 },
-            callback: v => '$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)
+            callback: v => {
+              const a = Math.abs(v);
+              const sign = v < 0 ? '-' : '';
+              if (a >= 10000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
+              if (a >= 1000)  return sign + '$' + (a / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+              return sign + '$' + Math.round(a);
+            }
           }
         }
       }
@@ -1104,6 +1138,9 @@ function computeStats() {
     set('loseStreak', '0');
     set('winLoss', '0 wins · 0 losses');
     set('profitableDays', '0 profitable days');
+    set('pfLabel', '—');
+    set('maxDD', 'Max drawdown: —');
+    set('winStreakSub', 'best run');
     const n0 = document.getElementById('netPnl');
     if (n0) { n0.textContent = '$0'; n0.className = 'stat-value'; }
     return;
@@ -1126,6 +1163,7 @@ function computeStats() {
   const grossLoss = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
   const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
   set('profitFactor', pf === Infinity ? '∞' : pf.toFixed(2));
+  set('pfLabel', pf === Infinity ? 'No losses yet' : (pf >= 2 ? 'Excellent' : pf >= 1.5 ? 'Good' : pf >= 1 ? 'Break-even+' : 'Needs work'));
 
   const rrVals = trades.map(t => num(t.rr)).filter(v => v !== 0);
   const avgRR  = rrVals.length ? (rrVals.reduce((s, v) => s + v, 0) / rrVals.length) : 0;
@@ -1136,7 +1174,17 @@ function computeStats() {
   set('largestWin',  wins.length   ? '+$' + Math.max(...wins.map(t => num(t.pnl))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
   set('largestLoss', losses.length ? '$-' + Math.abs(Math.min(...losses.map(t => num(t.pnl)))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
 
-  const chron = [...trades].reverse();
+  // Oldest → newest, explicitly sorted (streaks and drawdown depend on true order)
+  const _ts = t => (t.createdAt && typeof t.createdAt.seconds === 'number')
+    ? t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3
+    : null;
+  const chron = [...trades].sort((a, b) => {
+    const ad = a.rawDate || '', bd = b.rawDate || '';
+    if (ad !== bd) return ad.localeCompare(bd);
+    const at = _ts(a), bt = _ts(b);
+    if (at !== null && bt !== null && at !== bt) return at - bt;
+    return String(a.id).localeCompare(String(b.id));
+  });
   let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
   chron.forEach(t => {
     const p = num(t.pnl);
@@ -1149,6 +1197,25 @@ function computeStats() {
   const byDay = {};
   trades.forEach(t => { const d = t.rawDate || t.date || ''; if (!d) return; byDay[d] = (byDay[d] || 0) + num(t.pnl); });
   set('profitableDays', Object.values(byDay).filter(v => v > 0).length + ' profitable days');
+
+  // Max drawdown: largest peak-to-trough drop. The dollar amount is the same
+  // whether measured on equity or profit (the base cancels), but the % is only
+  // meaningful against account equity, so we use the starting balance when known.
+  const ddBase = (typeof START_BALANCE === 'number' && START_BALANCE > 0) ? START_BALANCE : 0;
+  let runEq = ddBase, runPeak = ddBase, maxDD = 0, maxDDPct = 0;
+  chron.forEach(t => {
+    runEq += num(t.pnl);
+    if (runEq > runPeak) runPeak = runEq;
+    const dd = runPeak - runEq;
+    if (dd > maxDD) {
+      maxDD = dd;
+      maxDDPct = runPeak > 0 ? (dd / runPeak) * 100 : 0;
+    }
+  });
+  set('maxDD', maxDD > 0
+    ? 'Max drawdown: $' + Math.round(maxDD).toLocaleString('en-US') + (ddBase > 0 ? ' (' + maxDDPct.toFixed(2) + '%)' : '')
+    : 'Max drawdown: —');
+  set('winStreakSub', bestWin > 0 ? 'best run of ' + bestWin : 'best run');
 }
 
 /* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
@@ -1199,9 +1266,9 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
   await initAccountSwitcher();
   try {
     const acc = await resolveSelectedAccount();
-    if (!acc) { window.__tvSetDashboardTrades([]); return; }   // no account → demo view
+    if (!acc) { window.__tvSetDashboardTrades([], null); return; }   // no account → demo view
     const rows = await listTrades(acc.id);
-    window.__tvSetDashboardTrades(rows);
+    window.__tvSetDashboardTrades(rows, acc);
   } catch (e) {
     console.error("Dashboard load failed:", e);
     window.__tvSetDashboardTrades([]);
