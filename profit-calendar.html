@@ -236,47 +236,77 @@ body {
 .weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
 .weekday-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; padding-bottom: 4px; transition: color var(--t) var(--ease); }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
 .day-cell {
-  position: relative; border-radius: 12px; border: 1px solid var(--border);
-  background: var(--bg-card); padding: 10px 8px; min-height: 92px;
-  display: flex; flex-direction: column; cursor: pointer;
-  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease), background var(--t) var(--ease), outline-color var(--t) var(--ease);
-  outline: 2px solid transparent; outline-offset: -2px;
+  position: relative; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--bg-card); padding: 12px 12px 11px; min-height: 104px;
+  display: flex; flex-direction: column; cursor: pointer; overflow: hidden;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease),
+              border-color var(--t) var(--ease), background var(--t) var(--ease);
 }
-.day-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); outline-color: var(--accent); }
-.day-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
-.day-cell.empty:hover { transform: none; box-shadow: none; outline-color: transparent; }
+.day-cell::after {
+  /* subtle accent strip on traded days */
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: transparent; transition: background var(--t) var(--ease);
+}
+.day-cell:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--text-faint); }
+.day-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; box-shadow: none; }
+.day-cell.empty:hover { transform: none; box-shadow: none; }
 .day-cell.no-trade { background: var(--bg-page); }
-.day-cell.win-day { background: var(--green-bg); border-color: var(--green-border); }
-.day-cell.loss-day { background: var(--red-bg); border-color: var(--red-border); }
-.day-cell.is-today { outline: 2px solid var(--accent); outline-offset: -2px; }
+.day-cell.no-trade .day-num { opacity: 0.55; }
 
+.day-cell.win-day  { background: var(--green-bg); border-color: var(--green-border); }
+.day-cell.loss-day { background: var(--red-bg);   border-color: var(--red-border); }
+.day-cell.flat-day { background: var(--bg-page); }
+.day-cell.win-day::after  { background: var(--green); }
+.day-cell.loss-day::after { background: var(--red); }
+.day-cell.is-today { box-shadow: 0 0 0 2px var(--accent) inset; }
+
+.day-top { display: flex; align-items: center; justify-content: space-between; }
 .day-num { font-size: 12px; font-weight: 700; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.day-cell.win-day .day-num { color: var(--green); }
+.day-cell.win-day  .day-num { color: var(--green); }
 .day-cell.loss-day .day-num { color: var(--red); }
-.day-primary { font-size: 15px; font-weight: 800; margin-top: 6px; color: var(--text-primary); letter-spacing: -0.2px; transition: color var(--t) var(--ease); }
-.day-cell.win-day .day-primary { color: var(--green); }
-.day-cell.loss-day .day-primary { color: var(--red); }
-.day-meta { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
-.day-trades { font-size: 10px; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.day-winrate { font-size: 10px; font-weight: 600; color: var(--text-faint); transition: color var(--t) var(--ease); }
+.today-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 
-/* ── Weekly summary sidebar ── */
-.weekly-sidebar { display: flex; flex-direction: column; gap: 12px; }
-.week-card {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
-  padding: 14px 16px; box-shadow: var(--shadow-card);
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+/* Hero P&L — the number the eye should land on first */
+.day-primary {
+  font-size: 19px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1;
+  margin-top: 10px; color: var(--text-primary); transition: color var(--t) var(--ease);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.day-cell.win-day  .day-primary { color: var(--green); }
+.day-cell.loss-day .day-primary { color: var(--red); }
+
+.day-meta { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 7px; }
+.day-trades { font-size: 10.5px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.day-winrate { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: rgba(0,0,0,0.05); color: var(--text-muted); }
+[data-theme="dark"] .day-winrate { background: rgba(255,255,255,0.08); }
+.day-cell.win-day  .day-winrate { background: rgba(16,185,129,0.16); color: var(--green); }
+.day-cell.loss-day .day-winrate { background: rgba(239,68,68,0.16); color: var(--red); }
+
+/* ── Weekly summary rail ── */
+.weekly-sidebar { display: flex; flex-direction: column; gap: 10px; }
+.week-card {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow-card); overflow: hidden;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease),
+              box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.week-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--border); transition: background var(--t) var(--ease);
+}
+.week-card.pos::before { background: var(--green); }
+.week-card.neg::before { background: var(--red); }
 .week-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-.week-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 10px; transition: color var(--t) var(--ease); }
-.week-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
-.week-row:last-child { margin-bottom: 0; }
-.week-row-label { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.week-row-value { font-size: 12.5px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
-.week-row-value.green { color: var(--green); }
-.week-row-value.red { color: var(--red); }
+.week-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.week-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+.week-days { font-size: 10px; font-weight: 600; color: var(--text-faint); }
+.week-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); line-height: 1.1; transition: color var(--t) var(--ease); }
+.week-value.green { color: var(--green); }
+.week-value.red { color: var(--red); }
+.week-sub { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.week-chip { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--bg-page); border: 1px solid var(--border); color: var(--text-muted); }
 
 /* ══════════════════════════════════════════════════════════
    DAY DETAIL DRAWER
@@ -419,7 +449,9 @@ body {
   .weekly-sidebar { grid-template-columns: repeat(2, 1fr); }
   .day-cell { min-height: 72px; padding: 7px 6px; border-radius: 9px; }
   .day-num { font-size: 10.5px; }
-  .day-primary { font-size: 12px; margin-top: 4px; }
+  .day-primary { font-size: 13px; margin-top: 5px; }
+  .day-meta { padding-top: 5px; gap: 5px; }
+  .week-value { font-size: 17px; }
   .day-trades, .day-winrate { font-size: 8.5px; }
   .calendar-grid, .weekday-row { gap: 5px; }
   .month-label { min-width: 100px; font-size: 13px; }
@@ -545,9 +577,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -873,16 +905,25 @@ const CALENDAR_SAMPLE_TRADES = [
   { id: 16, rawDate: '2026-06-30', date: 'Jun 30, 2026', pair: 'USDCHF', dir: 'Short', rr: 2.0, pnl: 980,   outcome: 'Win',  session: 'London',   notes: 'Strong close to the month.' },
 ];
 
+/* Trades come from Firestore (selected account) via the module at the
+   bottom of this page. Demo data shows only until the first real trade. */
+let TRADES = [];
+let DEMO_MODE = false;
+let DATA_READY = false;
+
 function getAllTrades() {
-  const stored = localStorage.getItem('tradeva_trades');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
-    } catch (e) {}
-  }
-  return CALENDAR_SAMPLE_TRADES;
+  if (TRADES && TRADES.length) return TRADES;
+  return DEMO_MODE ? CALENDAR_SAMPLE_TRADES : [];
 }
+
+/* Called by the Firestore module once trades arrive */
+window.__tvSetCalendarTrades = function (rows) {
+  TRADES = Array.isArray(rows) ? rows : [];
+  DEMO_MODE = TRADES.length === 0;
+  DATA_READY = true;
+  initViewDate();
+  renderAll();
+};
 
 /* Parse a trade's date into a Date object.
    Handles both rawDate (yyyy-mm-dd, from trades-new.html) and
@@ -917,9 +958,15 @@ function initViewDate() {
     const d = parseTradeDate(t);
     return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   });
-  if (hasThisMonth || trades !== CALENDAR_SAMPLE_TRADES) {
-    viewYear = now.getFullYear();
-    viewMonth = now.getMonth();
+  // Jump to the current month when the user has real trades; otherwise
+  // land on whatever month their most recent trade lives in.
+  if (TRADES && TRADES.length) {
+    if (hasThisMonth) { viewYear = now.getFullYear(); viewMonth = now.getMonth(); }
+    else {
+      let latest = null;
+      TRADES.forEach(t => { const d = parseTradeDate(t); if (d && (!latest || d > latest)) latest = d; });
+      if (latest) { viewYear = latest.getFullYear(); viewMonth = latest.getMonth(); }
+    }
   }
 }
 
@@ -1032,15 +1079,21 @@ function renderCalendar() {
     if (data) {
       const isWin = data.pnl > 0;
       const isLoss = data.pnl < 0;
-      cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'no-trade');
-      const winRate = Math.round(data.wins / data.trades.length * 100);
+      cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'flat-day');
+      const n = data.trades.length;
+      const winRate = Math.round(data.wins / n * 100);
       inner = `
-        <span class="day-num">${day}</span>
-        <span class="day-primary">${primaryValue(data.pnl, data.rr)}</span>
+        <div class="day-top">
+          <span class="day-num">${day}</span>
+          ${isToday ? '<span class="today-dot"></span>' : ''}
+        </div>
+        <div class="day-primary">${primaryValue(data.pnl, data.rr)}</div>
         <div class="day-meta">
-          <span class="day-trades">${data.trades.length} Trade${data.trades.length > 1 ? 's' : ''}</span>
+          <span class="day-trades">${n} trade${n > 1 ? 's' : ''}</span>
           <span class="day-winrate">${winRate}%</span>
         </div>`;
+    } else {
+      inner = `<div class="day-top"><span class="day-num">${day}</span>${isToday ? '<span class="today-dot"></span>' : ''}</div>`;
     }
     if (isToday) cls += ' is-today';
     cells += `<div class="${cls}" onclick="openDrawer(${day})" title="${MONTH_NAMES[viewMonth]} ${day}">${inner}</div>`;
@@ -1086,12 +1139,18 @@ function renderWeekly() {
     });
     const winRate = count ? Math.round(wins / count * 100) : 0;
     const pnlCls = pnl > 0 ? 'green' : pnl < 0 ? 'red' : '';
-    return `<div class="week-card">
-      <div class="week-title">Week ${i + 1}</div>
-      <div class="week-row"><span class="week-row-label">Profit</span><span class="week-row-value ${pnlCls}">${count ? primaryValue(pnl, rr) : '—'}</span></div>
-      <div class="week-row"><span class="week-row-label">RR</span><span class="week-row-value">${count ? fmtRR(rr) : '—'}</span></div>
-      <div class="week-row"><span class="week-row-label">Trades</span><span class="week-row-value">${count}</span></div>
-      <div class="week-row"><span class="week-row-label">Win Rate</span><span class="week-row-value">${count ? winRate + '%' : '—'}</span></div>
+    const cardCls = 'week-card' + (pnl > 0 ? ' pos' : pnl < 0 ? ' neg' : '');
+    const activeDays = days.filter(d => dayMap[d]).length;
+    return `<div class="${cardCls}">
+      <div class="week-head">
+        <span class="week-title">Week ${i + 1}</span>
+        <span class="week-days">${activeDays}d</span>
+      </div>
+      <div class="week-value ${pnlCls}">${count ? primaryValue(pnl, rr) : '$0'}</div>
+      <div class="week-sub">
+        <span class="week-chip">${count} trade${count === 1 ? '' : 's'}</span>
+        ${count ? `<span class="week-chip">${winRate}% WR</span>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -1337,11 +1396,32 @@ function renderAll() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  initViewDate();
   populateMonthYearSelects();
-  renderAll();
+  // calendar renders once Firestore trades arrive (see module below)
 });
 
 </script>
+<!-- Calendar data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  try {
+    const acc = await resolveSelectedAccount();
+    if (!acc) { window.__tvSetCalendarTrades([]); return; }
+    const rows = await listTrades(acc.id);
+    window.__tvSetCalendarTrades(rows);
+  } catch (e) {
+    console.error("Calendar load failed:", e);
+    window.__tvSetCalendarTrades([]);
+  }
+})();
+</script>
 </body>
+
 </html>
