@@ -849,14 +849,47 @@ function loadProfileSidebar() {
    STORAGE READERS (read-only from other modules)
 ══════════════════════════════════════════════════════════ */
 const REVIEWS_KEY = 'tradeva_reviews';
-function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
-function getTrades()          { return readJSON('tradeva_trades', []) || []; }
-function getPlans()           { return readJSON('tradeva_weekly_plans', []) || []; }
-function getMoodEntries()     { return readJSON('tradeva_mood_entries', []) || []; }
-function getDisciplineEntries(){ return readJSON('tradeva_discipline_entries', []) || []; }
-function getDisciplineRules() { return readJSON('tradeva_discipline_rules', []) || []; }
-function getReviews()         { return readJSON(REVIEWS_KEY, []) || []; }
-function setReviews(r)        { localStorage.setItem(REVIEWS_KEY, JSON.stringify(r)); }
+/* ══════════════════════════════════════════════════════════
+   DATA STORE (Firestore-backed)
+
+   Reviews is the capstone page: it WRITES its own reviews and READS
+   every other module to build each period's summary. All six sources
+   now come from Firestore, scoped to the selected trading account:
+
+     reviews    -> users/{uid}/accounts/{id}/reviews/{reviewId}
+     trades     -> users/{uid}/accounts/{id}/trades/{tradeId}
+     plans      -> users/{uid}/accounts/{id}/plans/{planId}
+     mood       -> users/{uid}/accounts/{id}/mood/{entryId}
+     discipline -> users/{uid}/accounts/{id}/discipline/{entryId}
+     rules      -> users/{uid}/accounts/{id}/settings/discipline
+
+   The module at the bottom loads everything and calls __tvSetReviewData().
+══════════════════════════════════════════════════════════ */
+let TRADES = [], PLANS = [], MOOD = [], DISCIPLINE = [], DISC_RULES = [], REVIEWS = [];
+let ACCOUNT_ID = null;
+let DATA_READY = false;
+
+function getTrades()           { return TRADES; }
+function getPlans()            { return PLANS; }
+function getMoodEntries()      { return MOOD; }
+function getDisciplineEntries(){ return DISCIPLINE; }
+function getDisciplineRules()  { return DISC_RULES; }
+function getReviews()          { return REVIEWS; }
+function setReviews(r)         { REVIEWS = r; }   // legacy mirror
+
+/* Called by the Firestore module once every source has loaded */
+window.__tvSetReviewData = function (d) {
+  TRADES     = Array.isArray(d.trades)     ? d.trades     : [];
+  PLANS      = Array.isArray(d.plans)      ? d.plans      : [];
+  MOOD       = Array.isArray(d.mood)       ? d.mood       : [];
+  DISCIPLINE = Array.isArray(d.discipline) ? d.discipline : [];
+  DISC_RULES = Array.isArray(d.rules)      ? d.rules      : [];
+  REVIEWS    = Array.isArray(d.reviews)    ? d.reviews    : [];
+  ACCOUNT_ID = d.accountId || null;
+  DATA_READY = true;
+  renderAll();
+  renderHistory();
+};
 
 /* Mood category scale metadata (mirrors Mood Tracker) */
 const MOOD_CATS = [
@@ -1443,18 +1476,14 @@ async function saveReview() {
       actionPlan: JSON.parse(JSON.stringify(actionPlan)),
     };
 
-    if (editingReviewId) {
-      const idx = reviews.findIndex(x => x.id === editingReviewId);
-      if (idx !== -1) { data.id = editingReviewId; reviews[idx] = data; }
-      editingReviewId = null;
-      showToast('Review updated!', true);
-    } else {
-      data.id = reviews.length ? Math.max(...reviews.map(x => x.id || 0)) + 1 : 1;
-      reviews.unshift(data);
-      showToast('Review saved!', true);
+    if (typeof window.__tvSaveReview !== 'function') {
+      throw new Error('Still loading — please try again in a moment.');
     }
-    setReviews(reviews);
-    renderHistory();
+    const wasEditing = !!editingReviewId;
+    await window.__tvSaveReview(editingReviewId, data);
+    editingReviewId = null;
+    showToast(wasEditing ? 'Review updated!' : 'Review saved!', true);
+    // __tvSaveReview refreshes REVIEWS and re-renders
     resetReflection();
   } catch (err) {
     console.error('Save review failed:', err);
@@ -1503,9 +1532,16 @@ function viewReview(id) {
 }
 function deleteReview(id) {
   if (!confirm('Delete this review? This cannot be undone.')) return;
-  setReviews(getReviews().filter(x => x.id !== id));
-  renderHistory();
-  showToast('Review deleted.', true);
+  (async () => {
+    try {
+      if (typeof window.__tvDeleteReview !== 'function') throw new Error('Still loading — try again in a moment.');
+      await window.__tvDeleteReview(id);
+      showToast('Review deleted.', true);
+    } catch (e) {
+      console.error('Delete review failed:', e);
+      showToast(e.message || 'Could not delete this review.', false);
+    }
+  })();
 }
 
 function renderHistory() {
@@ -1538,9 +1574,9 @@ function renderHistory() {
         <div class="review-card-stat"><div class="review-card-stat-val">${rv.winRate}%</div><div class="review-card-stat-label">Win Rate</div></div>
       </div>
       <div class="review-card-actions">
-        <button class="review-action-btn primary" onclick="viewReview(${rv.id})">View</button>
-        <button class="review-action-btn" onclick="editReview(${rv.id})">Edit</button>
-        <button class="review-action-btn danger" onclick="deleteReview(${rv.id})">Delete</button>
+        <button class="review-action-btn primary" onclick="viewReview('${rv.id}')">View</button>
+        <button class="review-action-btn" onclick="editReview('${rv.id}')">Edit</button>
+        <button class="review-action-btn danger" onclick="deleteReview('${rv.id}')">Delete</button>
       </div>
     </div>`;
   }).join('') + '</div>';
@@ -1566,11 +1602,70 @@ function showToast(msg, success) {
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
   renderActions();
-  renderAll();
-  renderHistory();
   setTimeout(moveGlider, 60);
+  // summaries + history render once Firestore data arrives (module below)
 });
 window.addEventListener('resize', moveGlider);
+</script>
+
+<!-- Review data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+import { listEntries, createEntry, updateEntry,
+         deleteEntry as fsDeleteEntry, getSettings } from "./tradeva-journal.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+let ACC = null;
+
+/* Pull every source in parallel — this page summarises all of them */
+async function refresh() {
+  if (!ACC) {
+    window.__tvSetReviewData({ trades: [], plans: [], mood: [], discipline: [], rules: [], reviews: [], accountId: null });
+    return;
+  }
+  const [trades, plans, mood, discipline, settings, reviews] = await Promise.all([
+    listTrades(ACC.id),
+    listEntries(ACC.id, "plans"),
+    listEntries(ACC.id, "mood"),
+    listEntries(ACC.id, "discipline"),
+    getSettings(ACC.id, "discipline", {}),
+    listEntries(ACC.id, "reviews")
+  ]);
+  window.__tvSetReviewData({
+    trades, plans, mood, discipline,
+    rules: settings.rules || [],
+    reviews,
+    accountId: ACC.id
+  });
+}
+
+/* Create when id is null, otherwise update in place */
+window.__tvSaveReview = async function (id, data) {
+  if (!ACC) throw new Error("Create a trading account in Settings first.");
+  if (id) await updateEntry(ACC.id, "reviews", id, data);
+  else await createEntry(ACC.id, "reviews", data);
+  await refresh();
+};
+
+window.__tvDeleteReview = async function (id) {
+  if (!ACC) throw new Error("No trading account selected.");
+  await fsDeleteEntry(ACC.id, "reviews", id);
+  await refresh();
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  try {
+    ACC = await resolveSelectedAccount();
+    await refresh();
+  } catch (e) {
+    console.error("Reviews load failed:", e);
+    window.__tvSetReviewData({ trades: [], plans: [], mood: [], discipline: [], rules: [], reviews: [], accountId: null });
+  }
+})();
 </script>
 </body>
 </html>
