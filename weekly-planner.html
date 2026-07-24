@@ -347,6 +347,24 @@ textarea.lg { min-height: 120px; }
 </style>
 </head>
 <body>
+<!-- ══ TRADEVA AUTH GUARD (injected — do not duplicate) ══ -->
+<style>
+@keyframes tvspin{to{transform:rotate(360deg);}}
+body.tv-guarding{visibility:hidden;}
+#tvAuthLoading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#F8FAFC;visibility:visible;}
+html[data-theme="dark"] #tvAuthLoading{background:#080C14;}
+body.tv-ready #tvAuthLoading{display:none;}
+</style>
+<div id="tvAuthLoading"><div style="width:34px;height:34px;border-radius:50%;border:3px solid rgba(59,130,246,0.25);border-top-color:#3B82F6;animation:tvspin .7s linear infinite;"></div></div>
+<script>document.body.classList.add("tv-guarding");</script>
+<script type="module">
+import { requireAuth } from "./tradeva-firebase.js";
+try { const user = await requireAuth(); window.tradevaUser = user; }
+catch (e) { console.error("Auth guard error:", e); }
+finally { document.body.classList.remove("tv-guarding"); document.body.classList.add("tv-ready"); }
+</script>
+<!-- ══ END AUTH GUARD ══ -->
+
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -889,11 +907,25 @@ function defaultWeekStart() {
 /* ══════════════════════════════════════════════════════════
    STORAGE / CRUD
 ══════════════════════════════════════════════════════════ */
-function getPlans() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch (e) { return []; }
-}
-function setPlans(plans) { localStorage.setItem(STORAGE_KEY, JSON.stringify(plans)); }
+/* Plans live in Firestore under the selected account:
+     users/{uid}/accounts/{accountId}/plans/{planId}
+   PLANS is the in-memory mirror the UI reads; the module at the bottom
+   of this page loads it and calls window.__tvSetPlans(). */
+let PLANS = [];
+let ACCOUNT_ID = null;
+let DATA_READY = false;
+
+function getPlans() { return PLANS; }
+function setPlans(plans) { PLANS = plans; }   // legacy mirror
+
+/* Called by the Firestore module once plans arrive */
+window.__tvSetPlans = function (rows, accountId) {
+  PLANS = Array.isArray(rows) ? rows : [];
+  ACCOUNT_ID = accountId || null;
+  DATA_READY = true;
+  renderPlans();
+  autoLoadActivePlan();
+};
 
 function collectFormData() {
   return {
@@ -958,25 +990,25 @@ async function savePlan() {
     const jan1 = new Date(start.getFullYear(), 0, 1);
     const weekNum = Math.ceil(((start - jan1) / 86400000 + jan1.getDay() + 1) / 7);
 
-    if (editingPlanId) {
-      const idx = plans.findIndex(p => p.id === editingPlanId);
-      if (idx !== -1) plans[idx] = { ...plans[idx], ...data, rangeLabel: fmt(start) + ' → ' + fmt(end), weekNum };
-      editingPlanId = null;
-    } else {
-      const newId = plans.length ? Math.max(...plans.map(p => p.id || 0)) + 1 : 1;
-      plans.unshift({
-        id: newId,
-        ...data,
-        rangeLabel: fmt(start) + ' → ' + fmt(end),
-        weekNum,
-        finalRR: null,
-        createdAt: new Date().toISOString(),
-      });
+    if (typeof window.__tvSavePlan !== 'function') {
+      throw new Error('Still loading — please try again in a moment.');
     }
 
-    setPlans(plans);
-    showToast('Weekly plan saved!', true);
-    renderPlans();
+    const existing = editingPlanId
+      ? plans.find(p => p.id === editingPlanId)
+      : plans.find(p => p.weekStart === data.weekStart);
+
+    const payload = {
+      ...data,
+      rangeLabel: fmt(start) + ' → ' + fmt(end),
+      weekNum,
+      finalRR: existing && existing.finalRR !== undefined ? existing.finalRR : null,
+    };
+
+    await window.__tvSavePlan(payload);
+    editingPlanId = null;
+    showToast(existing ? 'Weekly plan updated!' : 'Weekly plan saved!', true);
+    // __tvSavePlan refreshes PLANS and re-renders
   } catch (err) {
     console.error('Save plan failed:', err);
     showToast('Could not save the plan. Please try again.', false);
@@ -1046,9 +1078,9 @@ function renderPlans() {
         </div>
       </div>
       <div class="plan-actions">
-        <button class="plan-action-btn primary" onclick="viewPlan(${p.id})">View</button>
+        <button class="plan-action-btn primary" onclick="viewPlan('${p.id}')">View</button>
         <button class="plan-action-btn" onclick="duplicatePlan(${p.id})">Duplicate</button>
-        <button class="plan-action-btn danger" onclick="deletePlan(${p.id})">Delete</button>
+        <button class="plan-action-btn danger" onclick="deletePlan('${p.id}')">Delete</button>
       </div>
     </div>`;
   }).join('') + '</div>';
@@ -1111,11 +1143,16 @@ function duplicatePlan(id) {
   showToast('Plan duplicated.', true);
 }
 
-function deletePlan(id) {
+async function deletePlan(id) {
   if (!confirm('Delete this weekly plan? This cannot be undone.')) return;
-  setPlans(getPlans().filter(p => p.id !== id));
-  renderPlans();
-  showToast('Plan deleted.', true);
+  try {
+    if (typeof window.__tvDeletePlan !== 'function') throw new Error('Still loading — try again in a moment.');
+    await window.__tvDeletePlan(id);
+    showToast('Plan deleted.', true);
+  } catch (e) {
+    console.error('Delete plan failed:', e);
+    showToast(e.message || 'Could not delete this plan.', false);
+  }
 }
 
 /* ── Auto-load the current week's active plan if one exists ── */
@@ -1147,8 +1184,50 @@ document.addEventListener('DOMContentLoaded', () => {
   renderChecklist();
   addWatchlistRow();
   defaultWeekStart();
-  autoLoadActivePlan();
+  // saved plans render once Firestore data arrives (see module below)
 });
+</script>
+
+<!-- Planner data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listEntries, upsertByDate, deleteEntry as fsDeleteEntry } from "./tradeva-journal.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+let ACC = null;
+
+async function refresh() {
+  const rows = ACC ? await listEntries(ACC.id, "plans") : [];
+  window.__tvSetPlans(rows, ACC ? ACC.id : null);
+}
+
+/* One plan per week — upsert keyed on the week-start date */
+window.__tvSavePlan = async function (payload) {
+  if (!ACC) throw new Error("Create a trading account in Settings first.");
+  const { weekStart, ...rest } = payload;
+  // store weekStart as `date` so the shared journal helpers can key on it
+  await upsertByDate(ACC.id, "plans", weekStart, { ...rest, weekStart });
+  await refresh();
+};
+
+window.__tvDeletePlan = async function (id) {
+  if (!ACC) throw new Error("No trading account selected.");
+  await fsDeleteEntry(ACC.id, "plans", id);
+  await refresh();
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  try {
+    ACC = await resolveSelectedAccount();
+    await refresh();
+  } catch (e) {
+    console.error("Planner load failed:", e);
+    window.__tvSetPlans([], null);
+  }
+})();
 </script>
 </body>
 </html>
