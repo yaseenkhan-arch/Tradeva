@@ -642,9 +642,23 @@ function loadProfileSidebar() {
 /* ══════════════════════════════════════════════════════════
    STORAGE
 ══════════════════════════════════════════════════════════ */
-const KB_KEY = 'tradeva_knowledge';
-function getResources() { try { const v = JSON.parse(localStorage.getItem(KB_KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-function setResources(r) { localStorage.setItem(KB_KEY, JSON.stringify(r)); }
+/* Knowledge base is GLOBAL to the user — a saved book or strategy isn't
+   tied to one trading account, so it lives at:
+     users/{uid}/knowledge/{resourceId}
+   RESOURCES is the in-memory mirror the UI reads; the module at the bottom
+   of this page loads it and calls window.__tvSetKnowledge(). */
+let RESOURCES = [];
+let DATA_READY = false;
+
+function getResources() { return RESOURCES; }
+function setResources(r) { RESOURCES = r; }   // legacy mirror
+
+/* Called by the Firestore module once resources arrive */
+window.__tvSetKnowledge = function (rows) {
+  RESOURCES = Array.isArray(rows) ? rows : [];
+  DATA_READY = true;
+  render();
+};
 
 /* ══════════════════════════════════════════════════════════
    CATEGORY META
@@ -779,10 +793,10 @@ function cardHTML(r) {
         <div class="res-title">${escapeHtml(r.title)}</div>
       </div>
       <div class="res-actions-top">
-        <button class="icon-btn ${r.favorite ? 'on-fav' : ''}" title="Favorite" onclick="toggleFav(${r.id})">
+        <button class="icon-btn ${r.favorite ? 'on-fav' : ''}" title="Favorite" onclick="toggleFav('${r.id}')">
           <svg viewBox="0 0 15 15"><polygon points="7.5,1.5 9.3,5.4 13.5,5.8 10.3,8.7 11.2,13 7.5,10.6 3.8,13 4.7,8.7 1.5,5.8 5.7,5.4"/></svg>
         </button>
-        <button class="icon-btn ${r.pinned ? 'on-pin' : ''}" title="Pin" onclick="togglePin(${r.id})">
+        <button class="icon-btn ${r.pinned ? 'on-pin' : ''}" title="Pin" onclick="togglePin('${r.id}')">
           <svg viewBox="0 0 15 15"><line x1="7.5" y1="9" x2="7.5" y2="14"/><path d="M4 2h7l-1 5 2 2H3l2-2z"/></svg>
         </button>
       </div>
@@ -791,9 +805,9 @@ function cardHTML(r) {
     ${tags || extra ? `<div class="res-tags">${tags}${extra}</div>` : ''}
     <div class="res-foot">
       <span class="res-date"><svg viewBox="0 0 12 12"><rect x="1" y="2" width="10" height="9" rx="1.5"/><line x1="1" y1="4.5" x2="11" y2="4.5"/><line x1="4" y1="1" x2="4" y2="3"/><line x1="8" y1="1" x2="8" y2="3"/></svg>${fmtDate(r.createdAt)}</span>
-      <button class="res-btn primary" onclick="openDetail(${r.id})">Open</button>
-      <button class="res-btn" onclick="openEditModal(${r.id})">Edit</button>
-      <button class="res-btn danger" onclick="deleteResource(${r.id})">Delete</button>
+      <button class="res-btn primary" onclick="openDetail('${r.id}')">Open</button>
+      <button class="res-btn" onclick="openEditModal('${r.id}')">Edit</button>
+      <button class="res-btn danger" onclick="deleteResource('${r.id}')">Delete</button>
     </div>
   </div>`;
 }
@@ -852,15 +866,29 @@ function rerenderResultsOnly() {
 /* ══════════════════════════════════════════════════════════
    FAVORITE / PIN (inline, instant)
 ══════════════════════════════════════════════════════════ */
-function toggleFav(id) {
-  const list = getResources(); const r = list.find(x => x.id === id); if (!r) return;
-  r.favorite = !r.favorite; r.updatedAt = new Date().toISOString(); setResources(list);
-  render(); showToast(r.favorite ? 'Added to favorites' : 'Removed from favorites');
+async function toggleFav(id) {
+  const r = getResources().find(x => x.id === id); if (!r) return;
+  const next = !r.favorite;
+  try {
+    if (typeof window.__tvUpdateKnowledge !== 'function') throw new Error('Still loading — try again in a moment.');
+    await window.__tvUpdateKnowledge(id, { favorite: next });
+    showToast(next ? 'Added to favorites' : 'Removed from favorites');
+  } catch (e) {
+    console.error('Favorite failed:', e);
+    showToast(e.message || 'Could not update this resource.', false);
+  }
 }
-function togglePin(id) {
-  const list = getResources(); const r = list.find(x => x.id === id); if (!r) return;
-  r.pinned = !r.pinned; r.updatedAt = new Date().toISOString(); setResources(list);
-  render(); showToast(r.pinned ? 'Pinned to top' : 'Unpinned');
+async function togglePin(id) {
+  const r = getResources().find(x => x.id === id); if (!r) return;
+  const next = !r.pinned;
+  try {
+    if (typeof window.__tvUpdateKnowledge !== 'function') throw new Error('Still loading — try again in a moment.');
+    await window.__tvUpdateKnowledge(id, { pinned: next });
+    showToast(next ? 'Pinned to top' : 'Unpinned');
+  } catch (e) {
+    console.error('Pin failed:', e);
+    showToast(e.message || 'Could not update this resource.', false);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -905,7 +933,7 @@ function openEditModal(id) {
 }
 function closeFormModal() { closeOverlay('formModal'); }
 
-function saveResource() {
+async function saveResource() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { showToast('Title is required', false); document.getElementById('f-title').focus(); return; }
   const category = document.getElementById('f-category').value;
@@ -915,26 +943,38 @@ function saveResource() {
   const now = new Date().toISOString();
   const list = getResources();
 
-  if (editingId) {
-    const r = list.find(x => x.id === editingId);
-    if (r) { Object.assign(r, { category, title, url, description, tags, favorite: form.fav, pinned: form.pin, updatedAt: now }); }
-    showToast('Resource updated');
-  } else {
-    list.unshift({ id: Date.now(), category, title, url, description, tags, favorite: form.fav, pinned: form.pin, createdAt: now, updatedAt: now });
-    showToast('Resource saved');
+  const payload = { category, title, url, description, tags, favorite: form.fav, pinned: form.pin };
+
+  const btn = document.getElementById('formSaveBtn');
+  if (btn) btn.disabled = true;
+  try {
+    if (typeof window.__tvSaveKnowledge !== 'function') {
+      throw new Error('Still loading — please try again in a moment.');
+    }
+    await window.__tvSaveKnowledge(editingId, payload);
+    showToast(editingId ? 'Resource updated' : 'Resource saved');
+    editingId = null;
+    closeFormModal();
+    // __tvSaveKnowledge refreshes RESOURCES and re-renders
+  } catch (e) {
+    console.error('Save resource failed:', e);
+    showToast(e.message || 'Could not save this resource.', false);
+  } finally {
+    if (btn) btn.disabled = false;
   }
-  setResources(list);
-  editingId = null;
-  closeFormModal();
-  render();
 }
 
-function deleteResource(id) {
+async function deleteResource(id) {
   if (!confirm('Delete this resource? This cannot be undone.')) return;
-  setResources(getResources().filter(x => x.id !== id));
-  closeDetailModal();
-  render();
-  showToast('Resource deleted');
+  try {
+    if (typeof window.__tvDeleteKnowledge !== 'function') throw new Error('Still loading — try again in a moment.');
+    await window.__tvDeleteKnowledge(id);
+    closeDetailModal();
+    showToast('Resource deleted');
+  } catch (e) {
+    console.error('Delete resource failed:', e);
+    showToast(e.message || 'Could not delete this resource.', false);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -994,8 +1034,51 @@ document.addEventListener('keydown', e => {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  render();
+  // library renders once Firestore data arrives (see module below)
 });
+</script>
+
+<!-- Knowledge data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher } from "./tradeva-accounts.js";
+import { listKnowledge, createKnowledge, updateKnowledge,
+         deleteKnowledge as fsDeleteKnowledge } from "./tradeva-journal.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+async function refresh() {
+  const rows = await listKnowledge();
+  window.__tvSetKnowledge(rows);
+}
+
+/* Create when id is null, otherwise update in place */
+window.__tvSaveKnowledge = async function (id, payload) {
+  if (id) await updateKnowledge(id, payload);
+  else await createKnowledge(payload);
+  await refresh();
+};
+
+/* Partial update — used by the favourite and pin toggles */
+window.__tvUpdateKnowledge = async function (id, patch) {
+  await updateKnowledge(id, patch);
+  await refresh();
+};
+
+window.__tvDeleteKnowledge = async function (id) {
+  await fsDeleteKnowledge(id);
+  await refresh();
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();   // sidebar pill, even though the library is global
+  try {
+    await refresh();
+  } catch (e) {
+    console.error("Knowledge load failed:", e);
+    window.__tvSetKnowledge([]);
+  }
+})();
 </script>
 </body>
 </html>
