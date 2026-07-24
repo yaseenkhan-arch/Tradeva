@@ -126,8 +126,20 @@ async function listAccounts(opts = {}) {
   const fresh = _accountsPromise && (Date.now() - _accountsAt) < ACCOUNTS_TTL_MS;
   if (!fresh) {
     _accountsAt = Date.now();
+    const t0 = performance.now();
     _accountsPromise = getDocs(query(accountsCol(uid()), orderBy("createdAt", "desc")))
-      .then(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      .then(snap => {
+        const ms = performance.now() - t0;
+        // Was this served from the local cache or the network?
+        const src = snap.metadata.fromCache ? "CACHE" : "NETWORK";
+        if (window.TRADEVA_PERF !== false) {
+          console.log(`%c   ↳ getDocs(accounts): ${ms.toFixed(0)}ms  [${src}]  ${snap.size} docs`,
+                      "color:#8B5CF6");
+        }
+        window.__tvAccountsFetchMs = ms;
+        window.__tvAccountsSource = src;
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      })
       .catch(err => { invalidateAccountsCache(); throw err; });
   }
   const all = await _accountsPromise;
