@@ -1288,13 +1288,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Dashboard data + account switcher (module) -->
 <script type="module">
 import { auth } from "./tradeva-firebase.js";
-import { initAccountSwitcher, resolveSelectedAccount, getSelectedAccountId } from "./tradeva-accounts.js";
+import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
+         getSelectedAccountId } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
 import { perf } from "./tradeva-perf.js";
 
-/* Session restore. The previous version polled every 60ms, which wasted up
-   to 60ms even when the session was already known. onAuthStateChanged fires
-   as soon as the SDK resolves, so there is no polling penalty. */
 function tvWhenAuthed(){
   return new Promise(res => {
     if (auth.currentUser) return res(auth.currentUser);
@@ -1303,11 +1301,17 @@ function tvWhenAuthed(){
 }
 
 (async () => {
-  /* Reveal the shell immediately. The auth guard already keeps the page
-     hidden until the session is confirmed, but there is no reason to also
-     wait on Firestore before showing the layout — stat cards show their
-     placeholder dashes and fill in when data lands. This makes the page
-     feel responsive even while the network is still working. */
+  /* ── MEASURED FINDINGS ───────────────────────────────────────────
+     • getDocs on 2 account docs costs ~1250ms in BOTH persistent-cache and
+       memory-cache mode → IndexedDB is not the cause. It is the one-time
+       authenticated WebChannel handshake.
+     • TTFB varied 95ms → 2357ms between runs → hosting/network variance
+       dominates the bad runs and is outside the app's control.
+
+     Since the handshake cost cannot be removed, we take it off the critical
+     path: render from a localStorage snapshot of the account (accounts change
+     maybe twice a year), then reconcile with Firestore in the background.
+  ────────────────────────────────────────────────────────────────── */
   perf.mark("auth:start");
   await tvWhenAuthed();
   perf.mark("auth:end");
@@ -1315,45 +1319,59 @@ function tvWhenAuthed(){
   perf.firstContent("SHELL VISIBLE (skeleton painted)");
 
   try {
-    /* Account lookup and switcher rendering are independent — run together
-       instead of one after the other. */
-    perf.mark("acct:start");
-    /* Speculative start: if we already know the account id from the previous
-       visit, fire the trades query immediately rather than waiting for the
-       account document to come back. Both requests then share the same
-       connection warm-up instead of paying it serially. */
-    const cachedId = getSelectedAccountId();
-    const earlyTrades = cachedId ? listTrades(cachedId) : null;
+    /* FAST PATH — no network. Uses the account snapshot from the last visit
+       to start the trades query immediately. */
+    const cachedAcc = perf.timeSync("2. Account from local snapshot (0 network)",
+                                    () => resolveSelectedAccountCached());
+    const cachedId  = cachedAcc ? cachedAcc.id : getSelectedAccountId();
 
-    /* Split phase 2 so we can see WHICH part is slow: the account query,
-       or the switcher's DOM work. */
-    const acc = await perf.time("2a. resolveSelectedAccount (query)", resolveSelectedAccount());
-    await perf.time("2b. initAccountSwitcher (DOM)", initAccountSwitcher());
-    perf.mark("acct:end");
-    perf.span("2. Resolve account + sidebar switcher (total)", "acct:start", "acct:end");
+    // Kick both off together; neither waits for the other.
+    const tradesP   = cachedId ? listTrades(cachedId) : null;
+    const accountsP = resolveSelectedAccount();          // authoritative, background
 
-    if (!acc) {
-      window.__tvSetDashboardTrades([], null);
-      perf.firstContent();
-      perf.report("DASHBOARD STARTUP (no account)");
+    if (cachedAcc && tradesP) {
+      // Render with real trades as soon as they land — no account round-trip first.
+      const rows = await perf.time("3. Firestore: download trades (fast path)", tradesP);
+      perf.timeSync("4. Compute stats + render charts", () => {
+        window.__tvSetDashboardTrades(rows, cachedAcc);
+      });
+      perf.firstContent("DATA RENDERED (from snapshot + live trades)");
+      perf.report("DASHBOARD STARTUP (fast path)");
+
+      /* Reconcile in the background: if the authoritative account differs
+         (renamed, balance changed, switched elsewhere), re-render quietly. */
+      accountsP.then(acc => {
+        if (acc && acc.id !== cachedAcc.id) {
+          listTrades(acc.id).then(r2 => window.__tvSetDashboardTrades(r2, acc));
+        } else if (acc && JSON.stringify(acc) !== JSON.stringify(cachedAcc)) {
+          window.__tvSetDashboardTrades(rows, acc);
+        }
+      }).catch(() => {});
+
+      initAccountSwitcher().catch(() => {});
       return;
     }
 
-    /* The selected account id is cached in localStorage, so on a repeat visit
-       we already know which account to query — start the trades request in
-       parallel with the account lookup instead of waiting for it. */
-    const rows = await perf.time("3. Firestore: download trades",
-      (earlyTrades && cachedId === acc.id) ? earlyTrades : listTrades(acc.id));
-
+    /* SLOW PATH — first-ever visit, nothing cached. */
+    const acc = await perf.time("2b. resolveSelectedAccount (network)", accountsP);
+    if (!acc) {
+      window.__tvSetDashboardTrades([], null);
+      perf.firstContent("DATA RENDERED (no account)");
+      perf.report("DASHBOARD STARTUP (no account)");
+      return;
+    }
+    const rows = await perf.time("3. Firestore: download trades", listTrades(acc.id));
     perf.timeSync("4. Compute stats + render charts", () => {
       window.__tvSetDashboardTrades(rows, acc);
     });
+    perf.firstContent("DATA RENDERED (first visit)");
+    perf.report("DASHBOARD STARTUP (first visit)");
+    initAccountSwitcher().catch(() => {});
 
-    perf.firstContent("DATA RENDERED (real numbers on screen)");
-    perf.report("DASHBOARD STARTUP");
   } catch (e) {
     console.error("Dashboard load failed:", e);
     window.__tvSetDashboardTrades([], null);
+    perf.report("DASHBOARD STARTUP (error)");
   }
 })();
 </script>
