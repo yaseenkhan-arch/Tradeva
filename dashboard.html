@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 
 /* ══════════════════════════════════════════════════════════
@@ -1303,10 +1303,16 @@ function tvWhenAuthed(){
 }
 
 (async () => {
+  /* Reveal the shell immediately. The auth guard already keeps the page
+     hidden until the session is confirmed, but there is no reason to also
+     wait on Firestore before showing the layout — stat cards show their
+     placeholder dashes and fill in when data lands. This makes the page
+     feel responsive even while the network is still working. */
   perf.mark("auth:start");
   await tvWhenAuthed();
   perf.mark("auth:end");
   perf.span("1. Firebase Auth (session restore)", "auth:start", "auth:end");
+  perf.firstContent("SHELL VISIBLE (skeleton painted)");
 
   try {
     /* Account lookup and switcher rendering are independent — run together
@@ -1319,12 +1325,12 @@ function tvWhenAuthed(){
     const cachedId = getSelectedAccountId();
     const earlyTrades = cachedId ? listTrades(cachedId) : null;
 
-    const [acc] = await Promise.all([
-      resolveSelectedAccount(),
-      initAccountSwitcher()
-    ]);
+    /* Split phase 2 so we can see WHICH part is slow: the account query,
+       or the switcher's DOM work. */
+    const acc = await perf.time("2a. resolveSelectedAccount (query)", resolveSelectedAccount());
+    await perf.time("2b. initAccountSwitcher (DOM)", initAccountSwitcher());
     perf.mark("acct:end");
-    perf.span("2. Resolve account + sidebar switcher", "acct:start", "acct:end");
+    perf.span("2. Resolve account + sidebar switcher (total)", "acct:start", "acct:end");
 
     if (!acc) {
       window.__tvSetDashboardTrades([], null);
@@ -1343,7 +1349,7 @@ function tvWhenAuthed(){
       window.__tvSetDashboardTrades(rows, acc);
     });
 
-    perf.firstContent();
+    perf.firstContent("DATA RENDERED (real numbers on screen)");
     perf.report("DASHBOARD STARTUP");
   } catch (e) {
     console.error("Dashboard load failed:", e);
