@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════════
+ // ══════════════════════════════════════════════════════════════════
 // TRADEVA — PERFORMANCE INSTRUMENTATION
 //
 // Measures the real cost of each startup phase with performance.now()
@@ -67,7 +67,9 @@ function timeSync(label, fn) {
 function firstContent(label = "FIRST MEANINGFUL CONTENT") {
   if (!ENABLED()) return;
   const now = performance.now();
-  spans.push({ label, ms: now, start: 0, end: now, isTotal: true });
+  // Milestones are measured from page start, so they can be compared
+  // directly against First Contentful Paint.
+  spans.push({ label: "⏱ " + label, ms: now, start: 0, end: now, isTotal: true });
 }
 
 function report(title = "TRADEVA STARTUP") {
