@@ -104,23 +104,62 @@ async function deleteAccount(id) {
 }
 
 // List accounts (active first, newest first). Pass {includeArchived:true} to get all.
-/* ── REQUEST COALESCING ──────────────────────────────────────────
-   resolveSelectedAccount() and initAccountSwitcher() both need the
-   account list, and the switcher calls resolveSelectedAccount()
-   internally — so a single page load was firing THREE identical
-   getDocs() on the same collection. Firestore does not dedupe these,
-   and because they are the first reads of the session each one paid
-   the full cold-connection cost (~700ms), for ~2.3s total.
+/* ── ACCOUNT CACHE (localStorage snapshot + coalescing) ──────────
+   MEASURED: getDocs on a 2-document collection costs ~1250ms consistently,
+   in BOTH persistent-cache and memory-cache mode. So IndexedDB is not the
+   cause — it is the authenticated WebChannel handshake, paid once per
+   session on the first read.
 
-   We now cache the in-flight promise: concurrent callers share one
-   network request. The cache is cleared on any account mutation and
-   after a short TTL so data never goes stale.
+   That cost cannot be removed, but it CAN be taken off the critical path.
+   Accounts change very rarely (a user creates one and edits it maybe twice
+   a year), so we keep a snapshot in localStorage. On a repeat visit the app
+   renders from that snapshot in ~0ms and refreshes from Firestore in the
+   background, updating the UI only if something actually changed.
 ────────────────────────────────────────────────────────────────── */
+const ACCOUNTS_SNAPSHOT_KEY = "tradeva_accounts_snapshot";
+
+function readAccountsSnapshot() {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return (parsed && Array.isArray(parsed.rows) && parsed.uid === auth.currentUser?.uid)
+      ? parsed.rows : null;
+  } catch (e) { return null; }
+}
+
+function writeAccountsSnapshot(rows) {
+  try {
+    localStorage.setItem(ACCOUNTS_SNAPSHOT_KEY, JSON.stringify({
+      uid: auth.currentUser?.uid || null,
+      at: Date.now(),
+      // strip Firestore Timestamps — they do not survive JSON round-trips
+      rows: rows.map(r => {
+        const { createdAt, updatedAt, ...rest } = r;
+        return rest;
+      })
+    }));
+  } catch (e) { /* quota or private mode — cache is optional */ }
+}
+
+function clearAccountsSnapshot() {
+  try { localStorage.removeItem(ACCOUNTS_SNAPSHOT_KEY); } catch (e) {}
+}
+
 let _accountsPromise = null;
 let _accountsAt = 0;
-const ACCOUNTS_TTL_MS = 30000;   // re-fetch at most twice a minute
+const ACCOUNTS_TTL_MS = 30000;
 
-function invalidateAccountsCache() { _accountsPromise = null; _accountsAt = 0; }
+function invalidateAccountsCache() {
+  _accountsPromise = null; _accountsAt = 0; clearAccountsSnapshot();
+}
+
+/* Instant read from the local snapshot. Returns null on a first-ever visit. */
+function listAccountsCached(opts = {}) {
+  const rows = readAccountsSnapshot();
+  if (!rows) return null;
+  return opts.includeArchived ? rows : rows.filter(a => a.status !== "archived");
+}
 
 async function listAccounts(opts = {}) {
   const fresh = _accountsPromise && (Date.now() - _accountsAt) < ACCOUNTS_TTL_MS;
@@ -130,6 +169,8 @@ async function listAccounts(opts = {}) {
     _accountsPromise = getDocs(query(accountsCol(uid()), orderBy("createdAt", "desc")))
       .then(snap => {
         const ms = performance.now() - t0;
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        writeAccountsSnapshot(rows);
         // Was this served from the local cache or the network?
         const src = snap.metadata.fromCache ? "CACHE" : "NETWORK";
         if (window.TRADEVA_PERF !== false) {
@@ -138,7 +179,7 @@ async function listAccounts(opts = {}) {
         }
         window.__tvAccountsFetchMs = ms;
         window.__tvAccountsSource = src;
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return rows;
       })
       .catch(err => { invalidateAccountsCache(); throw err; });
   }
@@ -161,6 +202,14 @@ function clearSelectedAccount() { localStorage.removeItem(SELECTED_KEY); }
 // Resolve the selected account, defaulting to the first account if the
 // stored pointer is missing or points to a deleted/archived account.
 // Returns the account object, or null if the user has no accounts.
+/* Instant, synchronous resolve from the snapshot. null if unavailable. */
+function resolveSelectedAccountCached() {
+  const accounts = listAccountsCached();
+  if (!accounts || !accounts.length) return null;
+  const stored = getSelectedAccountId();
+  return (stored && accounts.find(a => a.id === stored)) || accounts[0];
+}
+
 async function resolveSelectedAccount() {
   const accounts = await listAccounts();
   if (!accounts.length) { clearSelectedAccount(); return null; }
@@ -269,5 +318,6 @@ function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"
 export {
   createAccount, updateAccount, deleteAccount, listAccounts, getAccount,
   getSelectedAccountId, setSelectedAccount, clearSelectedAccount, resolveSelectedAccount,
-  initAccountSwitcher, tradesCol, invalidateAccountsCache
+  initAccountSwitcher, tradesCol, invalidateAccountsCache,
+  listAccountsCached, resolveSelectedAccountCached
 };
