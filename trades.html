@@ -1,12 +1,17 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="modulepreload" href="./tradeva-firebase.js">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tradeva — Trades</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <style>
 
 /* ══════════════════════════════════════════════════════════
@@ -686,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script type="module">
 import { auth } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
-import { listTrades } from "./tradeva-trades.js";
+import { subscribeTrades } from "./tradeva-trades.js";
 function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
 
 (async () => {
@@ -709,9 +714,10 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
       }
       return;
     }
-    const rows = await listTrades(acc.id);
-    // hand the data to the page script
-    window.__tvSetTrades(rows);
+    // Live subscription: first callback is served from the local cache
+    // (instant on repeat visits), then Firestore pushes only changes —
+    // so adding or deleting a trade updates this list without a refetch.
+    subscribeTrades(acc.id, rows => window.__tvSetTrades(rows));
   } catch (e) {
     console.error("Loading trades failed:", e);
     window.__tvSetTrades([]);
