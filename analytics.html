@@ -9,6 +9,45 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="analytics.css">
+<style>
+/* ══════════════════════════════════════════════════════════
+   LAYOUT SAFETY NET
+   analytics.css was authored before the fixed right sidebar
+   existed, so wide grids could run underneath it and get
+   clipped. These rules keep every section inside the
+   available width on any screen.
+══════════════════════════════════════════════════════════ */
+.main {
+  margin-right: var(--sidebar-w, 248px);
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+.main > * { max-width: 100%; box-sizing: border-box; }
+
+/* Grids: never force more columns than the space allows */
+.quick-summary-grid,
+.breakdown-summary-grid { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)) !important; }
+.stats-overview-grid    { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)) !important; }
+.trends-grid,
+.tables-grid            { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important; }
+.edge-grid              { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; }
+.tradestat-grid         { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; }
+
+/* Cards must be allowed to shrink inside a grid track */
+.stat-card-lg, .stat-card-sm, .quick-stat-card,
+.trend-card, .edge-card, .table-card { min-width: 0; }
+
+/* Long numbers shouldn't blow out their card */
+.stat-value-lg, .stat-value-sm, .qs-value { overflow-wrap: anywhere; }
+
+/* Tables scroll instead of stretching the page */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 768px) {
+  .main { margin-right: 0; }
+}
+</style>
 </head>
 <body>
 <!-- ══ TRADEVA AUTH GUARD (injected — do not duplicate) ══ -->
@@ -271,7 +310,7 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M1 13l4.5-4.5 3 3L15 4"/><path d="M11 4h4v4"/></svg></div>
-          <span class="mom mom-up">+12.4%</span>
+          
         </div>
         <div class="stat-label-lg">Total PnL</div>
         <div class="stat-value-lg green" data-stat="netPnl" data-count="47320" data-prefix="+$">+$47,320</div>
@@ -281,7 +320,7 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><polyline points="5,8.5 7,10.5 11,5.5"/></svg></div>
-          <span class="mom mom-up">+3.1%</span>
+          
         </div>
         <div class="stat-label-lg">Win Rate</div>
         <div class="stat-value-lg green" data-stat="winRate" data-count="68.4" data-suffix="%">68.4%</div>
@@ -291,7 +330,7 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><rect x="1" y="9" width="3" height="6" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="1" width="3" height="14" rx="1"/></svg></div>
-          <span class="mom mom-up">+0.2</span>
+          
         </div>
         <div class="stat-label-lg">Profit Factor</div>
         <div class="stat-value-lg" data-stat="profitFactor" data-count="2.85">2.85</div>
@@ -301,7 +340,7 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg></div>
-          <span class="mom mom-up">+$14</span>
+          
         </div>
         <div class="stat-label-lg">Expectancy</div>
         <div class="stat-value-lg green" data-stat="expectancy" data-count="186" data-prefix="+$">+$186</div>
@@ -311,7 +350,7 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><polyline points="2,10 6,4 9,7 14,2"/></svg></div>
-          <span class="mom mom-up">+$32</span>
+          
         </div>
         <div class="stat-label-lg">Average Win</div>
         <div class="stat-value-lg green" data-stat="avgWin" data-count="620" data-prefix="+$">+$620</div>
@@ -321,17 +360,17 @@ try {
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><polyline points="2,5 6,11 9,8 14,13"/></svg></div>
-          <span class="mom mom-down">-$8</span>
+          
         </div>
         <div class="stat-label-lg">Average Loss</div>
-        <div class="stat-value-lg red" data-count="-218" data-prefix="-$">-$218</div>
+        <div class="stat-value-lg red" data-stat="avgLoss" data-count="218" data-prefix="-$">-$218</div>
         <div class="stat-desc">Mean loss on losing trades</div>
       </div>
 
       <div class="stat-card-lg">
         <div class="stat-top">
           <div class="stat-icon-wrap"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M8 4.5v4l3 2"/></svg></div>
-          <span class="mom mom-up">+0.3</span>
+          
         </div>
         <div class="stat-label-lg">Recovery Factor</div>
         <div class="stat-value-lg" data-stat="recoveryFactor" data-count="4.2">4.2</div>
@@ -341,7 +380,7 @@ try {
       <div class="stat-card-lg stat-edge">
         <div class="stat-top">
           <div class="stat-icon-wrap accent"><svg viewBox="0 0 16 16"><polygon points="8,1 10,6 15,6.5 11,10 12,15 8,12.5 4,15 5,10 1,6.5 6,6"/></svg></div>
-          <span class="mom mom-up">+4</span>
+          
         </div>
         <div class="stat-label-lg">Edge Score</div>
         <div class="stat-value-lg accent-text" data-stat="edgeScore" data-count="87" data-suffix="/100">87/100</div>
