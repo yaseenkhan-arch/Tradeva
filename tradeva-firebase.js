@@ -37,74 +37,74 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ── Firestore with OFFLINE PERSISTENCE ────────────────────────────
-// Documents are cached in IndexedDB, so a repeat page load reads from
-// local disk (instant) instead of the network, and the app keeps working
-// offline. persistentMultipleTabManager lets several Tradeva tabs share
-// one cache without fighting over the lock.
+// ── Firestore init ────────────────────────────────────────────────
+// DIAGNOSTIC: persistentLocalCache forces IndexedDB open + multi-tab lease
+// negotiation before the FIRST read can be served. Measured cost on the
+// first query of a session: ~3.4s in Firefox, ~2.2s in Chrome, for a
+// 2-document read. We time the init and let it be disabled at runtime so
+// the two hypotheses (IndexedDB vs auth handshake) can be told apart.
+//
+//   localStorage.setItem('tradeva_no_persistence','1')  -> memory cache
+//   localStorage.removeItem('tradeva_no_persistence')    -> persistent cache
 let db;
+const _fsInitStart = performance.now();
+const _noPersist = (() => { try { return localStorage.getItem("tradeva_no_persistence") === "1"; } catch (e) { return false; } })();
+
 try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  });
+  if (_noPersist) {
+    db = getFirestore(app);
+  } else {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  }
 } catch (e) {
-  // Older browsers (or private mode) may refuse IndexedDB — fall back to
-  // the normal in-memory client rather than breaking the whole app.
   console.warn("Firestore persistent cache unavailable, using memory cache:", e);
   db = getFirestore(app);
 }
-
-/* Storage is only needed when uploading a trade screenshot, so it is
-   loaded on demand instead of on every page. This removes an SDK fetch
-   (~120ms) from the critical path of 12 of 14 pages. */
-let _storage = null;
-async function getStorageLazy() {
-  if (_storage) return _storage;
-  const { getStorage } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js");
-  _storage = getStorage(app);
-  return _storage;
+if (window.TRADEVA_PERF !== false) {
+  console.log(`%c   ↳ Firestore init (${_noPersist ? "MEMORY cache" : "PERSISTENT cache"}): ` +
+              `${(performance.now() - _fsInitStart).toFixed(0)}ms`, "color:#0EA5E9");
 }
-/* Back-compat: existing code imports `storage` directly. Keep the name as a
-   thenable proxy so `await storage` works, and expose the loader explicitly. */
+
 const storage = { get instance() { return _storage; } };
 const googleProvider = new GoogleAuthProvider();
 
-/* ── CONNECTION WARM-UP ──────────────────────────────────────────
-   MEASURED: the first Firestore read of a session costs ~2.2s; a second
-   identical read costs ~670ms. The gap is one-time setup — opening the
-   WebChannel, exchanging the auth token, and (because persistentLocalCache
-   is enabled) initialising IndexedDB plus the multi-tab lease.
+/* ── AUTHENTICATED CONNECTION WARM-UP ────────────────────────────
+   MEASURED (Firefox): getDocs on a 2-document collection took 3368ms on the
+   first read of a session, then 0ms afterwards. The payload is irrelevant —
+   the cost is one-time session setup: IndexedDB open, multi-tab lease, and
+   the authenticated WebChannel handshake.
 
-   Coalescing duplicate queries saved only 80ms, which proved the cost is
-   per-session, not per-query. So instead of reducing queries, we start that
-   setup as early as possible.
-
-   Two things happen here:
-     1. IndexedDB / local cache init begins immediately on module load.
-     2. The authenticated channel is warmed the instant auth resolves —
-        in parallel with the app's own first query rather than before it.
-   Both are best-effort and never block the app. */
+   The previous attempt warmed on module load, BEFORE auth resolved, so it
+   only warmed an unauthenticated channel — the real handshake still happened
+   cold on the app's first genuine read. This version fires the instant a
+   session exists, so the handshake overlaps with the rest of startup. */
 let _warmed = null;
 function warmFirestore() {
   if (_warmed) return _warmed;
+  const u = auth.currentUser;
+  if (!u) return Promise.resolve();          // nothing useful to warm yet
+  const t0 = performance.now();
   _warmed = (async () => {
     try {
       const { doc: _doc, getDoc: _getDoc } = await import(
         "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-      const u = auth.currentUser;
-      // Read the user's own profile doc: allowed by the security rules, tiny,
-      // and almost always already needed later anyway.
-      const ref = u ? _doc(db, "users", u.uid) : _doc(db, "__warmup__", "__warmup__");
-      await _getDoc(ref).catch(() => {});
+      // The user's own profile doc: permitted by the rules, tiny, and it
+      // forces the full authenticated path to be established.
+      await _getDoc(_doc(db, "users", u.uid)).catch(() => {});
+      if (window.TRADEVA_PERF !== false) {
+        console.log(`%c   ↳ Firestore warm-up (authenticated): ${(performance.now() - t0).toFixed(0)}ms`,
+                    "color:#0EA5E9");
+      }
     } catch (e) { /* best-effort */ }
   })();
   return _warmed;
 }
 
-/* Kick off cache/IndexedDB init right away… */
-warmFirestore();
-/* …and warm the AUTHENTICATED channel the moment a session exists. */
-onAuthStateChanged(auth, (u) => { if (u) { _warmed = null; warmFirestore(); } });
+/* Warm as soon as the session is known — this is the earliest point at which
+   an authenticated read is possible. */
+onAuthStateChanged(auth, (u) => { if (u && !_warmed) warmFirestore(); });
 
 
 // ══════════════════════════════════════════════════════════════════
