@@ -529,15 +529,56 @@ function loadProfileSidebar() {
 /* ══════════════════════════════════════════════════════════
    STORAGE READERS
 ══════════════════════════════════════════════════════════ */
-function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
-function getTrades()            { return readJSON('tradeva_trades', []) || []; }
-function getPlans()             { return readJSON('tradeva_weekly_plans', []) || []; }
-function getMoodEntries()       { return readJSON('tradeva_mood_entries', []) || []; }
-function getDisciplineEntries() { return readJSON('tradeva_discipline_entries', []) || []; }
-function getReviews()           { return readJSON('tradeva_reviews', []) || []; }
-const MS_KEY = 'tradeva_milestones';
-function getMSCache() { return readJSON(MS_KEY, { unlocks: {} }) || { unlocks: {} }; }
-function setMSCache(c) { localStorage.setItem(MS_KEY, JSON.stringify(c)); }
+/* ══════════════════════════════════════════════════════════
+   DATA STORE (Firestore-backed)
+
+   Milestones is read-only over every module — it turns your whole
+   history into XP, levels and achievements:
+
+     trades     -> users/{uid}/accounts/{id}/trades
+     plans      -> users/{uid}/accounts/{id}/plans
+     mood       -> users/{uid}/accounts/{id}/mood
+     discipline -> users/{uid}/accounts/{id}/discipline
+     reviews    -> users/{uid}/accounts/{id}/reviews
+
+   The one thing it writes is the unlock-date cache, which now lives on
+   a settings doc so your achievement history syncs across devices:
+     users/{uid}/accounts/{id}/settings/milestones
+══════════════════════════════════════════════════════════ */
+let TRADES = [], PLANS = [], MOOD = [], DISCIPLINE = [], REVIEWS = [];
+let MS_CACHE = { unlocks: {} };
+let ACCOUNT_ID = null;
+let DATA_READY = false;
+
+function getTrades()            { return TRADES; }
+function getPlans()             { return PLANS; }
+function getMoodEntries()       { return MOOD; }
+function getDisciplineEntries() { return DISCIPLINE; }
+function getReviews()           { return REVIEWS; }
+function getMSCache() { return MS_CACHE; }
+
+/* Persist newly-unlocked achievement dates. Fire-and-forget: a failed
+   write must never block the page from rendering. */
+function setMSCache(c) {
+  MS_CACHE = c;
+  if (typeof window.__tvSaveMilestones === 'function') {
+    window.__tvSaveMilestones(c).catch(e => console.error('Saving milestone unlocks failed:', e));
+  }
+}
+
+/* Called by the Firestore module once every source has loaded */
+window.__tvSetMilestoneData = function (d) {
+  TRADES     = Array.isArray(d.trades)     ? d.trades     : [];
+  PLANS      = Array.isArray(d.plans)      ? d.plans      : [];
+  MOOD       = Array.isArray(d.mood)       ? d.mood       : [];
+  DISCIPLINE = Array.isArray(d.discipline) ? d.discipline : [];
+  REVIEWS    = Array.isArray(d.reviews)    ? d.reviews    : [];
+  MS_CACHE   = d.cache && typeof d.cache === 'object' ? d.cache : { unlocks: {} };
+  if (!MS_CACHE.unlocks) MS_CACHE.unlocks = {};
+  ACCOUNT_ID = d.accountId || null;
+  DATA_READY = true;
+  render();
+};
 
 /* ══════════════════════════════════════════════════════════
    DATE HELPERS
@@ -1052,8 +1093,54 @@ function emptyStateHTML() {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  render();
+  // achievements render once Firestore data arrives (see module below)
 });
+</script>
+
+<!-- Milestone data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+import { listEntries, getSettings, saveSettings } from "./tradeva-journal.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+
+let ACC = null;
+
+/* Everything in parallel — this page summarises the entire journal */
+async function refresh() {
+  if (!ACC) {
+    window.__tvSetMilestoneData({ trades: [], plans: [], mood: [], discipline: [], reviews: [], cache: { unlocks: {} }, accountId: null });
+    return;
+  }
+  const [trades, plans, mood, discipline, reviews, cache] = await Promise.all([
+    listTrades(ACC.id),
+    listEntries(ACC.id, "plans"),
+    listEntries(ACC.id, "mood"),
+    listEntries(ACC.id, "discipline"),
+    listEntries(ACC.id, "reviews"),
+    getSettings(ACC.id, "milestones", { unlocks: {} })
+  ]);
+  window.__tvSetMilestoneData({ trades, plans, mood, discipline, reviews, cache, accountId: ACC.id });
+}
+
+/* Unlock dates persist so an achievement keeps the date it was earned */
+window.__tvSaveMilestones = async function (cache) {
+  if (!ACC) return;
+  await saveSettings(ACC.id, "milestones", { unlocks: cache.unlocks || {} });
+};
+
+(async () => {
+  await tvWhenAuthed();
+  await initAccountSwitcher();
+  try {
+    ACC = await resolveSelectedAccount();
+    await refresh();
+  } catch (e) {
+    console.error("Milestones load failed:", e);
+    window.__tvSetMilestoneData({ trades: [], plans: [], mood: [], discipline: [], reviews: [], cache: { unlocks: {} }, accountId: null });
+  }
+})();
 </script>
 </body>
 </html>
