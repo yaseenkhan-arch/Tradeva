@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════════
+ // ══════════════════════════════════════════════════════════════════
 // TRADEVA — ACCOUNTS MODULE
 // Trading-account CRUD in Firestore + the live sidebar switcher.
 // Every page imports what it needs from here.
@@ -57,6 +57,7 @@ async function createAccount(data) {
   };
   if (!payload.name) throw new Error("Account name is required");
   const ref = await addDoc(accountsCol(uid()), payload);
+  invalidateAccountsCache();
   return ref.id;
 }
 
@@ -78,6 +79,7 @@ async function updateAccount(id, data) {
     }
   }
   await updateDoc(accountDoc(uid(), id), patch);
+  invalidateAccountsCache();
 }
 
 // Delete an account AND all of its trades (irreversible).
@@ -96,16 +98,40 @@ async function deleteAccount(id) {
   await batch.commit();
   // delete the account doc itself
   await deleteDoc(accountDoc(u, id));
+  invalidateAccountsCache();
   // if the deleted account was selected, clear the pointer
   if (getSelectedAccountId() === id) clearSelectedAccount();
 }
 
 // List accounts (active first, newest first). Pass {includeArchived:true} to get all.
+/* ── REQUEST COALESCING ──────────────────────────────────────────
+   resolveSelectedAccount() and initAccountSwitcher() both need the
+   account list, and the switcher calls resolveSelectedAccount()
+   internally — so a single page load was firing THREE identical
+   getDocs() on the same collection. Firestore does not dedupe these,
+   and because they are the first reads of the session each one paid
+   the full cold-connection cost (~700ms), for ~2.3s total.
+
+   We now cache the in-flight promise: concurrent callers share one
+   network request. The cache is cleared on any account mutation and
+   after a short TTL so data never goes stale.
+────────────────────────────────────────────────────────────────── */
+let _accountsPromise = null;
+let _accountsAt = 0;
+const ACCOUNTS_TTL_MS = 30000;   // re-fetch at most twice a minute
+
+function invalidateAccountsCache() { _accountsPromise = null; _accountsAt = 0; }
+
 async function listAccounts(opts = {}) {
-  const snap = await getDocs(query(accountsCol(uid()), orderBy("createdAt", "desc")));
-  let rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if (!opts.includeArchived) rows = rows.filter(a => a.status !== "archived");
-  return rows;
+  const fresh = _accountsPromise && (Date.now() - _accountsAt) < ACCOUNTS_TTL_MS;
+  if (!fresh) {
+    _accountsAt = Date.now();
+    _accountsPromise = getDocs(query(accountsCol(uid()), orderBy("createdAt", "desc")))
+      .then(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      .catch(err => { invalidateAccountsCache(); throw err; });
+  }
+  const all = await _accountsPromise;
+  return opts.includeArchived ? all : all.filter(a => a.status !== "archived");
 }
 
 async function getAccount(id) {
@@ -161,7 +187,11 @@ async function initAccountSwitcher(options = {}) {
     return;
   }
 
-  const selected = await resolveSelectedAccount();
+  /* Resolve the selection from the list we already have, instead of calling
+     resolveSelectedAccount() (which would re-enter listAccounts()). */
+  const storedId = getSelectedAccountId();
+  let selected = storedId ? accounts.find(a => a.id === storedId) : null;
+  if (!selected) { selected = accounts[0]; setSelectedAccount(selected.id); }
   if (labelEl && selected) labelEl.textContent = selected.name;
   if (dotEl) dotEl.style.background = "var(--green, #10B981)";
 
@@ -227,5 +257,5 @@ function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"
 export {
   createAccount, updateAccount, deleteAccount, listAccounts, getAccount,
   getSelectedAccountId, setSelectedAccount, clearSelectedAccount, resolveSelectedAccount,
-  initAccountSwitcher, tradesCol
+  initAccountSwitcher, tradesCol, invalidateAccountsCache
 };
