@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
 <title>Tradeva — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 
@@ -1288,7 +1288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Dashboard data + account switcher (module) -->
 <script type="module">
 import { auth } from "./tradeva-firebase.js";
-import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { initAccountSwitcher, resolveSelectedAccount, getSelectedAccountId } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
 import { perf } from "./tradeva-perf.js";
 
@@ -1312,6 +1312,13 @@ function tvWhenAuthed(){
     /* Account lookup and switcher rendering are independent — run together
        instead of one after the other. */
     perf.mark("acct:start");
+    /* Speculative start: if we already know the account id from the previous
+       visit, fire the trades query immediately rather than waiting for the
+       account document to come back. Both requests then share the same
+       connection warm-up instead of paying it serially. */
+    const cachedId = getSelectedAccountId();
+    const earlyTrades = cachedId ? listTrades(cachedId) : null;
+
     const [acc] = await Promise.all([
       resolveSelectedAccount(),
       initAccountSwitcher()
@@ -1326,7 +1333,11 @@ function tvWhenAuthed(){
       return;
     }
 
-    const rows = await perf.time("3. Firestore: download trades", listTrades(acc.id));
+    /* The selected account id is cached in localStorage, so on a repeat visit
+       we already know which account to query — start the trades request in
+       parallel with the account lookup instead of waiting for it. */
+    const rows = await perf.time("3. Firestore: download trades",
+      (earlyTrades && cachedId === acc.id) ? earlyTrades : listTrades(acc.id));
 
     perf.timeSync("4. Compute stats + render charts", () => {
       window.__tvSetDashboardTrades(rows, acc);
