@@ -139,6 +139,7 @@ function groupBy(list, keyFn, opts = {}) {
 /* ── Derived datasets (recomputed whenever trades change) ── */
 let EQUITY_LABELS = [], EQUITY_DATA = [], DRAWDOWN_DATA = [];
 let MONTHLY_LABELS = [], MONTHLY_PNL = [], WINRATE_TREND = [];
+let MONTHLY_LABELS_WR = [];
 let SESSION_DATA = { labels: [], values: [], winRates: [] };
 let DAY_DATA = { labels: [], values: [] };
 let PAIRS_DATA = { labels: [], values: [] };
@@ -184,6 +185,7 @@ const DEMO = {
 function useDemo() {
   EQUITY_LABELS = DEMO.EQUITY_LABELS; EQUITY_DATA = DEMO.EQUITY_DATA; DRAWDOWN_DATA = DEMO.DRAWDOWN_DATA;
   MONTHLY_LABELS = DEMO.MONTHLY_LABELS; MONTHLY_PNL = DEMO.MONTHLY_PNL; WINRATE_TREND = DEMO.WINRATE_TREND;
+  MONTHLY_LABELS_WR = DEMO.MONTHLY_LABELS;
   SESSION_DATA = DEMO.SESSION_DATA; DAY_DATA = DEMO.DAY_DATA; PAIRS_DATA = DEMO.PAIRS_DATA;
   DURATION_DATA = DEMO.DURATION_DATA; RR_DATA = DEMO.RR_DATA; OUTCOME_DATA = DEMO.OUTCOME_DATA;
   HEATMAP_HOURS = DEMO.HEATMAP_HOURS; HEATMAP_VALUES = DEMO.HEATMAP_VALUES;
@@ -228,6 +230,22 @@ function computeDatasets() {
   MONTHLY_LABELS = mKeys.map(k => mAgg[k].label);
   MONTHLY_PNL    = mKeys.map(k => Math.round(mAgg[k].pnl));
   WINRATE_TREND  = mKeys.map(k => mAgg[k].n ? Math.round(mAgg[k].wins / mAgg[k].n * 100) : 0);
+
+  /* A single month draws an invisible one-point line, so when there aren't
+     at least two months we fall back to a cumulative win-rate curve across
+     trades — same idea ("how is my win rate trending"), but always visible. */
+  if (mKeys.length < 2) {
+    let w = 0, d = 0;
+    const curve = [], curveLabels = [];
+    chron.forEach(t => {
+      const o = outcomeOf(t);
+      if (o === 'Win') { w++; d++; } else if (o === 'Loss') { d++; }
+      if (d > 0) { curve.push(Math.round(w / d * 100)); curveLabels.push(t.date || t.rawDate || ''); }
+    });
+    if (curve.length) { WINRATE_TREND = curve; MONTHLY_LABELS_WR = curveLabels; }
+  } else {
+    MONTHLY_LABELS_WR = MONTHLY_LABELS.slice();
+  }
 
   /* Breakdowns */
   SESSION_DATA = groupBy(chron, t => t.session, { sortByValue: true });
@@ -507,6 +525,20 @@ function updateCounters() {
   setText('bdBestPair', bestPair);
   setText('bdBestPairSub', PAIRS_DATA.values.length ? money(PAIRS_DATA.values[0]) + ' total' : '—');
 
+  /* ── Outcome donut legend ── */
+  setText('donutWins', wins.length);
+  setText('donutLosses', losses.length);
+  setText('donutBE', bes.length);
+
+  /* ── Setup performance insight (was mislabelled as trade duration) ── */
+  if (DURATION_DATA.labels.length) {
+    const bi = 0;
+    setHTML('setupInsight', '<strong>' + DURATION_DATA.labels[bi] + '</strong> is your most profitable setup (' +
+      money(DURATION_DATA.values[bi]) + ').');
+  } else {
+    setHTML('setupInsight', 'Tag your trades with a setup type to see which performs best.');
+  }
+
   /* ── Strengths / Needs Improvement (derived, not hardcoded) ── */
   const strengths = [], weaknesses = [];
   if (SESSION_DATA.labels.length && SESSION_DATA.values[0] > 0) strengths.push(SESSION_DATA.labels[0] + ' session');
@@ -731,7 +763,7 @@ function renderAllCharts() {
   wrGrad.addColorStop(1, 'rgba(59,130,246,0)');
   chartInstances.winrate = new Chart(wrCtx, {
     type: 'line',
-    data: { labels: MONTHLY_LABELS, datasets: [{ data: WINRATE_TREND, borderColor: '#3B82F6', borderWidth: 2.5, backgroundColor: wrGrad, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#3B82F6', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 }] },
+    data: { labels: (MONTHLY_LABELS_WR.length ? MONTHLY_LABELS_WR : MONTHLY_LABELS), datasets: [{ data: WINRATE_TREND, borderColor: '#3B82F6', borderWidth: 2.5, backgroundColor: wrGrad, fill: true, tension: 0.4, pointRadius: (WINRATE_TREND.length === 1 ? 5 : 0), pointHoverRadius: 5, pointHoverBackgroundColor: '#3B82F6', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 }] },
     options: chartOptions(c, v => v + '%', v => ' ' + v.toFixed(1) + '%', 40, 80)
   });
 
