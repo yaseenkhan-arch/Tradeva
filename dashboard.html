@@ -1287,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- Dashboard data + account switcher (module) -->
 <script type="module">
-import { auth } from "./tradeva-firebase.js";
+import { auth, warmFirestore } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
          getSelectedAccountId } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
@@ -1317,6 +1317,11 @@ function tvWhenAuthed(){
   perf.mark("auth:end");
   perf.span("1. Firebase Auth (session restore)", "auth:start", "auth:end");
   perf.firstContent("SHELL VISIBLE (skeleton painted)");
+
+  /* Now that a session exists, warm the authenticated Firestore channel so
+     its one-time handshake overlaps with the queries below rather than
+     blocking the first of them. Fire-and-forget. */
+  warmFirestore();
 
   try {
     /* FAST PATH — no network. Uses the account snapshot from the last visit
