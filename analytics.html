@@ -468,21 +468,14 @@ try {
         </div>
       </div>
 
-      <div class="edge-card">
-        <div class="edge-card-title">Time of Day Performance</div>
-        <div class="heatmap-row" id="heatmapRow"></div>
-        <div class="insight-box red-box">
-          <svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5H1.5z"/><line x1="8" y1="6.5" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.7" fill="currentColor" stroke="none"/></svg>
-          <span data-stat="timeInsight">—</span>
-        </div>
-      </div>
+      
 
       <div class="edge-card">
-        <div class="edge-card-title">Trade Duration Analysis</div>
+        <div class="edge-card-title">Setup Performance</div>
         <div class="chart-wrap-md"><canvas id="durationChart"></canvas></div>
         <div class="insight-box green-box">
           <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6"/></svg>
-          <span>Trades held <strong>15–60 minutes</strong> are your most profitable duration bucket.</span>
+          <span><span data-stat="setupInsight">—</span></span>
         </div>
       </div>
 
@@ -505,9 +498,9 @@ try {
         <div class="edge-card-title">Trade Outcome Distribution</div>
         <div class="chart-wrap-donut"><canvas id="outcomeChart"></canvas></div>
         <div class="donut-legend">
-          <div class="donut-legend-item"><span class="dot" style="background:var(--green)"></span>Wins <b>158</b></div>
-          <div class="donut-legend-item"><span class="dot" style="background:var(--red)"></span>Losses <b>61</b></div>
-          <div class="donut-legend-item"><span class="dot" style="background:var(--text-faint)"></span>B/E <b>12</b></div>
+          <div class="donut-legend-item"><span class="dot" style="background:var(--green)"></span>Wins <b data-stat="donutWins">0</b></div>
+          <div class="donut-legend-item"><span class="dot" style="background:var(--red)"></span>Losses <b data-stat="donutLosses">0</b></div>
+          <div class="donut-legend-item"><span class="dot" style="background:var(--text-faint)"></span>B/E <b data-stat="donutBE">0</b></div>
         </div>
       </div>
 
