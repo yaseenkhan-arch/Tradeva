@@ -216,60 +216,51 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
 
 ---
 
-## 7. Status
+## 7. Status — MIGRATION COMPLETE ✅
 
-### Migrated to Firestore ✅
-| Page | Notes |
-|---|---|
-| `login.html` / `register.html` | email+password, Google, verification, shared config |
-| `settings.html` | accounts CRUD + logout (new page) |
-| `dashboard.html` | all stats + equity/drawdown charts from real trades; demo badge |
-| `trades-new.html` | writes to Firestore, image compression → Storage, account gating |
-| `trades.html` | list/search/filter from Firestore |
-| `trade-detail.html` | view/edit/delete by doc id (`?id=`) |
-| `profit-calendar.html` | real trades + visual redesign |
-| `analytics.html` + `analytics.js` | full aggregation engine, all 11 stat cards real |
+Every page now runs on Firestore. The only localStorage still in use is
+`tradeva_theme`, `tradeva_profile` and `tradeva_photo` (UI preferences —
+intentionally per-device).
 
-Auth guard + live account switcher are on **all** app pages.
+| Page | Firestore path | Notes |
+|---|---|---|
+| `login` / `register` | — | email+password, Google, verification |
+| `settings` | `accounts/{id}` | account CRUD + logout |
+| `dashboard` | `.../trades` | stats + equity/drawdown from real trades |
+| `trades-new` | `.../trades` | image compression → Storage |
+| `trades` | `.../trades` | list/search/filter |
+| `trade-detail` | `.../trades/{id}` | view/edit/delete by doc id |
+| `profit-calendar` | `.../trades` | + visual redesign |
+| `analytics` (+ `.js`) | `.../trades` | full aggregation engine |
+| `mood-tracker` | `.../mood` | one entry per date |
+| `discipline-tracker` | `.../discipline` + `settings/discipline` | entries + rules/checklist |
+| `weekly-planner` | `.../plans` | one plan per week |
+| `knowledge-base` | `users/{uid}/knowledge` | **global**, not per-account |
+| `reviews` | `.../reviews` | writes reviews, reads all 5 other sources |
+| `milestones` | `settings/milestones` | read-only over everything; caches unlock dates |
 
-### Still on localStorage ⬜
-| Page | Keys it owns |
-|---|---|
-| `mood-tracker.html` | `tradeva_mood_entries` |
-| `discipline-tracker.html` | `tradeva_discipline_entries`, `_rules`, `_checklist` |
-| `reviews.html` | `tradeva_reviews` (+ reads mood/discipline/plans) |
-| `milestones.html` | `tradeva_milestones` (+ reads everything) |
-| `weekly-planner.html` | `tradeva_weekly_plans` |
-| `knowledge-base.html` | `tradeva_knowledge` |
+Auth guard + live account switcher are on **every** app page.
 
-**These are a different job.** Unlike the trade pages (which only *read*), each
-of these *creates and stores its own records*, so each needs its own Firestore
-collection and a small CRUD module — essentially repeating the trades migration.
+### Four shared modules
+- `tradeva-firebase.js` — config, auth, guard
+- `tradeva-accounts.js` — accounts + switcher
+- `tradeva-trades.js` — trade CRUD + image compression
+- `tradeva-journal.js` — mood / discipline / plans / reviews / settings / knowledge
 
----
+## 8. Possible Next Steps
 
-## 8. Recommended Next Steps
+The migration is finished, so future work is features rather than plumbing:
 
-1. **`mood-tracker.html` first** — simplest (one collection, one entry type).
-   It establishes the pattern the rest follow.
-2. Then `discipline-tracker`, `weekly-planner`, `knowledge-base`.
-3. Then `reviews` and `milestones` last — they *read* all the others, so they
-   need those collections to exist first.
-
-**Suggested collection paths** (keep the per-account scoping where it makes sense):
-
-```
-users/{uid}/accounts/{accountId}/mood/{entryId}
-users/{uid}/accounts/{accountId}/discipline/{entryId}
-users/{uid}/accounts/{accountId}/plans/{planId}
-users/{uid}/accounts/{accountId}/reviews/{reviewId}
-users/{uid}/knowledge/{resourceId}        ← NOT per-account (library is global)
-```
-
-Build one `tradeva-journal.js` module exporting CRUD for mood / discipline /
-plans / reviews rather than four separate modules — they share the same shape.
-
----
+1. **Performance** — every page waits on auth → account → query before
+   rendering. Caching the last-known values per account would remove the
+   brief blank state on load.
+2. **Real-time listeners** — currently every page fetches once on load.
+   Swapping `getDocs` for `onSnapshot` would make data update live across
+   tabs and devices without a refresh.
+3. **The Coming Soon pages** — AI Trade Review, Backtesting, Auto Sync.
+4. **Trade fields worth capturing** — time-in-position isn't logged, so
+   "Average Holding Time" on Analytics stays empty. Entry *times* would
+   also unlock genuine hour-by-hour analysis.
 
 ## 9. Testing Reality Check
 
