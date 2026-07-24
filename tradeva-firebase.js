@@ -47,24 +47,32 @@ const auth = getAuth(app);
 //   localStorage.setItem('tradeva_no_persistence','1')  -> memory cache
 //   localStorage.removeItem('tradeva_no_persistence')    -> persistent cache
 let db;
-const _fsInitStart = performance.now();
-const _noPersist = (() => { try { return localStorage.getItem("tradeva_no_persistence") === "1"; } catch (e) { return false; } })();
+{
+  const _t0 = (typeof performance !== "undefined" && performance.now) ? performance.now() : 0;
+  let _noPersist = false;
+  try { _noPersist = localStorage.getItem("tradeva_no_persistence") === "1"; } catch (e) {}
 
-try {
-  if (_noPersist) {
-    db = getFirestore(app);
-  } else {
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
+  try {
+    db = _noPersist
+      ? getFirestore(app)
+      : initializeFirestore(app, {
+          localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
+  } catch (e) {
+    // initializeFirestore throws if Firestore was already initialised for this
+    // app (e.g. another module got there first), and IndexedDB can be blocked
+    // in private mode. Either way, fall back rather than breaking the page.
+    console.warn("Firestore persistent cache unavailable, using default:", e && e.message);
+    try { db = getFirestore(app); } catch (e2) { console.error("Firestore init failed:", e2); }
   }
-} catch (e) {
-  console.warn("Firestore persistent cache unavailable, using memory cache:", e);
-  db = getFirestore(app);
-}
-if (window.TRADEVA_PERF !== false) {
-  console.log(`%c   ↳ Firestore init (${_noPersist ? "MEMORY cache" : "PERSISTENT cache"}): ` +
-              `${(performance.now() - _fsInitStart).toFixed(0)}ms`, "color:#0EA5E9");
+
+  try {
+    if (typeof window !== "undefined" && window.TRADEVA_PERF !== false) {
+      const _ms = ((typeof performance !== "undefined" && performance.now) ? performance.now() : 0) - _t0;
+      console.log("%c   ↳ Firestore init (" + (_noPersist ? "MEMORY cache" : "PERSISTENT cache") +
+                  "): " + _ms.toFixed(0) + "ms", "color:#0EA5E9");
+    }
+  } catch (e) {}
 }
 
 const storage = { get instance() { return _storage; } };
@@ -102,9 +110,11 @@ function warmFirestore() {
   return _warmed;
 }
 
-/* Warm as soon as the session is known — this is the earliest point at which
-   an authenticated read is possible. */
-onAuthStateChanged(auth, (u) => { if (u && !_warmed) warmFirestore(); });
+/* NOTE: deliberately NOT registering a module-level onAuthStateChanged here.
+   login.html imports this module before any user exists, and adding a global
+   auth listener at import time interfered with the login page's own submit
+   flow. App pages call warmFirestore() explicitly after their auth guard
+   resolves, which is both safer and better targeted. */
 
 
 // ══════════════════════════════════════════════════════════════════
