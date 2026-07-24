@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="modulepreload" href="./tradeva-firebase.js">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tradeva — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 
 /* ══════════════════════════════════════════════════════════
@@ -1285,19 +1290,53 @@ document.addEventListener('DOMContentLoaded', () => {
 import { auth } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
-function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+import { perf } from "./tradeva-perf.js";
+
+/* Session restore. The previous version polled every 60ms, which wasted up
+   to 60ms even when the session was already known. onAuthStateChanged fires
+   as soon as the SDK resolves, so there is no polling penalty. */
+function tvWhenAuthed(){
+  return new Promise(res => {
+    if (auth.currentUser) return res(auth.currentUser);
+    const unsub = auth.onAuthStateChanged(u => { if (u) { unsub(); res(u); } });
+  });
+}
 
 (async () => {
+  perf.mark("auth:start");
   await tvWhenAuthed();
-  await initAccountSwitcher();
+  perf.mark("auth:end");
+  perf.span("1. Firebase Auth (session restore)", "auth:start", "auth:end");
+
   try {
-    const acc = await resolveSelectedAccount();
-    if (!acc) { window.__tvSetDashboardTrades([], null); return; }   // no account → demo view
-    const rows = await listTrades(acc.id);
-    window.__tvSetDashboardTrades(rows, acc);
+    /* Account lookup and switcher rendering are independent — run together
+       instead of one after the other. */
+    perf.mark("acct:start");
+    const [acc] = await Promise.all([
+      resolveSelectedAccount(),
+      initAccountSwitcher()
+    ]);
+    perf.mark("acct:end");
+    perf.span("2. Resolve account + sidebar switcher", "acct:start", "acct:end");
+
+    if (!acc) {
+      window.__tvSetDashboardTrades([], null);
+      perf.firstContent();
+      perf.report("DASHBOARD STARTUP (no account)");
+      return;
+    }
+
+    const rows = await perf.time("3. Firestore: download trades", listTrades(acc.id));
+
+    perf.timeSync("4. Compute stats + render charts", () => {
+      window.__tvSetDashboardTrades(rows, acc);
+    });
+
+    perf.firstContent();
+    perf.report("DASHBOARD STARTUP");
   } catch (e) {
     console.error("Dashboard load failed:", e);
-    window.__tvSetDashboardTrades([]);
+    window.__tvSetDashboardTrades([], null);
   }
 })();
 </script>
