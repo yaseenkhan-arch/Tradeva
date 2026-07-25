@@ -134,14 +134,38 @@ async function deleteAccount(id) {
 ────────────────────────────────────────────────────────────────── */
 const ACCOUNTS_SNAPSHOT_KEY = "tradeva_accounts_snapshot";
 
-function readAccountsSnapshot() {
+function readAccountsSnapshotRaw() {
   try {
     const raw = localStorage.getItem(ACCOUNTS_SNAPSHOT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return (parsed && Array.isArray(parsed.rows) && parsed.uid === auth.currentUser?.uid)
-      ? parsed.rows : null;
+      ? parsed : null;
   } catch (e) { return null; }
+}
+
+function readAccountsSnapshot() {
+  const p = readAccountsSnapshotRaw();
+  return p ? p.rows : null;
+}
+
+/* MEASURED: this 2-document query cost 585ms on one page and 3315ms on
+   another in the same session. It is charged per QUERY, not per byte, and
+   it runs on every page load of every page.
+
+   Accounts change maybe twice a year, and every mutation calls
+   invalidateAccountsCache() which wipes the snapshot — so within the TTL
+   the cached copy is authoritative and the network round trip is pure
+   waste. Skip it entirely rather than "refreshing in the background",
+   because a background query still contends with the reads that matter.
+
+   Cost: an account edited on ANOTHER device can take up to the TTL to
+   appear here. Edits made on THIS device are instant. */
+const SNAPSHOT_TTL_MS = 10 * 60 * 1000;
+
+function snapshotIsFresh() {
+  const p = readAccountsSnapshotRaw();
+  return !!(p && p.rows.length && (Date.now() - (p.at || 0)) < SNAPSHOT_TTL_MS);
 }
 
 function writeAccountsSnapshot(rows) {
@@ -178,6 +202,17 @@ function listAccountsCached(opts = {}) {
 }
 
 async function listAccounts(opts = {}) {
+  /* Fast path: a recent local snapshot answers without touching the network.
+     Pass { fresh: true } where authoritative data matters (settings page). */
+  if (!opts.fresh && snapshotIsFresh()) {
+    const rows = readAccountsSnapshot() || [];
+    if (window.TRADEVA_PERF !== false) {
+      console.log("%c   \u21b3 accounts: 0ms  [SNAPSHOT]  " + rows.length + " docs",
+                  "color:#10B981");
+    }
+    return opts.includeArchived ? rows : rows.filter(a => a.status !== "archived");
+  }
+
   const fresh = _accountsPromise && (Date.now() - _accountsAt) < ACCOUNTS_TTL_MS;
   if (!fresh) {
     _accountsAt = Date.now();
