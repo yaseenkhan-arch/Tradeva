@@ -690,17 +690,27 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Trades data + account switcher (module) -->
 <script type="module">
 import { auth } from "./tradeva-firebase.js";
-import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { initAccountSwitcher, resolveSelectedAccount,
+         resolveSelectedAccountCached } from "./tradeva-accounts.js";
 import { subscribeTrades } from "./tradeva-trades.js";
 function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
 
 (async () => {
   await tvWhenAuthed();
-  await initAccountSwitcher();
+
+  /* Do NOT await this. initAccountSwitcher() waits on listAccounts(), which
+     measured 3315ms for TWO documents — and it was sitting in front of the
+     trades query, so the whole page queued behind a sidebar pill. The
+     switcher paints itself from the local snapshot and reconciles on its
+     own; nothing here depends on it. */
+  initAccountSwitcher().catch(e => console.error("Switcher failed:", e));
 
   const empty = document.getElementById("emptyState");
   try {
-    const acc = await resolveSelectedAccount();
+    /* Resolve from the local snapshot first — zero network. Only a
+       first-ever visit falls through to the network resolve. */
+    let acc = resolveSelectedAccountCached();
+    if (!acc) acc = await resolveSelectedAccount();
     if (!acc) {
       // No trading account yet → point the user at Settings
       window.TRADES = [];
@@ -714,9 +724,18 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
       }
       return;
     }
-    // Live subscription: first callback is served from the local cache
-    // (instant on repeat visits), then Firestore pushes only changes —
-    // so adding or deleting a trade updates this list without a refetch.
+    /* Live subscription — one query, then Firestore pushes only changes, so
+       adding or deleting a trade updates this list without a refetch.
+
+       NOTE: the first callback is served from the local cache only when
+       persistent local cache is enabled. It currently is NOT (fbperf shows
+       zero cache hits), so this first callback is a server read. Enabling
+       persistentLocalCache() in tradeva-firebase.js is the single change
+       that would make repeat visits to this page instant.
+
+       This query has no limit — fine at 21 trades, and query COUNT matters
+       more than payload here. Past ~1000 trades it needs limit + startAfter
+       paging, with the filters still running client-side over what's loaded. */
     subscribeTrades(acc.id, rows => window.__tvSetTrades(rows));
   } catch (e) {
     console.error("Loading trades failed:", e);
