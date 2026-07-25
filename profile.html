@@ -1,13 +1,17 @@
-    
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="modulepreload" href="./tradeva-firebase.js">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tradeva — Profile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <style>
 
 /* ══════════════════════════════════════════════════════════
@@ -612,9 +616,9 @@ try {
   </nav>
 
   <div class="sidebar-bottom">
-    <div class="account-switcher" onclick="window.location.href='settings.html'">
+    <div class="account-switcher">
       <div class="account-dot"></div>
-      <span class="account-label">Main Account</span>
+      <span class="account-label">Loading…</span>
       <svg class="account-caret" viewBox="0 0 14 14"><polyline points="3,5 7,9 11,5"/></svg>
     </div>
     <div class="theme-toggle" onclick="toggleTheme()">
@@ -979,7 +983,7 @@ function handlePhoto(input) {
 
 /* ── EXPORT CSV ──────────────────────────────────────────── */
 function exportData() {
-  const trades = JSON.parse(localStorage.getItem('tradeva_trades') || '[]');
+  const trades = (window.__tvProfileTrades || []);
   if (!trades.length) { showToast('No trades to export yet.'); return; }
   const headers = ['Date','Pair','Direction','Session','PnL','Outcome'];
   const rows = trades.map(t => [t.date, t.pair, t.dir, t.session, t.pnl, t.outcome || (t.pnl >= 0 ? 'Win' : 'Loss')]);
@@ -992,18 +996,23 @@ function exportData() {
 }
 
 /* ── CLEAR TRADES ────────────────────────────────────────── */
-function confirmClear() {
-  if (confirm('Are you sure? This will permanently delete all your trade records.')) {
-    localStorage.removeItem('tradeva_trades');
-    showToast('All trades cleared.');
-    loadStats();
+async function confirmClear() {
+  if (!confirm('Are you sure? This will permanently delete all your trade records for the selected account.')) return;
+  try {
+    if (typeof window.__tvClearTrades !== 'function') throw new Error('Still loading — try again in a moment.');
+    const n = await window.__tvClearTrades();
+    showToast(n + ' trade' + (n === 1 ? '' : 's') + ' cleared.');
+  } catch (e) {
+    console.error('Clear trades failed:', e);
+    showToast(e.message || 'Could not clear trades.');
   }
 }
 
 /* ── LOAD STATS ──────────────────────────────────────────── */
-function loadStats() {
-  const trades = JSON.parse(localStorage.getItem('tradeva_trades') || '[]');
-  if (!trades.length) return;
+function loadStats(tradesArg) {
+  const trades = tradesArg || window.__tvProfileTrades || [];
+  const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  if (!trades.length) { setT('statTrades', '0'); setT('statWinRate', '0%'); setT('statPnl', '$0'); return; }
   const wins = trades.filter(t => (t.pnl || 0) > 0);
   const total = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const wr = ((wins.length / trades.length) * 100).toFixed(1);
@@ -1088,5 +1097,41 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStats();
 });
 </script>
+<!-- Profile data + account switcher (module) -->
+<script type="module">
+import { auth } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades, deleteTrade } from "./tradeva-trades.js";
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(auth.currentUser);
+  const unsub = auth.onAuthStateChanged(u=>{ if(u){ unsub(); res(u); } }); }); }
+
+let ACC = null;
+
+async function refresh() {
+  const rows = ACC ? await listTrades(ACC.id) : [];
+  window.__tvProfileTrades = rows;      // consumed by exportCSV + loadStats
+  if (typeof loadStats === "function") loadStats(rows);
+}
+
+/* Delete every trade in the selected account. Firestore has no bulk
+   delete from the client, so this removes them individually (and their
+   Storage images via deleteTrade). */
+window.__tvClearTrades = async function () {
+  if (!ACC) throw new Error("No trading account selected.");
+  const rows = window.__tvProfileTrades || [];
+  for (const t of rows) { await deleteTrade(ACC.id, t.id); }
+  await refresh();
+  return rows.length;
+};
+
+(async () => {
+  await tvWhenAuthed();
+  const [acc] = await Promise.all([ resolveSelectedAccount(), initAccountSwitcher() ]);
+  ACC = acc;
+  try { await refresh(); }
+  catch (e) { console.error("Profile load failed:", e); window.__tvProfileTrades = []; }
+})();
+</script>
 </body>
+
 </html>
