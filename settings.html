@@ -533,9 +533,6 @@ textarea { resize: vertical; min-height: 80px; }
 .empty-ic svg { width:26px; height:26px; stroke:var(--accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 .empty-title { font-size:15px; font-weight:700; margin-bottom:6px; }
 .empty-sub { font-size:13px; color:var(--text-muted); max-width:360px; margin:0 auto 18px; line-height:1.5; }
-.logout-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; border:1px solid var(--border); border-radius:13px; margin-top:16px; }
-.logout-info-title { font-size:14px; font-weight:700; }
-.logout-info-sub { font-size:12.5px; color:var(--text-muted); margin-top:2px; }
 .btn-outline { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:var(--radius-btn); border:1px solid var(--border); background:var(--bg-page); color:var(--text-primary); font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all var(--t) var(--ease); }
 .btn-outline:hover { background:var(--border-light); }
 .btn-outline.danger { color:var(--red); border-color:var(--red); }
@@ -715,7 +712,6 @@ finally { document.body.classList.remove("tv-guarding"); document.body.classList
 
   <div class="tabs">
     <button class="tab active" data-tab="accounts" onclick="switchTab('accounts')">Accounts</button>
-    <button class="tab" data-tab="general" onclick="switchTab('general')">General</button>
   </div>
 
   <!-- ACCOUNTS TAB -->
@@ -735,23 +731,6 @@ finally { document.body.classList.remove("tv-guarding"); document.body.classList
     </div>
   </div>
 
-  <!-- GENERAL TAB -->
-  <div id="tab-general" style="display:none;">
-    <div class="card">
-      <div class="card-title">Session</div>
-      <div class="card-sub">You are signed in to Tradeva.</div>
-      <div class="logout-row">
-        <div>
-          <div class="logout-info-title" id="sessionEmail">—</div>
-          <div class="logout-info-sub">Sign out of your Tradeva account on this device.</div>
-        </div>
-        <button class="btn-outline danger" id="logoutBtn">
-          <svg viewBox="0 0 16 16"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3"/><polyline points="10,11 13.5,8 10,5"/><line x1="13.5" y1="8" x2="6" y2="8"/></svg>
-          Log out
-        </button>
-      </div>
-    </div>
-  </div>
 </main>
 
 <nav class="mobile-nav">
@@ -849,15 +828,17 @@ function openSidebar(){ document.querySelector('.sidebar').classList.add('open')
 function closeSidebar(){ document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow=''; }
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-  document.getElementById('tab-accounts').style.display = name==='accounts'?'':'none';
-  document.getElementById('tab-general').style.display = name==='general'?'':'none';
+  const accEl = document.getElementById('tab-accounts');
+  if (accEl) accEl.style.display = name==='accounts'?'':'none';
+  const genEl = document.getElementById('tab-general');   // removed with the logout row
+  if (genEl) genEl.style.display = name==='general'?'':'none';
 }
 </script>
 
 <!-- ACCOUNTS LOGIC -->
 <!-- ACCOUNTS LOGIC -->
 <script type="module">
-import { auth, logout } from "./tradeva-firebase.js";
+import { auth } from "./tradeva-firebase.js";
 import {
   createAccount, updateAccount, deleteAccount, listAccounts, getAccount,
   initAccountSwitcher, setSelectedAccount, getSelectedAccountId
@@ -1034,11 +1015,8 @@ async function confirmDelete(id){
 
 // ── init ──
 (async () => {
-  const user = await whenAuthed();
-  const emailEl = document.getElementById("sessionEmail");
-  if (emailEl) emailEl.textContent = user.email || user.displayName || "Signed in";
-  const lo = document.getElementById("logoutBtn");
-  if (lo) lo.addEventListener("click", () => logout());
+  await whenAuthed();
+  /* Logout moved to the Danger Zone on profile.html. */
   await renderAccounts();
   await initAccountSwitcher();
 })();
