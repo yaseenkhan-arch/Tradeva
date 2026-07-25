@@ -1,4 +1,4 @@
- /* ══════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════
  * tradeva-summary.js — dashboard summary doc + daily aggregates
  * ══════════════════════════════════════════════════════════════════════
  *
@@ -48,7 +48,15 @@ import { fbperf } from "./tradeva-fbperf.js";
 
 /* ── config ───────────────────────────────────────────────────────── */
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
+
+/* The dashboard is ONE document read. Measured: a getDoc round trip to
+   asia-south1 is a stable ~570ms, while a collection query costs 2-3x that
+   and concurrent queries contend during startup. So the recent-trades rows
+   and the equity curve live INSIDE this doc rather than in their own
+   collections — deleting a query is worth more than saving bytes. */
+const MAX_RECENT = 10;      // rows the dashboard table shows
+const MAX_CURVE_DAYS = 400; // ~18 months of trading days, keeps the doc small
 const CACHE_PREFIX = "tradeva_summary_";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -104,6 +112,21 @@ function zeroSummary() {
     largestWin: 0, largestLoss: 0,
     winStreak: 0, lossStreak: 0, currentStreak: 0,
     lastTradeDate: "", dirty: false,
+    recent: [],   // newest-first display rows
+    curve: [],    // {d: YYYY-MM-DD, l: display label, p: day pnl}
+  };
+}
+
+/** Minimal display row for the recent-trades table. */
+function recentRow(t) {
+  return {
+    id: t.id || null,
+    date: t.date || t.rawDate || "",
+    rawDate: t.rawDate || "",
+    pair: t.pair || "",
+    dir: t.dir || "",
+    session: t.session || "",
+    pnl: num(t.pnl),
   };
 }
 
@@ -116,6 +139,12 @@ export function deriveSummary(raw) {
     s.grossLoss > 0 ? s.grossWin / s.grossLoss : s.grossWin > 0 ? Infinity : 0;
   s.avgRR = s.rrCount > 0 ? s.sumRR / s.rrCount : 0;
   s.netRR = s.sumRR;
+
+  // Expand the compact stored shape into what the dashboard renders.
+  s.recent = Array.isArray(s.recent) ? s.recent : [];
+  s.curve = (Array.isArray(s.curve) ? s.curve : []).map((x) => ({
+    date: x.d, label: x.l || x.d, pnl: num(x.p), count: 1,
+  }));
 
   return s;
 }
@@ -161,6 +190,25 @@ export function computeSummaryFrom(trades) {
   }
 
   s.currentStreak = curWin > 0 ? curWin : -curLoss;
+
+  /* Equity curve, grouped by DAY (gotcha #3). */
+  const byDay = new Map();
+  for (const t of ordered) {
+    const d = t?.rawDate || "";
+    if (!d) continue;
+    const cur = byDay.get(d) || { d, l: t.date || d, p: 0 };
+    cur.p += num(t.pnl);
+    byDay.set(d, cur);
+  }
+  s.curve = [...byDay.values()]
+    .sort((a, b) => a.d.localeCompare(b.d))
+    .slice(-MAX_CURVE_DAYS)
+    .map((x) => ({ ...x, p: Math.round(x.p * 100) / 100 }));
+
+  /* Recent rows, newest first — same ordering the table used to get from
+     listTrades(), so the displayed rows are unchanged. */
+  s.recent = ordered.slice(-MAX_RECENT).reverse().map(recentRow);
+
   s.dirty = false;
   return s;
 }
@@ -394,6 +442,20 @@ async function applyDelta(accId, before, after) {
         if (-s.currentStreak > s.lossStreak) s.lossStreak = -s.currentStreak;
       }
       s.lastTradeDate = a.date;
+
+      /* Curve: fold the new trade into its day. */
+      const curve = Array.isArray(s.curve) ? [...s.curve] : [];
+      const i = curve.findIndex((x) => x.d === a.date);
+      if (i >= 0) curve[i] = { ...curve[i], p: Math.round((num(curve[i].p) + a.pnl) * 100) / 100 };
+      else curve.push({ d: a.date, l: after?.date || a.date, p: Math.round(a.pnl * 100) / 100 });
+      curve.sort((x, y) => String(x.d).localeCompare(String(y.d)));
+      s.curve = curve.slice(-MAX_CURVE_DAYS);
+
+      /* Recent: newest first, capped. */
+      const recent = Array.isArray(s.recent) ? [...s.recent] : [];
+      recent.unshift(recentRow({ ...after, rawDate: a.date }));
+      recent.sort((x, y) => String(y.rawDate || "").localeCompare(String(x.rawDate || "")));
+      s.recent = recent.slice(0, MAX_RECENT);
     } else {
       // Delete, edit, or backdated insert — streaks and extremes can no
       // longer be derived from the previous state. Flag for repair.
