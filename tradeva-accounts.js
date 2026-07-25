@@ -249,30 +249,11 @@ async function initAccountSwitcher(options = {}) {
   pill.removeAttribute("onclick");
 
   const labelEl = pill.querySelector(".account-label");
-  const dotEl = pill.querySelector(".account-dot");
+  const dotEl   = pill.querySelector(".account-dot");
 
-  let accounts = [];
-  try { accounts = await listAccounts(); }
-  catch (e) { console.error("Switcher: listAccounts failed", e); }
+  let CURRENT = [];   // whatever the pill is currently showing
 
-  // No accounts → pill invites the user to create one in Settings.
-  if (!accounts.length) {
-    if (labelEl) labelEl.textContent = "Add an account";
-    if (dotEl) dotEl.style.background = "var(--text-faint, #94A3B8)";
-    pill.style.cursor = "pointer";
-    pill.addEventListener("click", () => { window.location.href = "settings.html"; });
-    return;
-  }
-
-  /* Resolve the selection from the list we already have, instead of calling
-     resolveSelectedAccount() (which would re-enter listAccounts()). */
-  const storedId = getSelectedAccountId();
-  let selected = storedId ? accounts.find(a => a.id === storedId) : null;
-  if (!selected) { selected = accounts[0]; setSelectedAccount(selected.id); }
-  if (labelEl && selected) labelEl.textContent = selected.name;
-  if (dotEl) dotEl.style.background = "var(--green, #10B981)";
-
-  // Build dropdown menu
+  /* ── menu element, created once ──────────────────────────────────── */
   let menu = document.getElementById("tvAccountMenu");
   if (menu) menu.remove();
   menu = document.createElement("div");
@@ -282,7 +263,50 @@ async function initAccountSwitcher(options = {}) {
     "background:var(--bg-card,#fff)","border:1px solid var(--border,#E2E8F0)","border-radius:12px",
     "box-shadow:0 12px 32px rgba(0,0,0,0.16)","padding:6px","display:none"
   ].join(";");
+  document.body.appendChild(menu);
 
+  function positionMenu() {
+    const r = pill.getBoundingClientRect();
+    menu.style.left = r.left + "px";
+    menu.style.width = r.width + "px";
+    menu.style.top = (r.top - menu.offsetHeight - 8) + "px"; // open upward (pill sits at sidebar bottom)
+  }
+  function openMenu()  { menu.style.display = "block"; positionMenu(); }
+  function closeMenu() { menu.style.display = "none"; }
+
+  /* ── listeners bound exactly once, regardless of how many times we
+        repaint. Binding inside paint() would stack duplicate handlers
+        every time the background refresh landed. ─────────────────────── */
+  if (!pill.dataset.tvSwitcherBound) {
+    pill.dataset.tvSwitcherBound = "1";
+    pill.style.cursor = "pointer";
+
+    pill.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!CURRENT.length) { window.location.href = "settings.html"; return; }
+      menu.style.display === "block" ? closeMenu() : openMenu();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && !pill.contains(e.target)) closeMenu();
+    });
+    window.addEventListener("resize", () => {
+      if (menu.style.display === "block") positionMenu();
+    });
+
+    menu.addEventListener("click", (e) => {
+      if (e.target.closest("#tvManageAccounts")) { window.location.href = "settings.html"; return; }
+      const row = e.target.closest(".tv-acc-row");
+      if (!row) return;
+      const id = row.getAttribute("data-id");
+      setSelectedAccount(id);
+      closeMenu();
+      if (typeof options.onChange === "function") options.onChange(id);
+      else window.location.reload();   // default: re-read the selected account
+    });
+  }
+
+  /* ── rendering ───────────────────────────────────────────────────── */
   function rowHTML(a, isSel) {
     return `<div class="tv-acc-row" data-id="${a.id}" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text-primary,#0F172A);${isSel?'background:var(--accent-bg,#EFF6FF);':''}">
       <span style="width:7px;height:7px;border-radius:50%;background:${isSel?'var(--green,#10B981)':'var(--text-faint,#94A3B8)'};flex-shrink:0;"></span>
@@ -291,42 +315,54 @@ async function initAccountSwitcher(options = {}) {
     </div>`;
   }
 
-  const sel = getSelectedAccountId();
-  menu.innerHTML =
-    accounts.map(a => rowHTML(a, a.id === sel)).join("") +
-    `<div style="height:1px;background:var(--border-light,#F1F5F9);margin:6px 4px;"></div>
-     <div id="tvManageAccounts" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent,#3B82F6);">
-       <span style="width:15px;height:15px;display:inline-flex;">+</span> Manage accounts
-     </div>`;
+  function paint(accounts) {
+    CURRENT = accounts || [];
 
-  document.body.appendChild(menu);
+    if (!CURRENT.length) {
+      if (labelEl) labelEl.textContent = "Add an account";
+      if (dotEl) dotEl.style.background = "var(--text-faint, #94A3B8)";
+      menu.innerHTML = "";
+      closeMenu();
+      return;
+    }
 
-  function positionMenu() {
-    const r = pill.getBoundingClientRect();
-    menu.style.left = r.left + "px";
-    menu.style.width = r.width + "px";
-    menu.style.top = (r.top - menu.offsetHeight - 8) + "px"; // open upward (pill is at sidebar bottom)
+    const storedId = getSelectedAccountId();
+    let selected = storedId ? CURRENT.find(a => a.id === storedId) : null;
+    if (!selected) { selected = CURRENT[0]; setSelectedAccount(selected.id); }
+
+    if (labelEl) labelEl.textContent = selected.name;
+    if (dotEl) dotEl.style.background = "var(--green, #10B981)";
+
+    const sel = getSelectedAccountId();
+    menu.innerHTML =
+      CURRENT.map(a => rowHTML(a, a.id === sel)).join("") +
+      `<div style="height:1px;background:var(--border-light,#F1F5F9);margin:6px 4px;"></div>
+       <div id="tvManageAccounts" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent,#3B82F6);">
+         <span style="width:15px;height:15px;display:inline-flex;">+</span> Manage accounts
+       </div>`;
   }
-  function openMenu() { menu.style.display = "block"; positionMenu(); }
-  function closeMenu() { menu.style.display = "none"; }
-  function toggleMenu() { menu.style.display === "block" ? closeMenu() : openMenu(); }
 
-  pill.style.cursor = "pointer";
-  pill.addEventListener("click", (e) => { e.stopPropagation(); toggleMenu(); });
-  document.addEventListener("click", (e) => { if (!menu.contains(e.target) && !pill.contains(e.target)) closeMenu(); });
-  window.addEventListener("resize", () => { if (menu.style.display === "block") positionMenu(); });
+  const signature = list =>
+    (list || []).map(a => `${a.id}:${a.name || ""}:${a.type || ""}`).join("|");
 
-  menu.addEventListener("click", (e) => {
-    const manage = e.target.closest("#tvManageAccounts");
-    if (manage) { window.location.href = "settings.html"; return; }
-    const row = e.target.closest(".tv-acc-row");
-    if (!row) return;
-    const id = row.getAttribute("data-id");
-    setSelectedAccount(id);
-    closeMenu();
-    if (typeof options.onChange === "function") options.onChange(id);
-    else window.location.reload(); // default: reload so the whole page re-reads the selected account
-  });
+  /* ── paint from the local snapshot FIRST — zero network ───────────── */
+  const cached = listAccountsCached();
+  let painted = false;
+  if (cached && cached.length) { paint(cached); painted = true; }
+
+  /* ── then reconcile in the background ────────────────────────────── */
+  let fresh;
+  try {
+    fresh = await listAccounts();
+  } catch (e) {
+    console.error("Switcher: listAccounts failed", e);
+    if (!painted) paint([]);   // nothing cached and the fetch failed
+    return;
+  }
+
+  // Repaint only when the list actually changed — avoids clobbering an
+  // open menu on every page load for no reason.
+  if (!painted || signature(fresh) !== signature(cached)) paint(fresh);
 }
 
 function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
