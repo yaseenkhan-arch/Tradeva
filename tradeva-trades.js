@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════════
+ // ══════════════════════════════════════════════════════════════════
 // TRADEVA — TRADES MODULE
 // Trade CRUD in Firestore, scoped to the selected trading account,
 // plus screenshot compression + upload to Firebase Storage.
@@ -7,7 +7,7 @@
 //   storage: users/{uid}/accounts/{accountId}/trades/{tradeId}/{entry|exit}.jpg
 // ══════════════════════════════════════════════════════════════════
 
-import { auth, db, getStorageLazy } from "./tradeva-firebase.js";
+import { auth, db, storage } from "./tradeva-firebase.js";
 import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, setDoc,
   query, orderBy, limit, getCountFromServer, onSnapshot, increment, serverTimestamp
@@ -98,7 +98,7 @@ async function compressFromInput(inputId) {
 async function uploadTradeImage(accountId, tradeId, slot, dataUrl) {
   if (!dataUrl) return null;
   const path = `users/${uid()}/accounts/${accountId}/trades/${tradeId}/${slot}.jpg`;
-  const r = ref(await getStorageLazy(), path);
+  const r = ref(storage, path);
   await uploadString(r, dataUrl, "data_url");
   return await getDownloadURL(r);
 }
@@ -106,7 +106,7 @@ async function uploadTradeImage(accountId, tradeId, slot, dataUrl) {
 async function deleteTradeImage(accountId, tradeId, slot) {
   try {
     const path = `users/${uid()}/accounts/${accountId}/trades/${tradeId}/${slot}.jpg`;
-    await deleteObject(ref(await getStorageLazy(), path));
+    await deleteObject(ref(storage, path));
   } catch (e) {
     // missing file is fine
     if (!e || e.code !== "storage/object-not-found") console.warn("deleteTradeImage:", e);
