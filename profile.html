@@ -773,24 +773,6 @@ try {
           <div class="pref-track on"><div class="pref-knob"></div></div>
         </div>
       </div>
-      <div class="pref-row">
-        <div class="pref-left">
-          <div class="pref-title">Public Profile</div>
-          <div class="pref-desc">Allow others to view your trading stats</div>
-        </div>
-        <div class="pref-toggle" onclick="togglePref(this)">
-          <div class="pref-track"><div class="pref-knob"></div></div>
-        </div>
-      </div>
-      <div class="pref-row">
-        <div class="pref-left">
-          <div class="pref-title">Two-Factor Authentication</div>
-          <div class="pref-desc">Add an extra layer of security</div>
-        </div>
-        <div class="pref-toggle" onclick="togglePref(this)">
-          <div class="pref-track"><div class="pref-knob"></div></div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -826,6 +808,16 @@ try {
         <button class="btn-danger" style="border-color:var(--red);color:var(--red);" onclick="alert('Please contact support to delete your account.')">
           <svg viewBox="0 0 14 14"><path d="M7 1a6 6 0 100 12A6 6 0 007 1zM4.5 4.5l5 5M9.5 4.5l-5 5"/></svg>
           Delete Account
+        </button>
+      </div>
+      <div class="danger-row">
+        <div>
+          <div class="danger-title">Logout</div>
+          <div class="danger-desc">Securely sign out of your Tradeva account</div>
+        </div>
+        <button class="btn-danger" id="logoutBtn">
+          <svg viewBox="0 0 14 14"><path d="M5.5 1.5h-3a1 1 0 00-1 1v9a1 1 0 001 1h3"/><polyline points="9,10 12,7 9,4"/><line x1="12" y1="7" x2="5.5" y2="7"/></svg>
+          Logout
         </button>
       </div>
     </div>
@@ -1099,9 +1091,24 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- Profile data + account switcher (module) -->
 <script type="module">
-import { auth } from "./tradeva-firebase.js";
+import { auth, logout } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
 import { listTrades, deleteTrade } from "./tradeva-trades.js";
+
+/* Sign-out must also drop this device's cached copies of the user's data.
+   The accounts snapshot, the dashboard summary and the daily-backfill flags
+   are all per-user and would otherwise survive into the next session — on a
+   shared machine the next person to open the app would briefly see the
+   previous user's numbers painted from cache before auth redirected them.
+
+   tradeva_theme is a device preference, not user data, so it stays. */
+function clearLocalUserData() {
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("tradeva_") && k !== "tradeva_theme")
+      .forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* private mode — non-fatal, logout still proceeds */ }
+}
 function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(auth.currentUser);
   const unsub = auth.onAuthStateChanged(u=>{ if(u){ unsub(); res(u); } }); }); }
 
@@ -1123,6 +1130,23 @@ window.__tvClearTrades = async function () {
   await refresh();
   return rows.length;
 };
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    logoutBtn.disabled = true;
+    logoutBtn.style.opacity = "0.6";
+    try {
+      clearLocalUserData();
+      await logout();               // signOut + redirect to login.html
+    } catch (e) {
+      console.error("Logout failed:", e);
+      logoutBtn.disabled = false;
+      logoutBtn.style.opacity = "";
+      alert("Couldn't sign out. Please check your connection and try again.");
+    }
+  });
+}
 
 (async () => {
   await tvWhenAuthed();
