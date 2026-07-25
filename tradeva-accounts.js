@@ -96,9 +96,25 @@ async function deleteAccount(id) {
     if (n % 400 === 0) { await batch.commit(); batch = writeBatch(db); }
   }
   await batch.commit();
+
+  /* Firestore does not cascade, and deleting the parent doc does NOT delete
+     its subcollections — they become unreachable orphans that still bill.
+     Clear the derived data too. */
+  for (const sub of ["daily", "settings", "mood", "discipline", "plans", "reviews"]) {
+    try {
+      const snap = await getDocs(collection(db, "users", u, "accounts", id, sub));
+      for (let i = 0; i < snap.docs.length; i += 400) {
+        const b = writeBatch(db);
+        snap.docs.slice(i, i + 400).forEach(d => b.delete(d.ref));
+        await b.commit();
+      }
+    } catch (e) { console.warn(`deleteAccount: could not clear ${sub}`, e); }
+  }
+
   // delete the account doc itself
   await deleteDoc(accountDoc(u, id));
   invalidateAccountsCache();
+  try { localStorage.removeItem("tradeva_summary_" + id); } catch (e) {}
   // if the deleted account was selected, clear the pointer
   if (getSelectedAccountId() === id) clearSelectedAccount();
 }
