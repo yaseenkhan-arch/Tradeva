@@ -898,23 +898,54 @@ function toggleTheme() {
 // Init theme
 applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
 
-/* ── TRADE STORE (filled from Firestore by the module below) ── */
-let TRADES = [];        // real trades for the selected account
-let DEMO_MODE = false;  // set by the loader: true only when the account has no trades yet
-let DATA_READY = false; // nothing renders until Firestore answers (prevents demo flash)
-let ACCOUNT = null;     // the selected trading account
-let START_BALANCE = 0;  // account starting balance — drawdown is measured against equity, not profit
+/* ── DATA STORES (filled from Firestore by the module below) ──
+   TRADES now holds ONLY the recent-trades table rows (limited query).
+   Headline stats come from SUMMARY (one doc); charts, max drawdown and
+   profitable-days come from DAILY (one doc per trading day). Nothing on
+   this page reads the full trades collection any more. */
+let TRADES = [];        // recent rows only — NOT the full history
+let SUMMARY = null;     // settings/stats, already derived
+let DAILY = [];         // daily aggregates, oldest -> newest
+let DEMO_MODE = false;
+let DATA_READY = false;
+let ACCOUNT = null;
+let START_BALANCE = 0;  // drawdown is measured against equity, not profit
 
-/* Called by the Firestore module once data arrives */
-window.__tvSetDashboardTrades = function (rows, account) {
-  TRADES = Array.isArray(rows) ? rows : [];
+function tvApplyAccount(account) {
   ACCOUNT = account || null;
-  START_BALANCE = account && Number(account.startingBalance) > 0 ? Number(account.startingBalance) : 0;
-  DEMO_MODE = TRADES.length === 0;      // demo disappears permanently once a trade exists
-  DATA_READY = true;
+  START_BALANCE = account && Number(account.startingBalance) > 0
+    ? Number(account.startingBalance) : 0;
+}
+
+function tvSetDemoBadge() {
   const badge = document.getElementById('demoBadge');
   if (badge) badge.style.display = DEMO_MODE ? '' : 'none';
+}
+
+/* Headline stats — one Firestore document. */
+window.__tvSetDashboardSummary = function (summary, account) {
+  SUMMARY = summary || null;
+  if (account) tvApplyAccount(account);
+  DEMO_MODE = !SUMMARY || !SUMMARY.tradeCount;
+  DATA_READY = true;
+  tvSetDemoBadge();
+  computeStats();
+};
+
+/* Recent-trades table only. */
+window.__tvSetDashboardTrades = function (rows, account) {
+  TRADES = Array.isArray(rows) ? rows : [];
+  if (account) tvApplyAccount(account);
+  if (SUMMARY === null) DEMO_MODE = TRADES.length === 0;
+  DATA_READY = true;
+  tvSetDemoBadge();
   renderTrades();
+};
+
+/* Daily aggregates — charts, max drawdown, profitable days. */
+window.__tvSetDashboardDaily = function (days, account) {
+  DAILY = Array.isArray(days) ? days : [];
+  if (account) tvApplyAccount(account);
   renderCharts();
   computeStats();
 };
@@ -967,40 +998,20 @@ let chartGrowth, chartDrawdown;
 
 function isDark() { return html.getAttribute('data-theme') === 'dark'; }
 
-/* Build equity + drawdown series from real trades (chronological). */
+/* Build equity + drawdown series from the daily aggregates.
+   One point per trading DAY, seeded at the opening balance so growth
+   reads left-to-right from day zero (gotcha #3). */
 function buildChartSeries() {
-  const src = (TRADES && TRADES.length) ? TRADES : [];
-  if (!src.length) return null;
+  if (!DAILY || !DAILY.length) return null;
   const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
 
-  // Sort oldest -> newest explicitly (don't trust incoming order).
-  const ts = t => (t.createdAt && typeof t.createdAt.seconds === 'number')
-    ? t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3
-    : null;
-  const chron = [...src].sort((a, b) => {
-    const ad = a.rawDate || '', bd = b.rawDate || '';
-    if (ad !== bd) return ad.localeCompare(bd);
-    const at = ts(a), bt = ts(b);
-    if (at !== null && bt !== null && at !== bt) return at - bt;
-    if (typeof a._qi === 'number' && typeof b._qi === 'number') return b._qi - a._qi;
-    return 0;
-  });
-
-  // Group by DAY so the curve advances over time instead of per-trade.
-  // Several trades on one date collapse into a single point for that day.
-  const days = [];
-  const seen = {};
-  chron.forEach(t => {
-    const key = t.rawDate || t.date || '';
-    if (!(key in seen)) { seen[key] = days.length; days.push({ key, label: t.date || t.rawDate || '', pnl: 0 }); }
-    days[seen[key]].pnl += num(t.pnl);
-  });
+  // listDaily() already returns date-ascending, but don't trust the order.
+  const days = [...DAILY].sort((a, b) =>
+    String(a.date || '').localeCompare(String(b.date || '')));
 
   const base = START_BALANCE > 0 ? START_BALANCE : 0;
   const labels = [], equity = [], ddPct = [];
 
-  // Seed the curve at the opening balance so growth reads left-to-right from
-  // day zero, and drawdown starts flat at 0% (no drawdown before any trading).
   labels.push('Start');
   equity.push(Math.round((base > 0 ? base : 0) * 100) / 100);
   ddPct.push(0);
@@ -1008,16 +1019,41 @@ function buildChartSeries() {
   let cum = 0;
   let peakEq = base;
   days.forEach(d => {
-    cum += d.pnl;
+    cum += num(d.pnl);
     const eq = base + cum;
     if (eq > peakEq) peakEq = eq;
-    labels.push(d.label);
+    labels.push(d.label || d.date || '');
     equity.push(Math.round((base > 0 ? eq : cum) * 100) / 100);
     const dd = peakEq > 0 ? ((eq - peakEq) / peakEq) * 100 : 0;
     ddPct.push(Math.round(dd * 100) / 100);
   });
 
   return { labels, equity, ddPct };
+}
+
+/* Chart series with a SAFE fallback.
+
+   Previously buildChartSeries() read TRADES, which was always loaded, so a
+   null return could only mean "this account has no trades" — and the demo
+   curves below were the right thing to draw.
+
+   Now the series comes from DAILY, which arrives separately and is empty
+   until the aggregates land (or until backfillDaily has been run). Falling
+   back to the demo arrays there would paint a fabricated equity curve on a
+   real funded account, with no demo badge showing. Draw nothing instead. */
+const TV_DEMO_GROWTH = {
+  labels: ['May 2','May 6','May 12','May 19','May 22','Jun 2','Jun 10','Jun 20'],
+  equity: [1200, 1800, 3200, 5400, 6100, 8900, 12400, 15700]
+};
+const TV_DEMO_DD = {
+  labels: ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'],
+  ddPct:  [0, -6.5, -3.8, -1.2, 0, 0, 0, 0, 0]
+};
+function tvSeries(kind) {
+  const real = buildChartSeries();
+  if (real) return real;
+  if (DEMO_MODE) return kind === 'dd' ? TV_DEMO_DD : TV_DEMO_GROWTH;
+  return { labels: [], equity: [], ddPct: [] };
 }
 
 function renderCharts() {
@@ -1038,9 +1074,9 @@ function renderCharts() {
   chartGrowth = new Chart(gCtx, {
     type: 'line',
     data: {
-      labels: (buildChartSeries()?.labels) || ['May 2','May 6','May 12','May 19','May 22','Jun 2','Jun 10','Jun 20'],
+      labels: tvSeries('growth').labels,
       datasets: [{
-        data: (buildChartSeries()?.equity) || [1200, 1800, 3200, 5400, 6100, 8900, 12400, 15700],
+        data: tvSeries('growth').equity,
         borderColor: '#10B981',
         borderWidth: 2.5,
         backgroundColor: gGrad,
@@ -1097,9 +1133,9 @@ function renderCharts() {
   chartDrawdown = new Chart(dCtx, {
     type: 'line',
     data: {
-      labels: (buildChartSeries()?.labels) || ['May 1','May 5','May 8','May 14','May 21','May 29','Jun 5','Jun 16','Jun 20'],
+      labels: tvSeries('dd').labels,
       datasets: [{
-        data: (buildChartSeries()?.ddPct) || [0, -6.5, -3.8, -1.2, 0, 0, 0, 0, 0],
+        data: tvSeries('dd').ddPct,
         borderColor: '#EF4444',
         borderWidth: 2.5,
         backgroundColor: dGrad,
@@ -1141,14 +1177,48 @@ function renderCharts() {
 }
 
 /* ── COMPUTE STATS FROM LOCALSTORAGE ─────────────────────── */
-function computeStats() {
-  const trades = (TRADES && TRADES.length) ? TRADES : (DEMO_MODE ? SAMPLE_TRADES : []);
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  // Restore the green/red colouring on stat values (matches the original design)
-  const tone = (id, kind) => { const el = document.getElementById(id); if (el) el.className = 'stat-value' + (kind ? ' ' + kind : ''); };
-  const num = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
+/* Demo-only summary, computed from SAMPLE_TRADES with the exact same
+   arithmetic the real summary uses. Never runs once an account has trades. */
+function summaryFromTrades(trades) {
+  const n = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
+  const wins = trades.filter(t => n(t.pnl) > 0);
+  const losses = trades.filter(t => n(t.pnl) < 0);
+  const grossWin = wins.reduce((s, t) => s + Math.abs(n(t.pnl)), 0);
+  const grossLoss = losses.reduce((s, t) => s + Math.abs(n(t.pnl)), 0);
+  const rrVals = trades.map(t => n(t.rr)).filter(v => v !== 0);
+  let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
+  [...trades].reverse().forEach(t => {
+    const p = n(t.pnl);
+    if (p > 0) { curWin++; curLose = 0; if (curWin > bestWin) bestWin = curWin; }
+    else if (p < 0) { curLose++; curWin = 0; if (curLose > bestLose) bestLose = curLose; }
+  });
+  return {
+    tradeCount: trades.length,
+    wins: wins.length,
+    losses: losses.length,
+    netPnl: trades.reduce((s, t) => s + n(t.pnl), 0),
+    grossWin, grossLoss,
+    winRate: trades.length ? (wins.length / trades.length) * 100 : 0,
+    profitFactor: grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0),
+    avgRR: rrVals.length ? rrVals.reduce((s, v) => s + v, 0) / rrVals.length : 0,
+    netRR: rrVals.reduce((s, v) => s + v, 0),
+    largestWin: wins.length ? Math.max(...wins.map(t => n(t.pnl))) : 0,
+    largestLoss: losses.length ? Math.min(...losses.map(t => n(t.pnl))) : 0,
+    winStreak: bestWin,
+    lossStreak: bestLose
+  };
+}
 
-  if (!trades.length) {
+function computeStats() {
+  const set  = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const tone = (id, kind) => { const el = document.getElementById(id); if (el) el.className = 'stat-value' + (kind ? ' ' + kind : ''); };
+  const num  = v => (typeof v === 'number' && !isNaN(v)) ? v : (parseFloat(v) || 0);
+
+  const s = (SUMMARY && SUMMARY.tradeCount)
+    ? SUMMARY
+    : (DEMO_MODE ? summaryFromTrades(SAMPLE_TRADES) : null);
+
+  if (!s || !s.tradeCount) {
     set('totalTrades', '0');
     set('winRate', '0%');
     set('profitFactor', '0');
@@ -1168,85 +1238,88 @@ function computeStats() {
     return;
   }
 
-  const wins   = trades.filter(t => num(t.pnl) > 0);
-  const losses = trades.filter(t => num(t.pnl) < 0);
-  const total  = trades.reduce((s, t) => s + num(t.pnl), 0);
-  const wr     = ((wins.length / trades.length) * 100).toFixed(1);
-  const money  = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const money = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-  set('totalTrades', trades.length);
+  set('totalTrades', s.tradeCount);
   tone('totalTrades', '');
+
+  const wr = num(s.winRate).toFixed(1);
   set('winRate', wr + '%');
   tone('winRate', parseFloat(wr) >= 50 ? 'green' : 'red');
-  set('winLoss', wins.length + ' wins · ' + losses.length + ' losses');
+  set('winLoss', s.wins + ' wins · ' + s.losses + ' losses');
 
+  const total = num(s.netPnl);
   const netEl = document.getElementById('netPnl');
   if (netEl) { netEl.textContent = money(total); netEl.className = 'stat-value ' + (total >= 0 ? 'green' : 'red'); }
 
-  const grossWin  = wins.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
-  const grossLoss = losses.reduce((s, t) => s + Math.abs(num(t.pnl)), 0);
-  const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
-  set('profitFactor', pf === Infinity ? '∞' : pf.toFixed(2));
-  tone('profitFactor', (pf === Infinity || pf >= 1) ? 'green' : 'red');
+  const pf = s.profitFactor;
+  set('profitFactor', pf === Infinity ? '∞' : num(pf).toFixed(2));
+  tone('profitFactor', (pf === Infinity || num(pf) >= 1) ? 'green' : 'red');
   set('pfLabel', pf === Infinity ? 'No losses yet' : (pf >= 2 ? 'Excellent' : pf >= 1.5 ? 'Good' : pf >= 1 ? 'Break-even+' : 'Needs work'));
 
-  const rrVals = trades.map(t => num(t.rr)).filter(v => v !== 0);
-  const avgRR  = rrVals.length ? (rrVals.reduce((s, v) => s + v, 0) / rrVals.length) : 0;
-  const netRR  = rrVals.reduce((s, v) => s + v, 0);
+  const avgRR = num(s.avgRR), netRR = num(s.netRR);
   set('avgRR', avgRR.toFixed(2));
   tone('avgRR', avgRR >= 0 ? 'green' : 'red');
   set('netRR', netRR.toFixed(2));
   tone('netRR', netRR >= 0 ? 'green' : 'red');
 
-  tone('largestWin', wins.length ? 'green' : '');
-  tone('largestLoss', losses.length ? 'red' : '');
-  set('largestWin',  wins.length   ? '+$' + Math.max(...wins.map(t => num(t.pnl))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
-  set('largestLoss', losses.length ? '$-' + Math.abs(Math.min(...losses.map(t => num(t.pnl)))).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
+  const lw = num(s.largestWin), ll = num(s.largestLoss);
+  tone('largestWin', lw > 0 ? 'green' : '');
+  tone('largestLoss', ll < 0 ? 'red' : '');
+  set('largestWin',  lw > 0 ? '+$' + lw.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
+  set('largestLoss', ll < 0 ? '$-' + Math.abs(ll).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—');
 
-  // Oldest → newest, explicitly sorted (streaks and drawdown depend on true order)
-  const _ts = t => (t.createdAt && typeof t.createdAt.seconds === 'number')
-    ? t.createdAt.seconds * 1e6 + (t.createdAt.nanoseconds || 0) / 1e3
-    : null;
-  const chron = [...trades].sort((a, b) => {
-    const ad = a.rawDate || '', bd = b.rawDate || '';
-    if (ad !== bd) return ad.localeCompare(bd);
-    const at = _ts(a), bt = _ts(b);
-    if (at !== null && bt !== null && at !== bt) return at - bt;
-    if (typeof a._qi === 'number' && typeof b._qi === 'number') return b._qi - a._qi;
-    return 0;
-  });
-  let bestWin = 0, bestLose = 0, curWin = 0, curLose = 0;
-  chron.forEach(t => {
-    const p = num(t.pnl);
-    if (p > 0) { curWin++; curLose = 0; if (curWin > bestWin) bestWin = curWin; }
-    else if (p < 0) { curLose++; curWin = 0; if (curLose > bestLose) bestLose = curLose; }
-  });
+  const bestWin = num(s.winStreak), bestLose = num(s.lossStreak);
   set('winStreak', bestWin);
   tone('winStreak', bestWin > 0 ? 'green' : '');
   set('loseStreak', bestLose);
+  set('winStreakSub', bestWin > 0 ? 'best run of ' + bestWin : 'best run');
 
-  const byDay = {};
-  trades.forEach(t => { const d = t.rawDate || t.date || ''; if (!d) return; byDay[d] = (byDay[d] || 0) + num(t.pnl); });
-  set('profitableDays', Object.values(byDay).filter(v => v > 0).length + ' profitable days');
+  /* ── Day-level stats: derived from the daily aggregates, which arrive
+        with the charts. Until they land these keep their placeholder. ── */
+  const days = (DAILY && DAILY.length)
+    ? DAILY
+    : (DEMO_MODE ? tvDemoDays() : null);
 
-  // Max drawdown: largest peak-to-trough drop. The dollar amount is the same
-  // whether measured on equity or profit (the base cancels), but the % is only
-  // meaningful against account equity, so we use the starting balance when known.
-  const ddBase = (typeof START_BALANCE === 'number' && START_BALANCE > 0) ? START_BALANCE : 0;
+  if (!days || !days.length) {
+    set('profitableDays', '— profitable days');
+    set('maxDD', 'Max drawdown: —');
+    return;
+  }
+
+  set('profitableDays', days.filter(d => num(d.pnl) > 0).length + ' profitable days');
+
+  // Max drawdown: largest peak-to-trough drop on ACCOUNT EQUITY (gotcha #2).
+  const ddBase = START_BALANCE > 0 ? START_BALANCE : 0;
   let runEq = ddBase, runPeak = ddBase, maxDD = 0, maxDDPct = 0;
-  chron.forEach(t => {
-    runEq += num(t.pnl);
-    if (runEq > runPeak) runPeak = runEq;
-    const dd = runPeak - runEq;
-    if (dd > maxDD) {
-      maxDD = dd;
-      maxDDPct = runPeak > 0 ? (dd / runPeak) * 100 : 0;
-    }
-  });
+  // Real daily docs are keyed YYYY-MM-DD and sort lexically. Demo days are
+  // keyed by display string, so leave those in their given order.
+  const sortable = days.every(d => /^\d{4}-\d{2}-\d{2}$/.test(String(d.date || '')));
+  (sortable
+      ? [...days].sort((a, b) => String(a.date).localeCompare(String(b.date)))
+      : days)
+    .forEach(d => {
+      runEq += num(d.pnl);
+      if (runEq > runPeak) runPeak = runEq;
+      const dd = runPeak - runEq;
+      if (dd > maxDD) { maxDD = dd; maxDDPct = runPeak > 0 ? (dd / runPeak) * 100 : 0; }
+    });
+
   set('maxDD', maxDD > 0
     ? 'Max drawdown: $' + Math.round(maxDD).toLocaleString('en-US') + (ddBase > 0 ? ' (' + maxDDPct.toFixed(2) + '%)' : '')
     : 'Max drawdown: —');
-  set('winStreakSub', bestWin > 0 ? 'best run of ' + bestWin : 'best run');
+}
+
+/* Collapse the demo trades into days so demo mode still shows both stats. */
+function tvDemoDays() {
+  const by = {};
+  SAMPLE_TRADES.forEach(t => {
+    const k = t.rawDate || t.date || '';
+    if (!k) return;
+    by[k] = (by[k] || 0) + ((typeof t.pnl === 'number') ? t.pnl : parseFloat(t.pnl) || 0);
+  });
+  // Keep SAMPLE_TRADES' own order — display dates don't sort lexically.
+  return Object.keys(by).map(k => ({ date: k, label: k, pnl: by[k], count: 1 }));
 }
 
 /* ── LOAD PROFILE INTO SIDEBAR ──────────────────────────── */
@@ -1291,7 +1364,16 @@ import { auth } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
          getSelectedAccountId } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
+import { getSummary, getSummaryCached, listDaily } from "./tradeva-summary.js";
+import { fbperf } from "./tradeva-fbperf.js";
 import { perf } from "./tradeva-perf.js";
+
+/* Recent-trades table shows 10 rows. The query orders by createdAt, but the
+   table sorts by rawDate — so a backdated trade could be created recently yet
+   sort below older rows. Over-fetching 3x and letting the existing slice(0,10)
+   do the work keeps the displayed rows identical to the old full-collection
+   behaviour, at a cost of 30 documents instead of every trade. */
+const RECENT_FETCH = 30;
 
 function tvWhenAuthed(){
   return new Promise(res => {
@@ -1301,80 +1383,104 @@ function tvWhenAuthed(){
 }
 
 (async () => {
-  /* ── MEASURED FINDINGS ───────────────────────────────────────────
-     • getDocs on 2 account docs costs ~1250ms in BOTH persistent-cache and
-       memory-cache mode → IndexedDB is not the cause. It is the one-time
-       authenticated WebChannel handshake.
-     • TTFB varied 95ms → 2357ms between runs → hosting/network variance
-       dominates the bad runs and is outside the app's control.
-
-     Since the handshake cost cannot be removed, we take it off the critical
-     path: render from a localStorage snapshot of the account (accounts change
-     maybe twice a year), then reconcile with Firestore in the background.
-  ────────────────────────────────────────────────────────────────── */
   perf.mark("auth:start");
   await tvWhenAuthed();
   perf.mark("auth:end");
   perf.span("1. Firebase Auth (session restore)", "auth:start", "auth:end");
   perf.firstContent("SHELL VISIBLE (skeleton painted)");
-
+  fbperf.phase("authed");
 
   try {
-    /* FAST PATH — no network. Uses the account snapshot from the last visit
-       to start the trades query immediately. */
+    /* Account from the local snapshot — zero network. */
     const cachedAcc = perf.timeSync("2. Account from local snapshot (0 network)",
                                     () => resolveSelectedAccountCached());
-    const cachedId  = cachedAcc ? cachedAcc.id : getSelectedAccountId();
+    const accId = cachedAcc ? cachedAcc.id : getSelectedAccountId();
 
-    // Kick both off together; neither waits for the other.
-    const tradesP   = cachedId ? listTrades(cachedId) : null;
-    const accountsP = resolveSelectedAccount();          // authoritative, background
+    /* Paint last visit's numbers before any request lands. */
+    if (accId) {
+      const warm = getSummaryCached(accId);
+      if (warm) {
+        window.__tvSetDashboardSummary(warm, cachedAcc);
+        fbperf.phase("painted-from-cache");
+        perf.firstContent("STATS PAINTED (localStorage snapshot)");
+      }
+    }
 
-    if (cachedAcc && tradesP) {
-      // Render with real trades as soon as they land — no account round-trip first.
-      const rows = await perf.time("3. Firestore: download trades (fast path)", tradesP);
-      perf.timeSync("4. Compute stats + render charts", () => {
-        window.__tvSetDashboardTrades(rows, cachedAcc);
-      });
-      perf.firstContent("DATA RENDERED (from snapshot + live trades)");
-      perf.report("DASHBOARD STARTUP (fast path)");
-
-      /* Reconcile in the background: if the authoritative account differs
-         (renamed, balance changed, switched elsewhere), re-render quietly. */
-      accountsP.then(acc => {
-        if (acc && acc.id !== cachedAcc.id) {
-          listTrades(acc.id).then(r2 => window.__tvSetDashboardTrades(r2, acc));
-        } else if (acc && JSON.stringify(acc) !== JSON.stringify(cachedAcc)) {
-          window.__tvSetDashboardTrades(rows, acc);
-        }
-      }).catch(() => {});
-
+    if (!accId) {
+      /* First-ever visit — nothing cached, resolve over the network. */
+      const acc = await perf.time("2b. resolveSelectedAccount (network)", resolveSelectedAccount());
+      if (!acc) {
+        window.__tvSetDashboardSummary(null, null);
+        window.__tvSetDashboardTrades([], null);
+        perf.report("DASHBOARD STARTUP (no account)");
+        fbperf.report("Dashboard (no account)");
+        return;
+      }
+      await loadFor(acc, acc);
       initAccountSwitcher().catch(() => {});
       return;
     }
 
-    /* SLOW PATH — first-ever visit, nothing cached. */
-    const acc = await perf.time("2b. resolveSelectedAccount (network)", accountsP);
-    if (!acc) {
-      window.__tvSetDashboardTrades([], null);
-      perf.firstContent("DATA RENDERED (no account)");
-      perf.report("DASHBOARD STARTUP (no account)");
-      return;
-    }
-    const rows = await perf.time("3. Firestore: download trades", listTrades(acc.id));
-    perf.timeSync("4. Compute stats + render charts", () => {
-      window.__tvSetDashboardTrades(rows, acc);
-    });
-    perf.firstContent("DATA RENDERED (first visit)");
-    perf.report("DASHBOARD STARTUP (first visit)");
+    /* Fast path: summary + recent trades in parallel, neither waits. */
+    await loadFor(accId, cachedAcc);
+
+    /* Reconcile the account itself in the background — a rename or a
+       startingBalance edit changes the drawdown baseline. */
+    resolveSelectedAccount().then(acc => {
+      if (!acc) return;
+      if (acc.id !== accId) { loadFor(acc.id, acc); return; }
+      if (JSON.stringify(acc) !== JSON.stringify(cachedAcc)) {
+        window.__tvSetDashboardSummary(null, acc);  // re-apply balance
+        loadFor(acc.id, acc);
+      }
+    }).catch(() => {});
+
     initAccountSwitcher().catch(() => {});
 
   } catch (e) {
     console.error("Dashboard load failed:", e);
+    window.__tvSetDashboardSummary(null, null);
     window.__tvSetDashboardTrades([], null);
     perf.report("DASHBOARD STARTUP (error)");
+    fbperf.report("Dashboard (error)");
+  }
+
+  async function loadFor(accId, accObj) {
+    const [summary, recent] = await perf.time(
+      "3. Firestore: summary + recent trades (parallel)",
+      Promise.all([
+        getSummary(accId),
+        fbperf.traced("trades:recent(" + RECENT_FETCH + ")",
+                      () => listTrades(accId, { limit: RECENT_FETCH }),
+                      { accountId: accId })
+      ])
+    );
+
+    perf.timeSync("4. Render stats + recent trades", () => {
+      window.__tvSetDashboardSummary(summary, accObj);
+      window.__tvSetDashboardTrades(recent, accObj);
+    });
+    perf.firstContent("DASHBOARD INTERACTIVE");
+    fbperf.phase("dashboard-interactive");
+
+    /* Charts are below the fold and Chart.js is heavy — load their data
+       after the page is usable, never blocking the stats above. */
+    const idle = window.requestIdleCallback || (cb => setTimeout(cb, 150));
+    idle(async () => {
+      try {
+        const days = await listDaily(accId);
+        window.__tvSetDashboardDaily(days, accObj);
+        fbperf.phase("charts-ready");
+      } catch (e) {
+        console.error("daily aggregates failed:", e);
+      } finally {
+        perf.report("DASHBOARD STARTUP");
+        fbperf.report("Dashboard");
+      }
+    });
   }
 })();
 </script>
+
 </body>
 </html>
