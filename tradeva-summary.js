@@ -1,4 +1,4 @@
-/* ══════════════════════════════════════════════════════════════════════
+ /* ══════════════════════════════════════════════════════════════════════
  * tradeva-summary.js — dashboard summary doc + daily aggregates
  * ══════════════════════════════════════════════════════════════════════
  *
@@ -283,6 +283,36 @@ export async function listDaily(accId, { from, to } = {}) {
   return snap.docs.map((d) => d.data()).filter((d) => num(d.count) > 0);
 }
 
+/**
+ * Read the daily aggregates, building them once if they're missing.
+ *
+ * A fresh deploy has an empty `daily` collection, which would leave the
+ * charts blank until someone ran backfillDaily() by hand in the console.
+ * This heals it automatically on first load and never runs again once the
+ * collection is populated.
+ *
+ * The localStorage flag only guards the pathological case where a backfill
+ * legitimately produces zero days (e.g. every trade is missing rawDate) —
+ * without it, that would retry the full-collection read on every page load.
+ */
+export async function ensureDaily(accId, tradeCount = 0) {
+  let days = await listDaily(accId);
+  if (days.length || !accId || Number(tradeCount) <= 0) return days;
+
+  const flag = "tradeva_daily_bf_" + accId;
+  try { if (localStorage.getItem(flag)) return days; } catch { /* private mode */ }
+
+  try {
+    const res = await backfillDaily(accId);
+    console.info(`[tradeva] built daily aggregates: ${res.days} days from ${res.trades} trades`);
+    try { localStorage.setItem(flag, String(Date.now())); } catch { /* ignore */ }
+    days = await listDaily(accId);
+  } catch (e) {
+    console.warn("daily backfill failed:", e);
+  }
+  return days;
+}
+
 /** One-time migration: build `daily` from the existing trades. */
 export async function backfillDaily(accId) {
   const snap = await fbperf.traced(
@@ -403,4 +433,5 @@ export async function deleteDailyForAccount(accId) {
     await batch.commit();
   }
   invalidateSummaryCache(accId);
+  try { localStorage.removeItem("tradeva_daily_bf_" + accId); } catch (e) { /* ignore */ }
 }
