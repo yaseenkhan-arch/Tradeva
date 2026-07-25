@@ -942,6 +942,16 @@ window.__tvSetDashboardTrades = function (rows, account) {
   renderTrades();
 };
 
+/* Account changed (renamed, or startingBalance edited) but the trades did
+   not. Re-apply the balance and redraw — no Firestore reads at all, since
+   drawdown is the only thing that depends on it. */
+window.__tvSetDashboardAccount = function (account) {
+  if (!account) return;
+  tvApplyAccount(account);
+  computeStats();
+  renderCharts();
+};
+
 /* Daily aggregates — charts, max drawdown, profitable days. */
 window.__tvSetDashboardDaily = function (days, account) {
   DAILY = Array.isArray(days) ? days : [];
@@ -1364,7 +1374,7 @@ import { auth } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
          getSelectedAccountId } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
-import { getSummary, getSummaryCached, listDaily } from "./tradeva-summary.js";
+import { getSummary, getSummaryCached, ensureDaily } from "./tradeva-summary.js";
 import { fbperf } from "./tradeva-fbperf.js";
 import { perf } from "./tradeva-perf.js";
 
@@ -1428,11 +1438,22 @@ function tvWhenAuthed(){
        startingBalance edit changes the drawdown baseline. */
     resolveSelectedAccount().then(acc => {
       if (!acc) return;
+
+      /* A different account was selected elsewhere — full reload is correct. */
       if (acc.id !== accId) { loadFor(acc.id, acc); return; }
-      if (JSON.stringify(acc) !== JSON.stringify(cachedAcc)) {
-        window.__tvSetDashboardSummary(null, acc);  // re-apply balance
-        loadFor(acc.id, acc);
-      }
+
+      /* Same account: only these fields change what this page renders.
+         Do NOT compare whole objects — writeAccountsSnapshot() strips
+         createdAt/updatedAt before caching, so the fresh copy can never
+         equal the cached one and this branch fired on EVERY load,
+         re-running the whole dashboard a second time. */
+      const changed = !cachedAcc
+        || acc.name !== cachedAcc.name
+        || Number(acc.startingBalance) !== Number(cachedAcc.startingBalance);
+
+      /* And even then, nothing needs re-fetching — the summary and the
+         recent rows are unchanged. Re-apply the balance and re-render. */
+      if (changed) window.__tvSetDashboardAccount(acc);
     }).catch(() => {});
 
     initAccountSwitcher().catch(() => {});
@@ -1468,7 +1489,9 @@ function tvWhenAuthed(){
     const idle = window.requestIdleCallback || (cb => setTimeout(cb, 150));
     idle(async () => {
       try {
-        const days = await listDaily(accId);
+        /* ensureDaily builds the aggregates on first run if they're missing,
+           so the charts work without a manual console backfill. */
+        const days = await ensureDaily(accId, summary && summary.tradeCount);
         window.__tvSetDashboardDaily(days, accObj);
         fbperf.phase("charts-ready");
       } catch (e) {
