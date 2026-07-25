@@ -16,6 +16,14 @@ import {
   ref, uploadString, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
 
+/* settings/stats is now owned exclusively by tradeva-summary.js. The
+   applyStatsDelta() calls below were replaced by these hooks — running both
+   would double-count every counter on the same document. applyStatsDelta
+   stays exported for any page still importing it directly. */
+import {
+  onTradeCreated, onTradeUpdated, onTradeDeleted
+} from "./tradeva-summary.js";
+
 function uid() {
   const u = auth.currentUser;
   if (!u) throw new Error("Not signed in");
@@ -136,8 +144,8 @@ async function createTrade(accountId, data, images = {}) {
   if (images.exit)  patch.exitImg  = await uploadTradeImage(accountId, refDoc.id, "exit",  images.exit);
   if (Object.keys(patch).length) await updateDoc(refDoc, patch);
 
-  // O(1) summary update — no full collection read
-  applyStatsDelta(accountId, payload, +1).catch(e => console.warn("stats delta failed:", e));
+  // Summary + daily aggregate update — no full collection read
+  onTradeCreated(accountId, payload).catch(e => console.warn("summary update failed:", e));
 
   return refDoc.id;
 }
@@ -150,10 +158,10 @@ async function updateTrade(accountId, tradeId, data, images = {}) {
   if (images.entry) patch.entryImg = await uploadTradeImage(accountId, tradeId, "entry", images.entry);
   if (images.exit)  patch.exitImg  = await uploadTradeImage(accountId, tradeId, "exit",  images.exit);
   await updateDoc(tradeDoc(accountId, tradeId), patch);
-  // An edit can change pnl/outcome, so remove the old contribution and add the new
+  // An edit can change pnl/outcome/rawDate, so pass both states: the counters
+  // are adjusted exactly and the order-dependent fields are flagged for repair.
   if (before) {
-    await applyStatsDelta(accountId, before, -1);
-    await applyStatsDelta(accountId, { ...before, ...data }, +1);
+    await onTradeUpdated(accountId, before, { ...before, ...data });
   }
 }
 
@@ -164,7 +172,7 @@ async function deleteTrade(accountId, tradeId) {
   await deleteTradeImage(accountId, tradeId, "entry");
   await deleteTradeImage(accountId, tradeId, "exit");
   await deleteDoc(tradeDoc(accountId, tradeId));
-  if (existing) applyStatsDelta(accountId, existing, -1).catch(e => console.warn("stats delta failed:", e));
+  if (existing) onTradeDeleted(accountId, existing).catch(e => console.warn("summary update failed:", e));
 }
 
 async function getTrade(accountId, tradeId) {
@@ -221,9 +229,10 @@ async function countTrades(accountId) {
 // account list) can show headline numbers WITHOUT downloading every
 // trade. It is recomputed after each create / update / delete.
 //
-// Pages that need per-trade detail (charts, breakdowns) still read the
-// full collection — but thanks to offline persistence that read is
-// served from local cache on repeat visits.
+// Pages that need per-trade detail (breakdowns) still read the full
+// collection. NOTE: offline persistence was MEASURED to make no difference
+// here (gotcha #9) — the dashboard's charts now read the `daily` aggregates
+// instead, which is what actually removed the cost.
 // ══════════════════════════════════════════════════════════════════
 function statsDoc(accountId) {
   return doc(db, "users", uid(), "accounts", accountId, "settings", "stats");
