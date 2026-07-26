@@ -156,17 +156,16 @@ body {
    SEARCH + FILTERS
 ══════════════════════════════════════════════════════════ */
 .search-wrap { position: relative; margin-bottom: 16px; }
-/* The icon sits in a reserved lane on the left of the input. Its box is
-   pinned with min/max as well as width/height so it can never grow to the
-   SVG default (300x150) if this rule is ever beaten in the cascade — that
-   failure mode renders the glyph straight over the placeholder text. */
-.search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; min-width: 17px; max-width: 17px; min-height: 17px; max-height: 17px; flex: none; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; z-index: 1; }
-/* padding-left clears the icon lane: 16px offset + 17px glyph + 15px gap.
-   Set as its own longhand AFTER the shorthand so it survives even if the
-   shorthand is overridden somewhere. */
-.search-input { width: 100%; padding: 14px 44px 14px 48px; padding-left: 48px; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; box-shadow: var(--shadow-card); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
+.search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; z-index: 1; }
+/* SELECTOR MUST STAY input[type="text"].search-input.
+   The generic `input[type="text"], input[type="url"], select, textarea`
+   rule further down sets padding: 11px 13px, and an attribute selector
+   (0,1,1) out-ranks a bare class (0,1,0) — so a plain `.search-input`
+   rule LOSES and the placeholder lands under the icon at 13px.
+   padding-left clears the lane: 16px offset + 17px glyph + 15px gap. */
+input[type="text"].search-input { width: 100%; padding: 14px 44px 14px 48px; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; box-shadow: var(--shadow-card); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
 .search-input::placeholder { color: var(--text-faint); }
-.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+input[type="text"].search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); background: var(--bg-card); }
 .search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: none; background: var(--border-light); border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; transition: background var(--t) var(--ease); }
 .search-clear.show { display: flex; }
 .search-clear:hover { background: var(--border); }
