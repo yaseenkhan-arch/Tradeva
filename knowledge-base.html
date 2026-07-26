@@ -156,8 +156,15 @@ body {
    SEARCH + FILTERS
 ══════════════════════════════════════════════════════════ */
 .search-wrap { position: relative; margin-bottom: 16px; }
-.search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.search-input { width: 100%; padding: 14px 44px 14px 44px; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; box-shadow: var(--shadow-card); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
+/* The icon sits in a reserved lane on the left of the input. Its box is
+   pinned with min/max as well as width/height so it can never grow to the
+   SVG default (300x150) if this rule is ever beaten in the cascade — that
+   failure mode renders the glyph straight over the placeholder text. */
+.search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; min-width: 17px; max-width: 17px; min-height: 17px; max-height: 17px; flex: none; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; z-index: 1; }
+/* padding-left clears the icon lane: 16px offset + 17px glyph + 15px gap.
+   Set as its own longhand AFTER the shorthand so it survives even if the
+   shorthand is overridden somewhere. */
+.search-input { width: 100%; padding: 14px 44px 14px 48px; padding-left: 48px; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; box-shadow: var(--shadow-card); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease); outline: none; }
 .search-input::placeholder { color: var(--text-faint); }
 .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
 .search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: none; background: var(--border-light); border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; transition: background var(--t) var(--ease); }
@@ -768,7 +775,7 @@ function statsHTML(all) {
 
 function searchHTML() {
   return `<div class="search-wrap">
-    <svg class="search-ic" viewBox="0 0 17 17"><circle cx="7.5" cy="7.5" r="5.5"/><line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/></svg>
+    <svg class="search-ic" width="17" height="17" viewBox="0 0 17 17"><circle cx="7.5" cy="7.5" r="5.5"/><line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/></svg>
     <input type="text" class="search-input" id="searchInput" placeholder="Search your knowledge..." value="${escapeHtml(searchQuery)}" oninput="onSearch(this.value)">
     <button class="search-clear ${searchQuery ? 'show' : ''}" id="searchClear" onclick="clearSearch()"><svg viewBox="0 0 11 11"><line x1="2" y1="2" x2="9" y2="9"/><line x1="9" y1="2" x2="2" y2="9"/></svg></button>
   </div>`;
