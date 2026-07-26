@@ -566,7 +566,20 @@ body {
    preview and vanish from every download.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* 1 — Strip Mesh Light · warm off-white, beige + lavender mesh */
+/* 1 — Minimal · pure white, fine grain, Apple-quiet */
+.pnl-card[data-template="minimal"] {
+  --ink: #0B0D12; --ink-2: #9AA0A8;
+  --tile: #F5F6F8; --chip: #FFFFFF;
+  --hair: rgba(11,13,18,0.065);
+  --pill: #0B0D12; --pill-ink: #FFFFFF;
+  --grain: rgba(11,13,18,0.038);
+  background:
+    radial-gradient(circle, var(--grain) calc(var(--u) * 1.5px), rgba(0,0,0,0) calc(var(--u) * 1.5px)),
+    linear-gradient(180deg, #FFFFFF 0%, #FAFBFC 100%);
+  background-size: calc(var(--u) * 38px) calc(var(--u) * 38px), 100% 100%;
+}
+
+/* 2 — Strip Mesh Light · warm off-white, beige + lavender mesh */
 .pnl-card[data-template="light"] {
   background:
     radial-gradient(circle, var(--grain) calc(var(--u) * 1.6px), rgba(0,0,0,0) calc(var(--u) * 1.6px)),
@@ -652,6 +665,26 @@ body {
 
 .pnl-grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
 
+/* ── responsive ──────────────────────────────────────────────────────
+   The card needs no font-size media queries: every size is
+   calc(var(--u) * Npx) and --u is derived from the rendered box, so the
+   composition is identical at 320px and at 620px — it is the same card,
+   smaller. That is why the old @media blocks broke it: they replaced the
+   scaled values with fixed pixels and the layout collided.
+
+   These rules only reclaim width on small screens so --u can be as large
+   as the device allows, and give the pair row somewhere to go if a symbol
+   is unusually long. */
+@media (max-width: 560px) {
+  .pnlgen-preview-wrap { padding-left: 0; padding-right: 0; }
+  .pnl-card { max-width: 100%; }
+}
+@media (max-width: 380px) {
+  /* Only at this width can a long symbol crowd the badge. Wrapping is
+     preferable to shrinking type that is already proportional. */
+  .pnl-pair-row { flex-wrap: wrap; row-gap: calc(var(--u) * 14px); }
+}
+
 /* ── Template selector (horizontal scroll) ── */
 .tpl-row { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 22px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
 .tpl-row::-webkit-scrollbar { height: 5px; }
@@ -669,6 +702,7 @@ body {
 .tpl-chip.active .tpl-swatch { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
 .tpl-chip-label { font-size: 11px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
 .tpl-chip.active .tpl-chip-label { color: var(--accent); }
+.tpl-swatch-minimal   { background: linear-gradient(180deg, #FFFFFF, #F4F5F7); }
 .tpl-swatch-light     { background: radial-gradient(circle at 88% 8%, #BFA0D4, #FDFAF5 62%), linear-gradient(168deg, #FDFAF5, #F1E7D8); }
 .tpl-swatch-champagne { background: radial-gradient(circle at 90% 4%, #C19B5C, #FDFAF1 64%), linear-gradient(160deg, #FDFAF1, #EFE2C9); }
 .tpl-swatch-liquid    { background: radial-gradient(circle at 86% 10%, #818CF8, #FFFFFF 62%); }
@@ -707,37 +741,10 @@ body {
 .pnl-download-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 480px) {
-  .pnl-content { padding: 16px; }
-  .pnl-pair { font-size: 16px; }
-  .pnl-value-big { font-size: 20px; }
-  .pnl-stat-value { font-size: 15px; }
-  .pnl-dir-badge { font-size: 10px; padding: 2px 8px; margin: 4px 0 6px; }
-  .pnl-info-panel { width: 118px; padding: 9px 10px; gap: 7px; }
-  .pnl-info-label { font-size: 8px; }
-  .pnl-info-value { font-size: 10.5px; }
-  .pnl-info-row svg { width: 11px; height: 11px; }
-  .pnl-logo { font-size: 11px; gap: 5px; }
-  .pnl-logo-icon { width: 16px; height: 16px; }
-  .pnl-date { font-size: 9.5px; }
-  .pnl-outcome-badge { font-size: 9px; padding: 3px 9px; }
-  .pnl-avatar { width: 26px; height: 26px; font-size: 10px; }
-  .pnl-trader-label { font-size: 8px; }
-  .pnl-username { font-size: 10.5px; max-width: 90px; }
-  .pnl-qr-text { font-size: 8px; }
-  .pnl-qr-wrap { width: 34px; height: 34px; }
-  .pnl-footer { margin-top: 12px; padding-top: 10px; }
   .pnlgen-preview-wrap { padding: 16px 8px; }
 }
 
 @media (max-width: 360px) {
-  .pnl-content { padding: 13px; }
-  .pnl-pair { font-size: 14px; }
-  .pnl-value-big { font-size: 18px; }
-  .pnl-stat-value { font-size: 13px; }
-  .pnl-info-panel { width: 104px; padding: 7px 8px; gap: 5px; }
-  .pnl-info-label { font-size: 7.5px; }
-  .pnl-info-value { font-size: 9.5px; }
-  .pnl-username { max-width: 74px; }
 }
 
 </style>
@@ -1007,7 +1014,7 @@ try {
 
     <!-- Live Preview -->
     <div class="pnlgen-preview-wrap">
-      <div class="pnl-card" id="pnlCard" data-template="light" data-outcome="win" data-direction="long" data-size="square">
+      <div class="pnl-card" id="pnlCard" data-template="minimal" data-outcome="win" data-direction="long" data-size="square">
         <svg class="pnl-chart-bg" id="pnlChartBg" viewBox="0 0 400 400" preserveAspectRatio="none"></svg>
         <!-- Theme ornament. Plain SVG lines rather than a CSS repeating-gradient,
              because html2canvas rasterises shapes reliably and repeating
@@ -1114,7 +1121,11 @@ try {
     <!-- Card Template -->
     <div class="pnlgen-section-label">Card Template</div>
     <div class="tpl-row">
-      <button class="tpl-chip active" data-tpl="light" onclick="pnlSetTemplate('light')">
+      <button class="tpl-chip active" data-tpl="minimal" onclick="pnlSetTemplate('minimal')">
+        <span class="tpl-swatch tpl-swatch-minimal"></span>
+        <span class="tpl-chip-label">Minimal</span>
+      </button>
+      <button class="tpl-chip" data-tpl="light" onclick="pnlSetTemplate('light')">
         <span class="tpl-swatch tpl-swatch-light"></span>
         <span class="tpl-chip-label">Strip Mesh</span>
       </button>
@@ -1414,7 +1425,7 @@ async function deleteTrade() {
    — Does not duplicate or refetch trade data.
    — Does not alter any function above this block.
 ══════════════════════════════════════════════════════════ */
-let pnlTemplate = 'light';
+let pnlTemplate = 'minimal';
 let pnlSize = 'square';
 const PNL_SIZE_RATIOS = { square: 1 / 1, portrait: 1080 / 1350, story: 1080 / 1920 };
 
