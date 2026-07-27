@@ -87,6 +87,100 @@ async function ensureUserDoc(user, extra = {}) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════
+// SIDEBAR PROFILE — ONE implementation for every page.
+//
+// Each page used to carry its own copy that read localStorage ONLY. That
+// works while you stay on one device, but localStorage is per-device: on a
+// fresh sign-in (or after logout clears it) every page falls back to the
+// hardcoded "Kham / Pro Trader" placeholder.
+//
+// This paints the local snapshot first so there is no flicker, then — only
+// when that snapshot is incomplete — reconciles against users/{uid}, which
+// ensureUserDoc() already fills with displayName and photoURL. So it costs
+// zero extra reads on a device that already knows the user.
+//
+//   import { hydrateProfileSidebar } from './tradeva-firebase.js';
+//   hydrateProfileSidebar();          // safe to call before auth resolves
+//
+// No import-time side effects: nothing here runs until it is called.
+// ══════════════════════════════════════════════════════════════════
+function paintProfileSidebar(p = {}) {
+  const fname    = p.fname   || "Kham";
+  const lname    = p.lname   || "";
+  const account  = p.account || "Pro Trader";
+  const initials = (fname.charAt(0) + (lname.charAt(0) || "")).toUpperCase() || "KH";
+
+  const nameEl   = document.querySelector(".profile-name");
+  const roleEl   = document.querySelector(".profile-role");
+  const avatarEl = document.querySelector(".avatar");
+
+  if (nameEl) nameEl.textContent = fname;
+  if (roleEl) roleEl.textContent = account;
+  if (avatarEl) {
+    if (p.photo) {
+      avatarEl.style.backgroundImage    = "url(" + p.photo + ")";
+      avatarEl.style.backgroundSize     = "cover";
+      avatarEl.style.backgroundPosition = "center";
+      avatarEl.style.color              = "transparent";
+      avatarEl.textContent              = "";
+    } else {
+      avatarEl.style.backgroundImage = "";
+      avatarEl.style.color           = "";
+      avatarEl.textContent           = initials;
+    }
+  }
+}
+
+function readLocalProfile() {
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem("tradeva_profile") || "{}"); } catch (e) {}
+  try { p.photo = localStorage.getItem("tradeva_photo") || null; } catch (e) {}
+  return p;
+}
+
+async function hydrateProfileSidebar() {
+  const local = readLocalProfile();
+  paintProfileSidebar(local);                       // instant, no network
+
+  if (local.fname && local.account) return;         // device already knows them
+
+  const user = auth.currentUser || await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+  });
+  if (!user) return;
+
+  let remote = {};
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) remote = snap.data() || {};
+  } catch (e) {
+    return;                                         // offline: local paint stands
+  }
+
+  const display = remote.displayName || user.displayName || "";
+  if (!display && !remote.photoURL && !user.photoURL) return;
+
+  const merged = {
+    fname:   local.fname   || display.split(" ")[0] || "",
+    lname:   local.lname   || display.split(" ").slice(1).join(" ") || "",
+    account: local.account || remote.account || "Trader",
+    photo:   local.photo   || remote.photoURL || user.photoURL || null
+  };
+  paintProfileSidebar(merged);
+
+  // refresh the snapshot so the next page load paints instantly
+  try {
+    localStorage.setItem("tradeva_profile", JSON.stringify({
+      ...local,
+      photo: undefined,
+      fname:   merged.fname,
+      lname:   merged.lname,
+      account: merged.account
+    }));
+  } catch (e) {}
+}
+
 // ── Google sign-in (used by both login and register) ───────────────
 async function signInWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
@@ -104,6 +198,7 @@ export {
   app,
   auth,
   db,
+  hydrateProfileSidebar,
   storage,
   googleProvider,
   requireAuth,
