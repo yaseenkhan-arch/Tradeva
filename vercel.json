@@ -1,25 +1,31 @@
-{
+ {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
-      "comment": "Shared ES modules change only on deploy. Without an explicit header Vercel revalidates them on every navigation, so each page load pays a round trip per module before any Firestore call can start. must-revalidate keeps them correct: the browser reuses the file for an hour, then checks.",
       "source": "/(tradeva-.*\\.js)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     },
     {
-      "comment": "Images are content-stable. logo-transparent.png in particular is now referenced by trade-detail.html and the monthly report instead of being inlined, so it should be fetched once and reused across pages.",
       "source": "/(.*)\\.(png|jpg|jpeg|svg|webp|ico)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, must-revalidate"
+        }
       ]
     },
     {
-      "comment": "HTML must NOT be cached hard. These files carry the app logic inline, so a stale copy is a stale app — this is the exact failure mode behind several 'the fix didn't work' rounds. Always revalidate.",
       "source": "/(.*)\\.html",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
       ]
     }
   ]
