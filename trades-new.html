@@ -171,6 +171,24 @@ body {
   width: 100%;
 }
 
+/* ── Page container ───────────────────────────────────────────────────
+   The ONLY layout change on this page. .main still owns the sidebar
+   offset and the page padding; this simply caps how wide the content
+   inside it grows and centres it in whatever space is left.
+
+   The header, the account selector, every card and the save button are
+   all inside it, so nothing is left spanning full width while the rest
+   centres — that half-centred look is worse than the stretched one.
+
+   No padding-inline here on purpose: .main already applies 32px (14px on
+   mobile). Adding another 24px would stack to 56px and squeeze the very
+   inputs this is meant to make comfortable. */
+.page-container {
+  width: 100%;
+  max-width: 1050px;
+  margin-inline: auto;
+}
+
 /* ── Page Header ── */
 .page-header {
   display: flex; align-items: center;
@@ -617,6 +635,7 @@ try {
      MAIN CONTENT
 ══════════════════════════════════════════════════════════ -->
 <main class="main">
+ <div class="page-container">
 
   <!-- Page Header -->
   <div class="page-header">
@@ -904,6 +923,7 @@ try {
   <!-- Save Button -->
   <button class="save-btn" onclick="saveTrade()">Save Trade</button>
 
+ </div><!-- /.page-container -->
 </main>
 
 <!-- Mobile Bottom Nav -->
