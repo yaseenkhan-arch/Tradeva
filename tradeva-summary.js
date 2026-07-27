@@ -479,6 +479,21 @@ export const onTradeCreated = (accId, trade) => applyDelta(accId, null, trade);
 export const onTradeUpdated = (accId, before, after) => applyDelta(accId, before, after);
 export const onTradeDeleted = (accId, trade) => applyDelta(accId, trade, null);
 
+/**
+ * Last-resort repair flag. If a summary write fails (offline, navigation
+ * cancelled it, rules rejected it), set dirty so the next getSummary()
+ * recomputes from the trades collection instead of serving stale numbers
+ * forever. One tiny write; failing silently here is fine because the very
+ * next successful summary write will fix things anyway.
+ */
+export async function markSummaryDirty(accId) {
+  if (!accId) return;
+  try {
+    await setDoc(summaryRef(accId), { dirty: true, updatedAt: serverTimestamp() }, { merge: true });
+    invalidateSummaryCache(accId);
+  } catch (e) { /* nothing more we can do from here */ }
+}
+
 /** Force the order-dependent fields correct right now (blocking). */
 export async function ensureFresh(accId) {
   const snap = await getDoc(summaryRef(accId));
