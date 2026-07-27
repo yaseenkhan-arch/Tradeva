@@ -185,7 +185,11 @@ body {
    inputs this is meant to make comfortable. */
 .page-container {
   width: 100%;
-  max-width: 1050px;
+  /* ── THE ONE DIAL FOR THIS PAGE'S WIDTH ──
+     Raise it to widen, lower it to tighten. Nothing else needs touching:
+     the header, account selector, cards and save button all live inside
+     this container, so they move together. */
+  max-width: 975px;
   margin-inline: auto;
 }
 
