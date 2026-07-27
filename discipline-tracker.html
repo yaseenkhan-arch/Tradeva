@@ -224,17 +224,64 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .priority-always { background: var(--red-bg); color: var(--red); }
 .priority-important { background: var(--amber-bg); color: var(--amber); }
 .priority-optional { background: var(--border-light); color: var(--text-muted); }
-.rule-actions { display: flex; gap: 4px; margin-left: auto; }
+/* ── Rule overflow menu ───────────────────────────────────────────────
+   Replaces the green toggle and the bottom-right edit/delete buttons.
+   Edit, enable/disable and delete all live in here now, so the card top
+   carries one ghost button and the title/description get the width back. */
+/* Still used by the CHECKLIST section's edit/delete buttons, which are a
+   separate control set and were not part of this change. Do not remove. */
 .rule-icon-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--t) var(--ease); }
 .rule-icon-btn svg { width: 12px; height: 12px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke var(--t) var(--ease); }
 .rule-icon-btn:hover { background: var(--border-light); }
 .rule-icon-btn:hover svg { stroke: var(--text-primary); }
 .rule-icon-btn.danger:hover { border-color: var(--red); background: var(--red-bg); }
 .rule-icon-btn.danger:hover svg { stroke: var(--red); }
-.rule-toggle { width: 34px; height: 19px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
-.rule-toggle.on { background: var(--green); }
-.rule-toggle-knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-.rule-toggle.on .rule-toggle-knob { transform: translateX(15px); }
+
+.rule-menu-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
+.rule-menu-btn {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: none; background: transparent;              /* ghost — no chrome at rest */
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  transition: background var(--t) var(--ease);
+}
+.rule-menu-btn svg { width: 14px; height: 14px; fill: var(--text-faint); stroke: none; transition: fill var(--t) var(--ease); }
+.rule-menu-btn:hover { background: var(--border-light); }
+.rule-menu-btn:hover svg { fill: var(--text-primary); }
+.rule-menu-btn[aria-expanded="true"] { background: var(--border-light); }
+.rule-menu-btn[aria-expanded="true"] svg { fill: var(--text-primary); }
+
+.rule-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
+  min-width: 168px; padding: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(15,18,26,0.05), 0 12px 28px rgba(15,18,26,0.14);
+  opacity: 0; transform: translateY(-4px) scale(0.97);
+  transform-origin: top right; pointer-events: none;
+  transition: opacity 150ms var(--ease), transform 150ms var(--ease);
+}
+.rule-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+/* Lift the whole card while its menu is open so the dropdown is never
+   painted under a neighbouring card in the grid. */
+.rule-card.menu-open { z-index: 41; }
+
+.rule-menu-item {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border: none; background: transparent;
+  border-radius: 8px; cursor: pointer; text-align: left;
+  font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 500;
+  color: var(--text-primary);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.rule-menu-item svg { width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: stroke var(--t) var(--ease); }
+.rule-menu-item:hover { background: var(--bg-page); }
+.rule-menu-item:hover svg { stroke: var(--text-primary); }
+.rule-menu-item.danger { color: var(--red); }
+.rule-menu-item.danger svg { stroke: var(--red); }
+.rule-menu-item.danger:hover { background: var(--red-bg); }
+.rule-menu-sep { height: 1px; background: var(--border-light); margin: 4px 6px; }
 .add-rule-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 10px 16px; border-radius: var(--radius-btn); border: 1.5px dashed var(--border); background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease); }
 .add-rule-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
 .add-rule-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; }
@@ -1190,22 +1237,84 @@ function renderRules() {
           <div class="rule-title">${escapeHtml(r.title)}</div>
           ${r.desc ? `<div class="rule-desc">${escapeHtml(r.desc)}</div>` : ''}
         </div>
-        <div class="rule-toggle ${r.enabled ? 'on' : ''}" onclick="toggleRuleEnabled(${r.id})" title="Enable / disable rule"><div class="rule-toggle-knob"></div></div>
+        <div class="rule-menu-wrap">
+          <button class="rule-menu-btn" onclick="toggleRuleMenu(event, ${r.id})" aria-haspopup="true" aria-expanded="false" aria-label="Rule actions" title="Actions">
+            <svg viewBox="0 0 14 14"><circle cx="7" cy="2.6" r="1.15"/><circle cx="7" cy="7" r="1.15"/><circle cx="7" cy="11.4" r="1.15"/></svg>
+          </button>
+          <div class="rule-menu" id="ruleMenu-${r.id}" role="menu">
+            <button class="rule-menu-item" role="menuitem" onclick="ruleMenuAction(event, 'edit', ${r.id})">
+              <svg viewBox="0 0 14 14"><path d="M10 1.8l2.2 2.2L4.8 11.4l-2.9.7.7-2.9z"/></svg>
+              Edit rule
+            </button>
+            <button class="rule-menu-item" role="menuitem" onclick="ruleMenuAction(event, 'toggle', ${r.id})">
+              ${r.enabled
+                ? '<svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.2"/><line x1="4.6" y1="4.6" x2="9.4" y2="9.4"/></svg>'
+                : '<svg viewBox="0 0 14 14"><polyline points="2.6,7.4 5.6,10.2 11.4,3.8"/></svg>'}
+              ${r.enabled ? 'Disable rule' : 'Enable rule'}
+            </button>
+            <div class="rule-menu-sep"></div>
+            <button class="rule-menu-item danger" role="menuitem" onclick="ruleMenuAction(event, 'delete', ${r.id})">
+              <svg viewBox="0 0 14 14"><polyline points="2,3.5 12,3.5"/><path d="M5,3.5V1.8h4v1.7M11,3.5l-.6,8.7H3.6L3,3.5"/></svg>
+              Delete rule
+            </button>
+          </div>
+        </div>
       </div>
       <div class="rule-meta-row">
         <span class="rule-priority ${prCls}">${r.priority}</span>
-        <div class="rule-actions">
-          <button class="rule-icon-btn" onclick="openRuleEditor(${r.id})" title="Edit">
-            <svg viewBox="0 0 12 12"><path d="M8.5 1.5l2 2L4 10l-2.5.5L2 8z"/></svg>
-          </button>
-          <button class="rule-icon-btn danger" onclick="deleteRule(${r.id})" title="Delete">
-            <svg viewBox="0 0 12 12"><polyline points="1.5,3 10.5,3"/><path d="M4 3V1.5h4V3M9.5 3l-.5 7.5h-6L2.5 3"/></svg>
-          </button>
-        </div>
       </div>
     </div>`;
   }).join('');
 }
+
+/* ── Rule overflow menu ───────────────────────────────────────────────
+   One menu open at a time. renderRules() rebuilds the grid's innerHTML,
+   so any open menu disappears with it — that is why every action closes
+   the menu first and lets the re-render take care of the rest. */
+function closeRuleMenus() {
+  document.querySelectorAll('.rule-menu.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.rule-menu-btn[aria-expanded="true"]')
+    .forEach(b => b.setAttribute('aria-expanded', 'false'));
+  document.querySelectorAll('.rule-card.menu-open').forEach(c => c.classList.remove('menu-open'));
+}
+
+function toggleRuleMenu(e, id) {
+  e.stopPropagation();
+  const menu = document.getElementById('ruleMenu-' + id);
+  if (!menu) return;
+  const willOpen = !menu.classList.contains('open');
+  closeRuleMenus();
+  if (!willOpen) return;
+
+  menu.classList.add('open');
+  const btn = e.currentTarget;
+  if (btn && btn.setAttribute) btn.setAttribute('aria-expanded', 'true');
+  const card = menu.closest('.rule-card');
+  if (card) card.classList.add('menu-open');
+
+  /* Flip upward if the menu would fall past the viewport bottom. */
+  menu.style.top = ''; menu.style.bottom = '';
+  const r = menu.getBoundingClientRect();
+  if (r.bottom > window.innerHeight - 8) {
+    menu.style.top = 'auto';
+    menu.style.bottom = 'calc(100% + 6px)';
+  }
+}
+
+function ruleMenuAction(e, action, id) {
+  e.stopPropagation();
+  closeRuleMenus();
+  if (action === 'edit') openRuleEditor(id);
+  else if (action === 'toggle') toggleRuleEnabled(id);
+  else if (action === 'delete') deleteRule(id);
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.rule-menu-wrap')) closeRuleMenus();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeRuleMenus();
+});
 
 function toggleRuleFollow(id) {
   const rule = getRules().find(r => r.id === id);
