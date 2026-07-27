@@ -282,7 +282,12 @@ body {
 .day-cell.win-day  .day-primary { color: var(--green); }
 .day-cell.loss-day .day-primary { color: var(--red); }
 
-.day-meta { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 7px; }
+.day-meta { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 7px; min-width: 0; }
+/* Nothing in a cell may push past its box — compactNum() keeps the string
+   short, and these keep a long one from spilling if it ever slips through. */
+.day-cell { overflow: hidden; }
+.day-primary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.day-trades, .day-winrate { flex-shrink: 0; }
 .day-trades { font-size: 10.5px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
 .day-winrate { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: rgba(0,0,0,0.05); color: var(--text-muted); }
 [data-theme="dark"] .day-winrate { background: rgba(255,255,255,0.08); }
@@ -390,30 +395,34 @@ body {
 .report-modal-close:hover { background: rgba(0,0,0,0.12); }
 .report-modal-close svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
 
-.report-card { padding: 28px; position: relative; background: var(--bg-card); transition: background var(--t) var(--ease); }
-.report-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.report-brand-icon { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
-.report-brand-icon svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
-.report-brand-name { font-size: 14px; font-weight: 800; letter-spacing: 0.02em; color: var(--text-primary); transition: color var(--t) var(--ease); }
-.report-month { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 14px 0 18px; letter-spacing: -0.3px; transition: color var(--t) var(--ease); }
+.report-card { padding: 38px 34px 30px; position: relative; background: var(--bg-card); transition: background var(--t) var(--ease); }
+.report-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 0; }
+.report-brand-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 3px 10px rgba(59,130,246,0.28); }
+.report-brand-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.report-brand-name { font-size: 17px; font-weight: 800; letter-spacing: 0.11em; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-brand-sub { font-size: 15px; font-weight: 500; letter-spacing: 0.13em; color: var(--text-faint); }
+/* Hairline under the lockup — the same separation the P&L card footer uses. */
+.report-brand-rule { height: 1px; background: var(--border-light); margin: 22px 0 0; }
+.report-month { font-size: 30px; font-weight: 800; color: var(--text-primary); margin: 22px 0 4px; letter-spacing: -0.035em; line-height: 1.05; transition: color var(--t) var(--ease); }
+.report-month-sub { font-size: 13px; font-weight: 500; color: var(--text-faint); margin-bottom: 26px; letter-spacing: 0.01em; }
 
-.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
-.report-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
-.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 4px; transition: color var(--t) var(--ease); }
-.report-stat-value { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.report-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 16px; padding: 17px 18px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.report-stat-value { font-size: 23px; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t) var(--ease); }
 .report-stat-value.green { color: var(--green); }
 .report-stat-value.red { color: var(--red); }
 
-.report-highlight-row { display: flex; gap: 12px; margin-bottom: 20px; }
-.report-highlight { flex: 1; border-radius: 12px; padding: 12px 14px; }
+.report-highlight-row { display: flex; gap: 14px; margin-bottom: 24px; }
+.report-highlight { flex: 1; min-width: 0; border-radius: 16px; padding: 17px 18px; }
 .report-highlight.best { background: var(--green-bg); border: 1px solid var(--green-border); }
 .report-highlight.worst { background: var(--red-bg); border: 1px solid var(--red-border); }
-.report-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.report-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 8px; }
 .report-highlight.best .report-highlight-label { color: var(--green); }
 .report-highlight.worst .report-highlight-label { color: var(--red); }
-.report-highlight-value { font-size: 14px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-highlight-value { font-size: 16px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t) var(--ease); }
 
-.report-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 10px; color: var(--text-faint); transition: border-color var(--t) var(--ease), color var(--t) var(--ease); }
+.report-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 11px; font-weight: 500; color: var(--text-faint); transition: border-color var(--t) var(--ease), color var(--t) var(--ease); }
 
 .report-download-btn {
   width: 100%; padding: 13px; border: none; background: var(--accent); color: #fff;
@@ -447,28 +456,62 @@ body {
   .sidebar.open { transform: translateX(0); }
   .sidebar-overlay { display: block; pointer-events: none; }
   .sidebar-overlay.open { pointer-events: auto; }
-  .main { margin-right: 0; padding: 16px 14px 90px; }
+  .main { margin-right: 0; padding: 16px 12px 90px; }
   .mobile-nav { display: flex; }
   .mob-menu-btn { display: flex; }
   .page-title { font-size: 21px; }
   .weekly-sidebar { grid-template-columns: repeat(2, 1fr); }
-  .day-cell { min-height: 72px; padding: 7px 6px; border-radius: 9px; }
-  .day-num { font-size: 10.5px; }
-  .day-primary { font-size: 13px; margin-top: 5px; }
-  .day-meta { padding-top: 5px; gap: 5px; }
-  .week-value { font-size: 17px; }
-  .day-trades, .day-winrate { font-size: 8.5px; }
-  .calendar-grid, .weekday-row { gap: 5px; }
-  .month-label { min-width: 100px; font-size: 13px; }
-  .toolbar-row { flex-direction: column; align-items: stretch; }
-  .toolbar-left, .toolbar-right { justify-content: space-between; }
+  .month-label { min-width: 96px; font-size: 13px; }
   .day-drawer { width: 100%; max-width: 100%; }
+
+  /* Day cells: taller, not smaller. The old rules shrank the value to 13px
+     and the meta row to 8.5px, which is where the clipping came from —
+     values are abbreviated by compactNum() now, so the type can stay
+     legible instead. */
+  .calendar-grid, .weekday-row { gap: 4px; }
+  .day-cell { min-height: 86px; padding: 8px 6px; border-radius: 11px; }
+  .day-num { font-size: 11px; }
+  .day-primary {
+    font-size: 15px; margin-top: 4px; letter-spacing: -0.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: clip;
+  }
+  .day-meta { padding-top: 5px; gap: 4px; flex-wrap: nowrap; }
+  .day-trades { font-size: 9.5px; white-space: nowrap; }
+  .day-winrate { font-size: 9px; padding: 1px 5px; white-space: nowrap; }
+  .week-value { font-size: 18px; }
+
+  /* Toolbar is two buttons now — they fit on one row. */
+  .toolbar-row { flex-direction: row; align-items: center; }
+  .toolbar-right { width: 100%; display: flex; gap: 8px; }
+  .toolbar-right .btn-outline, .toolbar-right .btn-primary { flex: 1; justify-content: center; }
 }
+
+@media (max-width: 560px) {
+  .weekday-row > div { font-size: 9.5px; letter-spacing: 0.06em; }
+  .day-cell { min-height: 78px; padding: 7px 4px; }
+  .day-primary { font-size: 14px; }
+  /* Below this width the win-rate pill is what pushes the row over.
+     Trade count is the more useful of the two, so the pill goes first. */
+  .day-winrate { display: none; }
+}
+
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .weekly-sidebar { grid-template-columns: 1fr 1fr; }
   .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
   .report-grid { grid-template-columns: 1fr 1fr; }
+  .day-cell { min-height: 72px; }
+  .day-primary { font-size: 13.5px; }
+  .day-trades { font-size: 9px; }
+}
+
+@media (max-width: 380px) {
+  .main { padding-left: 8px; padding-right: 8px; }
+  .calendar-grid, .weekday-row { gap: 3px; }
+  .day-cell { min-height: 66px; padding: 6px 3px; border-radius: 9px; }
+  .day-num { font-size: 10px; }
+  .day-primary { font-size: 12.5px; }
+  .day-trades { font-size: 8.5px; }
 }
 
 </style>
@@ -629,45 +672,18 @@ try {
     </div>
   </div>
 
-  <!-- Toolbar: Filters / Export / Report -->
+  <!-- Toolbar: PNG + Monthly Report -->
   <div class="toolbar-row">
-    <div class="toolbar-left">
-      <button class="btn-outline" onclick="toggleFilters()">
-        <svg viewBox="0 0 16 16"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/><circle cx="6" cy="4" r="1.6" fill="var(--bg-card)" stroke="currentColor"/><circle cx="10" cy="8" r="1.6" fill="var(--bg-card)" stroke="currentColor"/><circle cx="5" cy="12" r="1.6" fill="var(--bg-card)" stroke="currentColor"/></svg>
-        Filters
-      </button>
-    </div>
     <div class="toolbar-right">
       <button class="btn-outline" onclick="exportPNG()">
         <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.2"/><polyline points="1.5,11 5.5,7.5 8,9.5 10.5,7 14.5,10.5"/></svg>
         PNG
-      </button>
-      <button class="btn-outline" onclick="exportPDF()">
-        <svg viewBox="0 0 16 16"><path d="M4 1.5h6l3 3v10a1 1 0 01-1 1H4a1 1 0 01-1-1v-12a1 1 0 011-1z"/><path d="M10 1.5V5h3"/></svg>
-        PDF
-      </button>
-      <button class="btn-outline" onclick="exportCSV()">
-        <svg viewBox="0 0 16 16"><path d="M4 1.5h6l3 3v10a1 1 0 01-1 1H4a1 1 0 01-1-1v-12a1 1 0 011-1z"/><path d="M10 1.5V5h3"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="5" y1="11.5" x2="11" y2="11.5"/></svg>
-        CSV
       </button>
       <button class="btn-primary" onclick="openReportModal()">
         <svg viewBox="0 0 15 15"><rect x="1.5" y="1.5" width="12" height="12" rx="2"/><path d="M4.5 8l2 2 4-4.5"/></svg>
         Monthly Report
       </button>
     </div>
-  </div>
-
-  <!-- Filters Bar (collapsible) -->
-  <div class="filter-bar" id="filterBar">
-    <div class="select-wrap"><select id="fMonth" onchange="onMonthYearSelect()"></select></div>
-    <div class="select-wrap"><select id="fYear" onchange="onMonthYearSelect()"></select></div>
-    <div class="select-wrap"><select id="fAccount" onchange="renderAll()"><option>All Accounts</option><option>Main Account</option><option>Funded Account</option></select></div>
-    <div class="select-wrap"><select id="fPropFirm" onchange="renderAll()"><option>All Prop Firms</option><option>FTMO</option><option>MyForexFunds</option><option>None</option></select></div>
-    <div class="select-wrap"><select id="fBroker" onchange="renderAll()"><option>All Brokers</option><option>IC Markets</option><option>Pepperstone</option></select></div>
-    <div class="select-wrap"><select id="fSession" onchange="renderAll()"><option>All Sessions</option><option>Asia</option><option>London</option><option>New York</option><option>Overlap</option></select></div>
-    <div class="select-wrap"><select id="fPair" onchange="renderAll()"><option>All Pairs</option><option>EURUSD</option><option>GBPJPY</option><option>XAUUSD</option><option>GBPUSD</option><option>USDCAD</option><option>USDCHF</option></select></div>
-    <div class="select-wrap"><select id="fStrategy" onchange="renderAll()"><option>All Strategies</option><option>Trend Following</option><option>Reversal</option><option>Breakout</option><option>Retest / Reentry</option></select></div>
-    <div class="select-wrap"><select id="fTags" onchange="renderAll()"><option>All Tags</option><option>High Conviction</option><option>News Play</option><option>A+ Setup</option></select></div>
   </div>
 
   <!-- Month Summary Cards -->
@@ -796,8 +812,11 @@ try {
           <svg viewBox="0 0 18 18"><polyline points="1,14 5,9 8,12 13,5 17,3"/></svg>
         </div>
         <span class="report-brand-name">TRADEVA</span>
+        <span class="report-brand-sub">REPORT</span>
       </div>
+      <div class="report-brand-rule"></div>
       <div class="report-month" id="reportMonth">June 2026</div>
+      <div class="report-month-sub">Monthly performance summary</div>
 
       <div class="report-grid">
         <div class="report-stat">
@@ -979,8 +998,14 @@ function initViewDate() {
    AGGREGATION
 ══════════════════════════════════════════════════════════ */
 function getMonthTrades() {
-  const pairFilter = document.getElementById('fPair').value;
-  const sessionFilter = document.getElementById('fSession').value;
+  /* The filter bar was removed from the toolbar. These reads are guarded
+     rather than deleted so the filtering logic below stays intact and can
+     be re-enabled by restoring the selects — without it, a missing element
+     throws here and the whole calendar renders blank. */
+  const fPairEl = document.getElementById('fPair');
+  const fSessionEl = document.getElementById('fSession');
+  const pairFilter = fPairEl ? fPairEl.value : 'All Pairs';
+  const sessionFilter = fSessionEl ? fSessionEl.value : 'All Sessions';
   let trades = getAllTrades().filter(t => {
     const d = parseTradeDate(t);
     return d && d.getFullYear() === viewYear && d.getMonth() === viewMonth;
@@ -1009,6 +1034,85 @@ function buildDayMap(trades) {
    FORMATTERS
 ══════════════════════════════════════════════════════════ */
 const fmtMoney = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+/* ── compact values ────────────────────────────────────────────────────
+   A day cell on a 360px phone is roughly 44px of usable width. "+$10,300"
+   cannot fit there at a readable size, and shrinking the font until it does
+   is what made the current version unreadable. So the VALUE gets shorter
+   instead of the type getting smaller:
+
+     950     -> $950        4300   -> $4.3K
+     1000    -> $1K         10300  -> $10.3K
+     1200    -> $1.2K       124000 -> $124K      1400000 -> $1.4M
+
+   Below 1000 nothing is abbreviated. A trailing .0 is always dropped, so
+   1000 reads "$1K" and never "$1.0K". */
+function compactNum(v) {
+  const n = Math.abs(v);
+  if (n < 1000) return String(Math.round(n));
+  /* Trailing zeros are always dropped, which is what lets one rule satisfy
+     both 1,400,000 -> 1.4M and 1,250,000 -> 1.25M: the M range keeps up to
+     two decimals, and 1.40 trims to 1.4. */
+  /* Only strip zeros that follow a decimal point. A bare /\.?0+$/ also eats
+     the zeros in whole numbers, turning 10.3K into "1K". */
+  const trim = (x, dp) => {
+    const t = (Math.round(x * 10 ** dp) / 10 ** dp).toFixed(dp);
+    return dp === 0 ? t : t.replace(/\.0+$|(\.\d*[1-9])0+$/, '$1');
+  };
+  // 3+ integer digits drop the decimal entirely: 124K, never 124.3K
+  /* TIGHT drops one decimal everywhere. On a 360px phone a day cell is
+     about 39px of usable width, and "-$1.23M" needs ~45px — the only case
+     in the whole range that could still clip. TIGHT makes it "-$1.2M". */
+  const kDp = TIGHT ? 0 : 1;
+  const mDp = TIGHT ? 1 : 2;
+
+  /* Boundary guard: 999,999 rounds to 1000K under the K branch, which is
+     both wrong and wider than the cell. Promote to the next unit instead. */
+  const unit = (val, dp, suffix) => {
+    /* Cap the string at 3 significant digits, and at 2 in TIGHT — that is
+       what keeps "-$86.7M" (45px) from clipping a 39px cell on a 360px
+       phone. It becomes "-$87M" (32px). */
+    const eff = val >= 100 ? 0
+              : TIGHT   && val >= 10 ? 0
+              : COMPACT && val >= 10 ? Math.min(dp, 1)
+              : dp;
+    const out = eff === 0 ? String(Math.round(val)) : trim(val, eff);
+    return parseFloat(out) >= 1000 ? null : out + suffix;
+  };
+
+  if (n < 1e6) { const r = unit(n / 1e3, kDp, 'K'); if (r) return r; }
+  if (n < 1e9) { const r = unit(n / 1e6, mDp, 'M'); if (r) return r; }
+  return unit(n / 1e9, mDp, 'B') || (Math.round(n / 1e9) + 'B');
+}
+
+const fmtMoneyCompact = v => (v >= 0 ? '+$' : '-$') + compactNum(v);
+
+/* COMPACT is driven by a matchMedia listener rather than measuring each
+   cell: measurement would force a layout on every render, and the cutoff is
+   a property of the viewport, not of any one value. */
+let COMPACT = false;   // abbreviate at all
+let TIGHT = false;     // abbreviate harder — smallest phones
+const compactQuery = window.matchMedia('(max-width: 900px)');
+const tightQuery   = window.matchMedia('(max-width: 400px)');
+
+function syncDensity() {
+  const c = compactQuery.matches, t = tightQuery.matches;
+  if (c === COMPACT && t === TIGHT) return;
+  COMPACT = c; TIGHT = t;
+  if (typeof renderAll === 'function') renderAll();
+}
+COMPACT = compactQuery.matches;
+TIGHT = tightQuery.matches;
+[compactQuery, tightQuery].forEach(q => {
+  q.addEventListener ? q.addEventListener('change', syncDensity)
+                     : q.addListener(syncDensity);   // older Safari
+});
+
+/* Money for on-card display: compact on small screens, full on desktop. */
+const fmtMoneyAuto = v => (COMPACT ? fmtMoneyCompact(v) : fmtMoney(v));
+
+/* "2 trades" is fine until the cell gets tight; then "2T". */
+const fmtTrades = n => COMPACT ? n + 'T' : n + ' trade' + (n === 1 ? '' : 's');
 const fmtMoneyFull = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtRR = v => (v >= 0 ? '+' : '') + v.toFixed(1) + 'R';
 const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
@@ -1016,7 +1120,7 @@ const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1)
 function primaryValue(pnl, rr) {
   if (displayMode === 'rr') return fmtRR(rr);
   if (displayMode === 'percent') return fmtPct(pnl);
-  return fmtMoney(pnl);
+  return fmtMoneyAuto(pnl);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1094,7 +1198,7 @@ function renderCalendar() {
         </div>
         <div class="day-primary">${primaryValue(data.pnl, data.rr)}</div>
         <div class="day-meta">
-          <span class="day-trades">${n} trade${n > 1 ? 's' : ''}</span>
+          <span class="day-trades">${fmtTrades(n)}</span>
           <span class="day-winrate">${winRate}%</span>
         </div>`;
     } else {
@@ -1279,12 +1383,10 @@ function goToToday() {
   syncMonthYearSelects();
   renderAll();
 }
-function toggleFilters() {
-  document.getElementById('filterBar').classList.toggle('open');
-}
 function populateMonthYearSelects() {
   const mSel = document.getElementById('fMonth');
   const ySel = document.getElementById('fYear');
+  if (!mSel || !ySel) return;   // filter bar removed from the toolbar
   mSel.innerHTML = MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
   let years = '';
   for (let y = 2024; y <= 2028; y++) years += `<option value="${y}">${y}</option>`;
@@ -1292,8 +1394,10 @@ function populateMonthYearSelects() {
   syncMonthYearSelects();
 }
 function syncMonthYearSelects() {
-  document.getElementById('fMonth').value = viewMonth;
-  document.getElementById('fYear').value = viewYear;
+  const mEl = document.getElementById('fMonth');
+  const yEl = document.getElementById('fYear');
+  if (mEl) mEl.value = viewMonth;
+  if (yEl) yEl.value = viewYear;
 }
 function onMonthYearSelect() {
   viewMonth = parseInt(document.getElementById('fMonth').value, 10);
@@ -1313,28 +1417,6 @@ async function exportPNG() {
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch (e) { alert('Could not export PNG. Please try again.'); }
-}
-async function exportPDF() {
-  const card = document.getElementById('calendarCard');
-  try {
-    const canvas = await html2canvas(card, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-    pdf.save(`tradeva-calendar-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.pdf`);
-  } catch (e) { alert('Could not export PDF. Please try again.'); }
-}
-function exportCSV() {
-  const trades = getMonthTrades();
-  if (!trades.length) { alert('No trades to export for this month.'); return; }
-  const header = 'Date,Pair,Direction,Session,RR,PnL,Outcome\n';
-  const rows = trades.map(t => [t.date || t.rawDate, t.pair, t.dir, t.session || '', t.rr || 0, t.pnl || 0, t.outcome || ''].join(',')).join('\n');
-  const blob = new Blob([header + rows], { type: 'text/csv' });
-  const link = document.createElement('a');
-  link.download = `tradeva-trades-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.csv`;
-  link.href = URL.createObjectURL(blob);
-  link.click();
-  URL.revokeObjectURL(link.href);
 }
 
 /* ══════════════════════════════════════════════════════════
