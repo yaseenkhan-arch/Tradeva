@@ -1348,8 +1348,19 @@ document.addEventListener('DOMContentLoaded', () => {
 import { auth, hydrateProfileSidebar } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
          getSelectedAccountId } from "./tradeva-accounts.js";
-import { getSummary, getSummaryCached, ensureDaily } from "./tradeva-summary.js";
+import { getSummary, getSummaryCached, ensureDaily, verifySummary } from "./tradeva-summary.js";
 import { fbperf } from "./tradeva-fbperf.js";
+/* Instrumentation is opt-in now. Both perf.js and fbperf were reporting on
+   every production load, which costs a console table plus a Resource Timing
+   sweep on the critical path for numbers no user reads.
+
+   To re-enable while debugging, run in the console and reload:
+     localStorage.setItem('tradeva_debug', '1')
+   ...and to turn it back off:
+     localStorage.removeItem('tradeva_debug') */
+window.TRADEVA_PERF = window.TRADEVA_FBPERF =
+  (() => { try { return localStorage.getItem('tradeva_debug') === '1'; } catch (e) { return false; } })();
+
 import { perf } from "./tradeva-perf.js";
 
 /* One shared implementation for every page — see tradeva-firebase.js.
@@ -1474,6 +1485,21 @@ function tvWhenAuthed(){
 
     perf.report("DASHBOARD STARTUP");
     fbperf.report("Dashboard");
+
+    /* Self-heal, off the critical path. One aggregation query confirms the
+       summary still matches the trades collection; if a write was ever lost
+       the dashboard rebuilds itself and repaints. No console commands, no
+       stale numbers that only a developer could notice. */
+    const idleVerify = window.requestIdleCallback || (cb => setTimeout(cb, 400));
+    idleVerify(async () => {
+      try {
+        const fixed = await verifySummary(accId, summary);
+        if (!fixed) return;                       // already in sync
+        window.__tvSetDashboardSummary(fixed, accObj);
+        window.__tvSetDashboardTrades(fixed.recent || [], accObj);
+        window.__tvSetDashboardDaily(fixed.curve || [], accObj);
+      } catch (e) { console.warn("summary self-heal failed:", e); }
+    });
   }
 })();
 </script>
