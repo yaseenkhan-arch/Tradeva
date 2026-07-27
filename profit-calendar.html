@@ -1003,20 +1003,9 @@ applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
 function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
 
-/* ── PROFILE ── */
-function loadProfileSidebar() {
-  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
-  const photo = localStorage.getItem('tradeva_photo');
-  const fname = p.fname || 'Kham';
-  const lname = p.lname || '';
-  const account = p.account || 'Pro Trader';
-  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
-  document.getElementById('sidebarName').textContent = fname;
-  document.getElementById('sidebarRole').textContent = account;
-  const av = document.getElementById('sidebarAvatar');
-  if (photo) { av.style.backgroundImage = 'url(' + photo + ')'; av.textContent = ''; }
-  else av.textContent = initials;
-}
+/* ── PROFILE ──
+   Lives in tradeva-firebase.js now (hydrateProfileSidebar) so every page
+   shares one implementation. The module block below calls it. */
 
 /* ══════════════════════════════════════════════════════════
    DATA LAYER
@@ -1725,7 +1714,6 @@ function renderAll() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadProfileSidebar();
   populateMonthYearSelects();
   // calendar renders once Firestore trades arrive (see module below)
 });
@@ -1733,9 +1721,15 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- Calendar data + account switcher (module) -->
 <script type="module">
-import { auth } from "./tradeva-firebase.js";
+import { auth, hydrateProfileSidebar } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
 import { listTrades } from "./tradeva-trades.js";
+
+/* One shared implementation for every page — see tradeva-firebase.js.
+   Called after the imports (not in the auth-guard block, which runs before
+   the sidebar markup exists). Paints from localStorage instantly, then
+   reconciles against users/{uid} only if that snapshot is incomplete. */
+hydrateProfileSidebar();
 function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
 
 (async () => {
