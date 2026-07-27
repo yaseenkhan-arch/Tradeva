@@ -228,15 +228,6 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
    Replaces the green toggle and the bottom-right edit/delete buttons.
    Edit, enable/disable and delete all live in here now, so the card top
    carries one ghost button and the title/description get the width back. */
-/* Still used by the CHECKLIST section's edit/delete buttons, which are a
-   separate control set and were not part of this change. Do not remove. */
-.rule-icon-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--t) var(--ease); }
-.rule-icon-btn svg { width: 12px; height: 12px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke var(--t) var(--ease); }
-.rule-icon-btn:hover { background: var(--border-light); }
-.rule-icon-btn:hover svg { stroke: var(--text-primary); }
-.rule-icon-btn.danger:hover { border-color: var(--red); background: var(--red-bg); }
-.rule-icon-btn.danger:hover svg { stroke: var(--red); }
-
 .rule-menu-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
 .rule-menu-btn {
   width: 26px; height: 26px; border-radius: 7px;
@@ -328,11 +319,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .cl-cat-badge { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; }
 .cl-cat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .cl-required-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: var(--red-bg); color: var(--red); text-transform: uppercase; letter-spacing: 0.03em; }
-.cl-actions { display: flex; gap: 4px; margin-left: auto; }
-.cl-toggle { width: 34px; height: 19px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background var(--t) var(--ease); flex-shrink: 0; }
-.cl-toggle.on { background: var(--green); }
-.cl-toggle-knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform var(--t) var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-.cl-toggle.on .cl-toggle-knob { transform: translateX(15px); }
+
 
 /* Modal */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--t) var(--ease); padding: 20px; }
@@ -1238,22 +1225,22 @@ function renderRules() {
           ${r.desc ? `<div class="rule-desc">${escapeHtml(r.desc)}</div>` : ''}
         </div>
         <div class="rule-menu-wrap">
-          <button class="rule-menu-btn" onclick="toggleRuleMenu(event, ${r.id})" aria-haspopup="true" aria-expanded="false" aria-label="Rule actions" title="Actions">
+          <button class="rule-menu-btn" onclick="toggleOverflowMenu(event, 'rule-${r.id}')" aria-haspopup="true" aria-expanded="false" aria-label="Rule actions" title="Actions">
             <svg viewBox="0 0 14 14"><circle cx="7" cy="2.6" r="1.15"/><circle cx="7" cy="7" r="1.15"/><circle cx="7" cy="11.4" r="1.15"/></svg>
           </button>
-          <div class="rule-menu" id="ruleMenu-${r.id}" role="menu">
-            <button class="rule-menu-item" role="menuitem" onclick="ruleMenuAction(event, 'edit', ${r.id})">
+          <div class="rule-menu" id="ovfMenu-rule-${r.id}" role="menu">
+            <button class="rule-menu-item" role="menuitem" onclick="overflowMenuAction(event, 'rule', 'edit', ${r.id})">
               <svg viewBox="0 0 14 14"><path d="M10 1.8l2.2 2.2L4.8 11.4l-2.9.7.7-2.9z"/></svg>
               Edit rule
             </button>
-            <button class="rule-menu-item" role="menuitem" onclick="ruleMenuAction(event, 'toggle', ${r.id})">
+            <button class="rule-menu-item" role="menuitem" onclick="overflowMenuAction(event, 'rule', 'toggle', ${r.id})">
               ${r.enabled
                 ? '<svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.2"/><line x1="4.6" y1="4.6" x2="9.4" y2="9.4"/></svg>'
                 : '<svg viewBox="0 0 14 14"><polyline points="2.6,7.4 5.6,10.2 11.4,3.8"/></svg>'}
               ${r.enabled ? 'Disable rule' : 'Enable rule'}
             </button>
             <div class="rule-menu-sep"></div>
-            <button class="rule-menu-item danger" role="menuitem" onclick="ruleMenuAction(event, 'delete', ${r.id})">
+            <button class="rule-menu-item danger" role="menuitem" onclick="overflowMenuAction(event, 'rule', 'delete', ${r.id})">
               <svg viewBox="0 0 14 14"><polyline points="2,3.5 12,3.5"/><path d="M5,3.5V1.8h4v1.7M11,3.5l-.6,8.7H3.6L3,3.5"/></svg>
               Delete rule
             </button>
@@ -1271,25 +1258,28 @@ function renderRules() {
    One menu open at a time. renderRules() rebuilds the grid's innerHTML,
    so any open menu disappears with it — that is why every action closes
    the menu first and lets the re-render take care of the rest. */
-function closeRuleMenus() {
+function closeOverflowMenus() {
   document.querySelectorAll('.rule-menu.open').forEach(m => m.classList.remove('open'));
   document.querySelectorAll('.rule-menu-btn[aria-expanded="true"]')
     .forEach(b => b.setAttribute('aria-expanded', 'false'));
   document.querySelectorAll('.rule-card.menu-open').forEach(c => c.classList.remove('menu-open'));
 }
 
-function toggleRuleMenu(e, id) {
+/* key is scope-prefixed ("rule-12" / "cl-12") because a rule id and a
+   checklist id can be the same number — without the prefix, opening one
+   card's menu could target the other section's card. */
+function toggleOverflowMenu(e, key) {
   e.stopPropagation();
-  const menu = document.getElementById('ruleMenu-' + id);
+  const menu = document.getElementById('ovfMenu-' + key);
   if (!menu) return;
   const willOpen = !menu.classList.contains('open');
-  closeRuleMenus();
+  closeOverflowMenus();
   if (!willOpen) return;
 
   menu.classList.add('open');
   const btn = e.currentTarget;
   if (btn && btn.setAttribute) btn.setAttribute('aria-expanded', 'true');
-  const card = menu.closest('.rule-card');
+  const card = menu.closest('.rule-card, .checklist-card');
   if (card) card.classList.add('menu-open');
 
   /* Flip upward if the menu would fall past the viewport bottom. */
@@ -1301,19 +1291,25 @@ function toggleRuleMenu(e, id) {
   }
 }
 
-function ruleMenuAction(e, action, id) {
+function overflowMenuAction(e, scope, action, id) {
   e.stopPropagation();
-  closeRuleMenus();
-  if (action === 'edit') openRuleEditor(id);
-  else if (action === 'toggle') toggleRuleEnabled(id);
-  else if (action === 'delete') deleteRule(id);
+  closeOverflowMenus();
+  if (scope === 'rule') {
+    if (action === 'edit') openRuleEditor(id);
+    else if (action === 'toggle') toggleRuleEnabled(id);
+    else if (action === 'delete') deleteRule(id);
+  } else {
+    if (action === 'edit') openChecklistModal(id);
+    else if (action === 'toggle') toggleChecklistEnabled(id);
+    else if (action === 'delete') deleteChecklistItem(id);
+  }
 }
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.rule-menu-wrap')) closeRuleMenus();
+  if (!e.target.closest('.rule-menu-wrap')) closeOverflowMenus();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeRuleMenus();
+  if (e.key === 'Escape') closeOverflowMenus();
 });
 
 function toggleRuleFollow(id) {
@@ -1416,17 +1412,28 @@ function renderChecklist() {
               ${c.required ? '<span class="cl-required-badge">Required</span>' : ''}
             </div>
           </div>
-          <div class="cl-actions">
-            <div class="cl-toggle ${c.enabled ? 'on' : ''}" onclick="toggleChecklistEnabled(${c.id})" title="Enable / disable"><div class="cl-toggle-knob"></div></div>
+          <div class="rule-menu-wrap">
+            <button class="rule-menu-btn" onclick="toggleOverflowMenu(event, 'cl-${c.id}')" aria-haspopup="true" aria-expanded="false" aria-label="Checklist item actions" title="Actions">
+              <svg viewBox="0 0 14 14"><circle cx="7" cy="2.6" r="1.15"/><circle cx="7" cy="7" r="1.15"/><circle cx="7" cy="11.4" r="1.15"/></svg>
+            </button>
+            <div class="rule-menu" id="ovfMenu-cl-${c.id}" role="menu">
+              <button class="rule-menu-item" role="menuitem" onclick="overflowMenuAction(event, 'cl', 'edit', ${c.id})">
+                <svg viewBox="0 0 14 14"><path d="M10 1.8l2.2 2.2L4.8 11.4l-2.9.7.7-2.9z"/></svg>
+                Edit item
+              </button>
+              <button class="rule-menu-item" role="menuitem" onclick="overflowMenuAction(event, 'cl', 'toggle', ${c.id})">
+                ${c.enabled
+                  ? '<svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.2"/><line x1="4.6" y1="4.6" x2="9.4" y2="9.4"/></svg>'
+                  : '<svg viewBox="0 0 14 14"><polyline points="2.6,7.4 5.6,10.2 11.4,3.8"/></svg>'}
+                ${c.enabled ? 'Disable item' : 'Enable item'}
+              </button>
+              <div class="rule-menu-sep"></div>
+              <button class="rule-menu-item danger" role="menuitem" onclick="overflowMenuAction(event, 'cl', 'delete', ${c.id})">
+                <svg viewBox="0 0 14 14"><polyline points="2,3.5 12,3.5"/><path d="M5,3.5V1.8h4v1.7M11,3.5l-.6,8.7H3.6L3,3.5"/></svg>
+                Delete item
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="rule-meta-row" style="margin-top:10px;justify-content:flex-end;">
-          <button class="rule-icon-btn" onclick="openChecklistModal(${c.id})" title="Edit">
-            <svg viewBox="0 0 12 12"><path d="M8.5 1.5l2 2L4 10l-2.5.5L2 8z"/></svg>
-          </button>
-          <button class="rule-icon-btn danger" onclick="deleteChecklistItem(${c.id})" title="Delete">
-            <svg viewBox="0 0 12 12"><polyline points="1.5,3 10.5,3"/><path d="M4 3V1.5h4V3M9.5 3l-.5 7.5h-6L2.5 3"/></svg>
-          </button>
         </div>
       </div>`;
     }).join('');
