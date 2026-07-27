@@ -838,11 +838,17 @@ function switchTab(name){
 <!-- ACCOUNTS LOGIC -->
 <!-- ACCOUNTS LOGIC -->
 <script type="module">
-import { auth } from "./tradeva-firebase.js";
+import { auth, hydrateProfileSidebar } from "./tradeva-firebase.js";
 import {
   createAccount, updateAccount, deleteAccount, listAccounts, getAccount,
   initAccountSwitcher, setSelectedAccount, getSelectedAccountId
 } from "./tradeva-accounts.js";
+
+/* One shared implementation for every page — see tradeva-firebase.js.
+   Called after the imports (not in the auth-guard block, which runs before
+   the sidebar markup exists). Paints from localStorage instantly, then
+   reconciles against users/{uid} only if that snapshot is incomplete. */
+hydrateProfileSidebar();
 
 let editingId = null;
 
