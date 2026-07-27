@@ -405,7 +405,7 @@ body {
 /* ── header ─────────────────────────────────────────────────────────── */
 .pnl-top { display: flex; align-items: center; gap: calc(var(--u) * 14px); flex-shrink: 0; }
 .pnl-logo { display: flex; align-items: center; gap: calc(var(--u) * 11px); margin-right: auto; min-width: 0; }
-.pnl-logo-icon { width: calc(var(--u) * 30px); height: calc(var(--u) * 30px); object-fit: contain; display: block; flex-shrink: 0; }
+.pnl-logo-icon { width: calc(var(--u) * 35px); height: calc(var(--u) * 35px); object-fit: contain; display: block; flex-shrink: 0; }
 .pnl-logo-mark { font-size: calc(var(--u) * 30px); font-weight: 800; letter-spacing: 0.11em; color: var(--ink); }
 .pnl-logo-sub  { font-size: calc(var(--u) * 28px); font-weight: 500; letter-spacing: 0.13em; color: var(--ink-2); }
 .pnl-date { font-size: calc(var(--u) * 28px); font-weight: 500; color: var(--ink-2); letter-spacing: 0.045em; white-space: nowrap; }
@@ -548,14 +548,12 @@ body {
 }
 .pnl-accent-text { color: var(--pnl-accent); }
 
-.pnl-card[data-template="midnight"][data-outcome="win"],
-.pnl-card[data-template="aurora"][data-outcome="win"],
-.pnl-card[data-template="noir"][data-outcome="win"] {
+/* Midnight is now the only dark surface — Aurora and Noir became light
+   themes, and the brightened accents would glare on pastel. */
+.pnl-card[data-template="midnight"][data-outcome="win"] {
   --pnl-accent: #2BE0A4; --pnl-accent-bg: rgba(43,224,164,0.13); --pnl-accent-line: rgba(43,224,164,0.24);
 }
-.pnl-card[data-template="midnight"][data-outcome="loss"],
-.pnl-card[data-template="aurora"][data-outcome="loss"],
-.pnl-card[data-template="noir"][data-outcome="loss"] {
+.pnl-card[data-template="midnight"][data-outcome="loss"] {
   --pnl-accent: #FF4D6F; --pnl-accent-bg: rgba(255,77,111,0.14); --pnl-accent-line: rgba(255,77,111,0.26);
 }
 
@@ -579,15 +577,22 @@ body {
   background-size: calc(var(--u) * 38px) calc(var(--u) * 38px), 100% 100%;
 }
 
-/* 2 — Strip Mesh Light · warm off-white, beige + lavender mesh */
-.pnl-card[data-template="light"] {
-  background:
-    radial-gradient(circle, var(--grain) calc(var(--u) * 1.6px), rgba(0,0,0,0) calc(var(--u) * 1.6px)),
-    radial-gradient(48% 34% at 92% 2%,  rgba(191,160,212,0.42) 0%, rgba(191,160,212,0) 66%),
-    radial-gradient(54% 38% at 4% 96%,  rgba(216,182,132,0.46) 0%, rgba(216,182,132,0) 68%),
-    radial-gradient(40% 30% at 96% 92%, rgba(206,190,172,0.36) 0%, rgba(206,190,172,0) 70%),
-    linear-gradient(168deg, #FDFAF5 0%, #F4EDE2 100%);
-  background-size: calc(var(--u) * 40px) calc(var(--u) * 40px), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+/* 2 — Aqua Dream · soft pink / indigo / mint / cream on near-white
+   Circle radii are calc(var(--u) * Npx) rather than fixed px: the source
+   values are sized for a 925-wide card, so at a 1080 export a fixed 400px
+   circle would cover a different fraction of the surface than in the
+   preview. Scaling them keeps the download identical to what you see. */
+.pnl-card[data-template="aqua"] {
+  --ink: #0B0D12; --ink-2: #98A0AB;
+  --tile: rgba(255,255,255,0.60); --chip: #FFFFFF;
+  --hair: rgba(11,13,18,0.07);
+  --pill: #0B0D12; --pill-ink: #FFFFFF; --qr-bg: #FFFFFF;
+  background-color: #F8FAFC;
+  background-image:
+    radial-gradient(calc(var(--u) * 400px) circle at 10% 0%,    #FFD1DC 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 90% 0%,    #A5B4FC 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,    #99F6E0 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 100% 100%, #FEF3C7 0%, transparent 70%);
 }
 
 /* 2 — Midnight · #0F1115, grid, red glow, texture */
@@ -606,19 +611,20 @@ body {
 }
 .pnl-card[data-template="midnight"] .pnl-ornament { display: block; }
 
-/* 3 — Aurora · black with purple / blue / pink fintech lighting */
-.pnl-card[data-template="aurora"] {
-  --ink: #FFFFFF; --ink-2: rgba(255,255,255,0.56);
-  --tile: rgba(255,255,255,0.065); --chip: rgba(255,255,255,0.11);
-  --hair: rgba(255,255,255,0.12);
-  --pill: #FFFFFF; --pill-ink: #0A0A12; --qr-bg: #FFFFFF;
-  background:
-    radial-gradient(42% 30% at 8% 4%,    rgba(139,92,246,0.66) 0%, rgba(139,92,246,0) 70%),
-    radial-gradient(40% 28% at 96% 14%,  rgba(56,189,248,0.52) 0%, rgba(56,189,248,0) 70%),
-    radial-gradient(48% 34% at 74% 102%, rgba(244,114,182,0.52) 0%, rgba(244,114,182,0) 70%),
-    radial-gradient(36% 26% at 18% 94%,  rgba(45,212,191,0.32) 0%, rgba(45,212,191,0) 70%),
-    radial-gradient(80% 60% at 50% 50%,  rgba(10,10,20,0.55) 0%, rgba(6,6,11,0.9) 100%),
-    #06060B;
+/* 3 — Peach Sunset · warm coral / peach on cream
+   NOTE: replaced a DARK theme. The ink tokens are flipped to dark — the
+   old white --ink would have been unreadable on this cream surface. */
+.pnl-card[data-template="peach"] {
+  --ink: #2B1810; --ink-2: #A08573;
+  --tile: rgba(255,255,255,0.58); --chip: #FFFDFB;
+  --hair: rgba(43,24,16,0.10);
+  --pill: #2B1810; --pill-ink: #FFFBEB; --qr-bg: #FFFFFF;
+  background-color: #FFFBEB;
+  background-image:
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,    #FF9A8B 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 100% 20%, #FFDAB9 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 50% 100%, #FFE4B5 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 80% 80%,  #FFC8A2 0%, transparent 70%);
 }
 
 /* 4 — Champagne Gold · warm cream, gold mesh, never yellow */
@@ -651,16 +657,19 @@ body {
     linear-gradient(180deg, #FFFFFF 0%, #F7F8FB 100%);
 }
 
-/* 6 — Noir Spotlight · studio spotlight over a deep vignette */
-.pnl-card[data-template="noir"] {
-  --ink: #F7F7F8; --ink-2: #7E7E86;
-  --tile: rgba(255,255,255,0.05); --chip: rgba(255,255,255,0.09);
-  --hair: rgba(255,255,255,0.10);
-  --pill: #F7F7F8; --pill-ink: #08090B; --qr-bg: #FFFFFF;
-  background:
-    radial-gradient(42% 30% at 50% -8%,  rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 62%),
-    radial-gradient(70% 50% at 50% 6%,   rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%),
-    radial-gradient(118% 92% at 50% 44%, #1A1B1F 0%, #050506 100%);
+/* 6 — Mint Ocean · emerald / cyan / teal on pale aqua
+   Also replaced a DARK theme, so the ink tokens are flipped to dark. */
+.pnl-card[data-template="mint"] {
+  --ink: #06231F; --ink-2: #6E9691;
+  --tile: rgba(255,255,255,0.58); --chip: #FFFFFF;
+  --hair: rgba(6,35,31,0.09);
+  --pill: #06231F; --pill-ink: #F0FDFD; --qr-bg: #FFFFFF;
+  background-color: #F0FDFD;
+  background-image:
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,   #6EE7B7 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 100% 10%,#67E8F9 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,  #5EEAD4 0%, transparent 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 100% 90%,#BAE6FD 0%, transparent 70%);
 }
 
 .pnl-grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
@@ -703,12 +712,12 @@ body {
 .tpl-chip-label { font-size: 11px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
 .tpl-chip.active .tpl-chip-label { color: var(--accent); }
 .tpl-swatch-minimal   { background: linear-gradient(180deg, #FFFFFF, #F4F5F7); }
-.tpl-swatch-light     { background: radial-gradient(circle at 88% 8%, #BFA0D4, #FDFAF5 62%), linear-gradient(168deg, #FDFAF5, #F1E7D8); }
+.tpl-swatch-aqua      { background: radial-gradient(circle at 12% 4%, #FFD1DC, transparent 68%), radial-gradient(circle at 92% 4%, #A5B4FC, transparent 68%), radial-gradient(circle at 4% 92%, #99F6E0, transparent 68%), #F8FAFC; }
 .tpl-swatch-champagne { background: radial-gradient(circle at 90% 4%, #C19B5C, #FDFAF1 64%), linear-gradient(160deg, #FDFAF1, #EFE2C9); }
 .tpl-swatch-liquid    { background: radial-gradient(circle at 86% 10%, #818CF8, #FFFFFF 62%); }
 .tpl-swatch-midnight  { background: radial-gradient(circle at 50% 100%, #F0325B, #0F1115 58%); }
-.tpl-swatch-aurora    { background: radial-gradient(circle at 12% 8%, #8B5CF6, #06060B 62%); }
-.tpl-swatch-noir      { background: radial-gradient(circle at 50% -10%, #45464C, #060607 66%); }
+.tpl-swatch-peach     { background: radial-gradient(circle at 4% 4%, #FF9A8B, transparent 70%), radial-gradient(circle at 96% 22%, #FFDAB9, transparent 70%), radial-gradient(circle at 52% 96%, #FFE4B5, transparent 70%), #FFFBEB; }
+.tpl-swatch-mint      { background: radial-gradient(circle at 4% 4%, #6EE7B7, transparent 70%), radial-gradient(circle at 96% 10%, #67E8F9, transparent 70%), radial-gradient(circle at 4% 92%, #5EEAD4, transparent 70%), #F0FDFD; }
 
 /* ── Size selector ── */
 .pnlsize-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
@@ -1125,9 +1134,9 @@ try {
         <span class="tpl-swatch tpl-swatch-minimal"></span>
         <span class="tpl-chip-label">Minimal</span>
       </button>
-      <button class="tpl-chip" data-tpl="light" onclick="pnlSetTemplate('light')">
-        <span class="tpl-swatch tpl-swatch-light"></span>
-        <span class="tpl-chip-label">Strip Mesh</span>
+      <button class="tpl-chip" data-tpl="aqua" onclick="pnlSetTemplate('aqua')">
+        <span class="tpl-swatch tpl-swatch-aqua"></span>
+        <span class="tpl-chip-label">Aqua Dream</span>
       </button>
       <button class="tpl-chip" data-tpl="champagne" onclick="pnlSetTemplate('champagne')">
         <span class="tpl-swatch tpl-swatch-champagne"></span>
@@ -1141,13 +1150,13 @@ try {
         <span class="tpl-swatch tpl-swatch-midnight"></span>
         <span class="tpl-chip-label">Midnight</span>
       </button>
-      <button class="tpl-chip" data-tpl="aurora" onclick="pnlSetTemplate('aurora')">
-        <span class="tpl-swatch tpl-swatch-aurora"></span>
-        <span class="tpl-chip-label">Aurora</span>
+      <button class="tpl-chip" data-tpl="peach" onclick="pnlSetTemplate('peach')">
+        <span class="tpl-swatch tpl-swatch-peach"></span>
+        <span class="tpl-chip-label">Peach Sunset</span>
       </button>
-      <button class="tpl-chip" data-tpl="noir" onclick="pnlSetTemplate('noir')">
-        <span class="tpl-swatch tpl-swatch-noir"></span>
-        <span class="tpl-chip-label">Noir</span>
+      <button class="tpl-chip" data-tpl="mint" onclick="pnlSetTemplate('mint')">
+        <span class="tpl-swatch tpl-swatch-mint"></span>
+        <span class="tpl-chip-label">Mint Ocean</span>
       </button>
     </div>
 
