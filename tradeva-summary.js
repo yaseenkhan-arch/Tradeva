@@ -41,7 +41,7 @@
 import { db, auth } from "./tradeva-firebase.js";
 import {
   doc, getDoc, setDoc, collection, query, orderBy, where,
-  getDocs, runTransaction, writeBatch, increment, serverTimestamp,
+  getDocs, getCountFromServer, runTransaction, writeBatch, increment, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 import { fbperf } from "./tradeva-fbperf.js";
@@ -293,6 +293,45 @@ export async function getSummary(accId) {
   }
 
   return deriveSummary(data);
+}
+
+/* ── self-healing integrity check ─────────────────────────────────────
+ * The summary is a DERIVED document: correct only as long as every write
+ * path updates it. That is a fragile contract — one cancelled write (a
+ * redirect, a dropped connection, a tab closed mid-save) and the dashboard
+ * silently disagrees with every other page, with no way for the user to
+ * know or fix it.
+ *
+ * So the dashboard stops trusting the contract and verifies it instead.
+ * getCountFromServer() is an AGGREGATION query: the server returns just a
+ * number, billed as a single read no matter how many trades exist. If it
+ * disagrees with the stored tradeCount, the summary is rebuilt from the
+ * trades collection automatically.
+ *
+ * Runs AFTER the dashboard has painted, so it never delays anything. The
+ * user sees corrected numbers on the next load at the latest, and never
+ * has to run a console command.
+ * ════════════════════════════════════════════════════════════════════ */
+export async function verifySummary(accId, summary) {
+  if (!accId || !summary) return null;
+  try {
+    const snap = await fbperf.traced(
+      "summary:verify(count)",
+      () => getCountFromServer(tradesCol(accId)),
+      { accountId: accId }
+    );
+    const actual = snap.data().count;
+    if (actual === num(summary.tradeCount)) return null;   // in sync
+
+    console.warn(
+      `[tradeva] summary drift detected: doc says ${num(summary.tradeCount)} trades, ` +
+      `collection has ${actual}. Rebuilding.`
+    );
+    return await recomputeSummary(accId);
+  } catch (e) {
+    console.warn("summary verify failed (non-fatal):", e);
+    return null;
+  }
 }
 
 /* ── daily aggregates (charts, max drawdown, profitable days) ─────── */
