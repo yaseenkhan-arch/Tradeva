@@ -231,17 +231,22 @@ body {
 /* ══════════════════════════════════════════════════════════
    CALENDAR LAYOUT
 ══════════════════════════════════════════════════════════ */
-.calendar-layout { display: grid; grid-template-columns: 1fr 260px; gap: 16px; align-items: start; }
+.calendar-layout { display: block; }
 
 .calendar-card {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
   padding: 20px; box-shadow: var(--shadow-card);
   transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
-.weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
+/* 8 columns: 7 weekdays + the week summary card.
+   The week cards used to live in a SEPARATE sibling container, so their rows
+   could only ever line up by coincidence. Making the card the 8th cell of the
+   same grid means CSS aligns each week card to its own calendar row exactly,
+   with no JS measuring and no drift when a cell grows. */
+.weekday-row { display: grid; grid-template-columns: repeat(7, 1fr) 168px; gap: 8px; margin-bottom: 8px; }
 .weekday-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; padding-bottom: 4px; transition: color var(--t) var(--ease); }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr) 168px; gap: 8px; align-items: stretch; }
 .day-cell {
   position: relative; border-radius: 14px; border: 1px solid var(--border);
   background: var(--bg-card); padding: 12px 12px 11px; min-height: 104px;
@@ -265,7 +270,20 @@ body {
 .day-cell.flat-day { background: var(--bg-page); }
 .day-cell.win-day::after  { background: var(--green); }
 .day-cell.loss-day::after { background: var(--red); }
-.day-cell.is-today { box-shadow: 0 0 0 2px var(--accent) inset; }
+/* Today marker.
+   THE BLUE CIRCLE BUG: html2canvas cannot rasterise `inset` box-shadow. It
+   falls back to painting the shadow as a solid OUTER shape, which is the
+   large blue blob that appeared over the current day in every exported PNG.
+   An inset ring is drawn here with a real border instead — identical on
+   screen, and it exports correctly because it is a border, not a shadow. */
+.day-cell.is-today { border: 2px solid var(--accent); }
+.day-cell.is-today.win-day  { border-color: var(--green); }
+.day-cell.is-today.loss-day { border-color: var(--red); }
+/* Belt and braces: during capture, kill every shadow and focus ring in the
+   card. Browsers also paint :focus outlines into the canvas. */
+.exporting .day-cell, .exporting .week-card { box-shadow: none !important; }
+.exporting *:focus, .exporting *:focus-visible { outline: none !important; box-shadow: none !important; }
+.exporting .today-dot { display: none !important; }
 
 .day-top { display: flex; align-items: center; justify-content: space-between; }
 .day-num { font-size: 12px; font-weight: 700; color: var(--text-muted); transition: color var(--t) var(--ease); }
@@ -295,7 +313,65 @@ body {
 .day-cell.loss-day .day-winrate { background: rgba(239,68,68,0.16); color: var(--red); }
 
 /* ── Weekly summary rail ── */
-.weekly-sidebar { display: flex; flex-direction: column; gap: 10px; }
+/* Stacked fallback, shown only below 900px where 8 columns will not fit. */
+.weekly-sidebar { display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+
+/* ── Display Stats popover ───────────────────────────────────────────
+   Anchored to its trigger rather than the page, so it cannot drift on
+   scroll. Opacity+transform transition (not display) so it can animate. */
+.ds-wrap { position: relative; display: inline-flex; margin-left: 10px; }
+.ds-btn {
+  width: 36px; height: 36px; padding: 0; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--bg-card); color: var(--text-muted); cursor: pointer;
+  transition: background 150ms var(--ease), color 150ms var(--ease), border-color 150ms var(--ease);
+}
+.ds-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.ds-btn:hover { background: var(--bg-page); color: var(--text-primary); border-color: var(--text-faint); }
+.ds-btn[aria-expanded="true"] { background: var(--accent-bg, rgba(59,130,246,0.1)); color: var(--accent); border-color: var(--accent); }
+.ds-pop {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 60;
+  min-width: 232px; padding: 8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(15,18,26,0.05), 0 14px 34px rgba(15,18,26,0.14);
+  opacity: 0; transform: translateY(-6px) scale(0.97);
+  transform-origin: top right; pointer-events: none;
+  transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+}
+.ds-pop.open { opacity: 1; transform: none; pointer-events: auto; }
+.ds-pop-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--text-faint); padding: 8px 10px 10px;
+}
+.ds-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 11px; cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+.ds-row:hover { background: var(--bg-page); }
+.ds-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ds-box {
+  width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
+  border: 1.6px solid var(--border); background: var(--bg-card);
+  position: relative; transition: background 140ms var(--ease), border-color 140ms var(--ease);
+}
+.ds-box::after {
+  content: ''; position: absolute; left: 6px; top: 2.5px;
+  width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0.6); opacity: 0;
+  transition: opacity 140ms var(--ease), transform 140ms var(--ease);
+}
+.ds-row input:checked + .ds-box { background: var(--accent); border-color: var(--accent); }
+.ds-row input:checked + .ds-box::after { opacity: 1; transform: rotate(45deg) scale(1); }
+.ds-row input:focus-visible + .ds-box { box-shadow: 0 0 0 3px rgba(59,130,246,0.22); }
+.ds-label { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+@media (max-width: 560px) { .ds-pop { right: auto; left: 0; transform-origin: top left; } }
+
+.week-slot { display: flex; }
+.week-slot .week-card { width: 100%; }
+.weekday-label.week-col { text-align: left; padding-left: 4px; }
 .week-card {
   position: relative; background: var(--bg-card); border: 1px solid var(--border);
   border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow-card); overflow: hidden;
@@ -397,7 +473,8 @@ body {
 
 .report-card { padding: 38px 34px 30px; position: relative; background: var(--bg-card); transition: background var(--t) var(--ease); }
 .report-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 0; }
-.report-brand-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 3px 10px rgba(59,130,246,0.28); }
+.report-brand-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.report-brand-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .report-brand-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .report-brand-name { font-size: 17px; font-weight: 800; letter-spacing: 0.11em; color: var(--text-primary); transition: color var(--t) var(--ease); }
 .report-brand-sub { font-size: 15px; font-weight: 500; letter-spacing: 0.13em; color: var(--text-faint); }
@@ -408,8 +485,8 @@ body {
 
 .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .report-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 16px; padding: 17px 18px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
-.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
-.report-stat-value { font-size: 23px; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t) var(--ease); }
+.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.11em; color: var(--text-faint); margin-bottom: 8px; line-height: 1.35; min-height: 2.7em; display: flex; align-items: flex-end; transition: color var(--t) var(--ease); }
+.report-stat-value { font-size: 23px; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; transition: color var(--t) var(--ease); }
 .report-stat-value.green { color: var(--green); }
 .report-stat-value.red { color: var(--red); }
 
@@ -420,7 +497,7 @@ body {
 .report-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 8px; }
 .report-highlight.best .report-highlight-label { color: var(--green); }
 .report-highlight.worst .report-highlight-label { color: var(--red); }
-.report-highlight-value { font-size: 16px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t) var(--ease); }
+.report-highlight-value { font-size: 16px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; transition: color var(--t) var(--ease); }
 
 .report-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 11px; font-weight: 500; color: var(--text-faint); transition: border-color var(--t) var(--ease), color var(--t) var(--ease); }
 
@@ -451,6 +528,22 @@ body {
 @media (max-width: 900px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+/* Display Stats visibility */
+.calendar-card.hide-pnl   .day-primary  { display: none; }
+.calendar-card.hide-count .day-trades   { display: none; }
+.calendar-card.hide-wr    .day-winrate  { display: none; }
+.calendar-card.hide-pnl   .day-cell     { justify-content: flex-start; }
+
+/* Below 900px the 8th column no longer fits: fall back to 7 columns and
+   show the stacked week cards underneath. */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .calendar-grid, .weekday-row { grid-template-columns: repeat(7, 1fr); }
+  .week-slot { display: none; }
+  .weekday-label.week-col { display: none; }
+  .weekly-sidebar { display: grid; }
+}
+
 @media (max-width: 768px) {
   .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
   .sidebar.open { transform: translateX(0); }
@@ -460,37 +553,33 @@ body {
   .mobile-nav { display: flex; }
   .mob-menu-btn { display: flex; }
   .page-title { font-size: 21px; }
-  .weekly-sidebar { grid-template-columns: repeat(2, 1fr); }
   .month-label { min-width: 96px; font-size: 13px; }
   .day-drawer { width: 100%; max-width: 100%; }
 
-  /* Day cells: taller, not smaller. The old rules shrank the value to 13px
-     and the meta row to 8.5px, which is where the clipping came from —
-     values are abbreviated by compactNum() now, so the type can stay
-     legible instead. */
-  .calendar-grid, .weekday-row { gap: 4px; }
-  .day-cell { min-height: 86px; padding: 8px 6px; border-radius: 11px; }
-  .day-num { font-size: 11px; }
-  .day-primary {
-    font-size: 15px; margin-top: 4px; letter-spacing: -0.02em;
-    white-space: nowrap; overflow: hidden; text-overflow: clip;
-  }
-  .day-meta { padding-top: 5px; gap: 4px; flex-wrap: nowrap; }
+  /* Cleaner, roomier cells. The old rules shrank the value to 13px and the
+     meta row to 8.5px — values are abbreviated by compactNum() now, so the
+     type can stay legible and the cell can breathe instead. */
+  .calendar-card { padding: 14px 10px; border-radius: 16px; }
+  .calendar-grid, .weekday-row { gap: 6px; }
+  .weekday-row { margin-bottom: 10px; }
+  .weekday-label { font-size: 10px; letter-spacing: 0.1em; font-weight: 700; }
+  .day-cell { min-height: 92px; padding: 9px 7px; border-radius: 13px; }
+  .day-num { font-size: 11.5px; }
+  .day-primary { font-size: 15.5px; margin-top: 5px; letter-spacing: -0.02em; }
+  .day-meta { padding-top: 6px; gap: 5px; flex-wrap: nowrap; }
   .day-trades { font-size: 9.5px; white-space: nowrap; }
   .day-winrate { font-size: 9px; padding: 1px 5px; white-space: nowrap; }
   .week-value { font-size: 18px; }
 
-  /* Toolbar is two buttons now — they fit on one row. */
   .toolbar-row { flex-direction: row; align-items: center; }
   .toolbar-right { width: 100%; display: flex; gap: 8px; }
   .toolbar-right .btn-outline, .toolbar-right .btn-primary { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 560px) {
-  .weekday-row > div { font-size: 9.5px; letter-spacing: 0.06em; }
-  .day-cell { min-height: 78px; padding: 7px 4px; }
-  .day-primary { font-size: 14px; }
-  /* Below this width the win-rate pill is what pushes the row over.
+  .day-cell { min-height: 84px; padding: 8px 5px; }
+  .day-primary { font-size: 14.5px; }
+  /* Below this width the win-rate pill is what overflows the meta row.
      Trade count is the more useful of the two, so the pill goes first. */
   .day-winrate { display: none; }
 }
@@ -500,18 +589,20 @@ body {
   .weekly-sidebar { grid-template-columns: 1fr 1fr; }
   .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
   .report-grid { grid-template-columns: 1fr 1fr; }
-  .day-cell { min-height: 72px; }
-  .day-primary { font-size: 13.5px; }
+  .day-cell { min-height: 76px; }
+  .day-primary { font-size: 14px; }
   .day-trades { font-size: 9px; }
 }
 
 @media (max-width: 380px) {
   .main { padding-left: 8px; padding-right: 8px; }
-  .calendar-grid, .weekday-row { gap: 3px; }
-  .day-cell { min-height: 66px; padding: 6px 3px; border-radius: 9px; }
-  .day-num { font-size: 10px; }
-  .day-primary { font-size: 12.5px; }
+  .calendar-card { padding: 12px 7px; }
+  .calendar-grid, .weekday-row { gap: 4px; }
+  .day-cell { min-height: 70px; padding: 7px 4px; border-radius: 11px; }
+  .day-num { font-size: 10.5px; }
+  .day-primary { font-size: 13px; }
   .day-trades { font-size: 8.5px; }
+  .weekly-sidebar { grid-template-columns: 1fr; }
 }
 
 </style>
@@ -730,7 +821,7 @@ try {
     </div>
   </div>
 
-  <!-- Display Mode Toggle -->
+  <!-- Display Mode Toggle + Display Stats -->
   <div class="mode-toggle-wrap">
     <span class="mode-toggle-label">Display as:</span>
     <div class="mode-toggle">
@@ -738,6 +829,18 @@ try {
       <button class="mode-btn active" data-mode="dollar" onclick="setMode('dollar')">$</button>
       <button class="mode-btn" data-mode="rr" onclick="setMode('rr')">R</button>
       <button class="mode-btn" data-mode="percent" onclick="setMode('percent')">%</button>
+    </div>
+    <div class="ds-wrap">
+      <button class="ds-btn" id="dsBtn" onclick="toggleDisplayStats(event)" aria-haspopup="true" aria-expanded="false" aria-label="Display stats" title="Display stats">
+        <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.8"/><path d="M10 1.6v2.4M10 16v2.4M1.6 10h2.4M16 10h2.4M4.05 4.05l1.7 1.7M14.25 14.25l1.7 1.7M15.95 4.05l-1.7 1.7M5.75 14.25l-1.7 1.7"/></svg>
+      </button>
+      <div class="ds-pop" id="dsPop" role="menu">
+        <div class="ds-pop-title">Display stats</div>
+        <label class="ds-row"><input type="checkbox" id="dsRR" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">R Multiple</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsPnl" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Daily P&amp;L</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsCount" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Number of trades</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsWR" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Day win rate</span></label>
+      </div>
     </div>
   </div>
 
@@ -752,6 +855,7 @@ try {
         <div class="weekday-label">Fri</div>
         <div class="weekday-label">Sat</div>
         <div class="weekday-label">Sun</div>
+        <div class="weekday-label week-col">Week</div>
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
@@ -808,8 +912,13 @@ try {
     </button>
     <div class="report-card" id="reportCard">
       <div class="report-brand">
+        <!-- Official Tradeva mark. Referenced as a FILE, not inlined base64:
+             the P&L card embeds this same image as a ~172KB data URI, which is
+             most of that page's weight. logo-transparent.png is already in the
+             repo root, is same-origin (so html2canvas can rasterise it), and
+             gets cached across pages. -->
         <div class="report-brand-icon">
-          <svg viewBox="0 0 18 18"><polyline points="1,14 5,9 8,12 13,5 17,3"/></svg>
+          <img src="logo-transparent.png" alt="Tradeva" class="report-brand-img">
         </div>
         <span class="report-brand-name">TRADEVA</span>
         <span class="report-brand-sub">REPORT</span>
@@ -1176,8 +1285,17 @@ function renderCalendar() {
   const today = new Date();
   const isCurrentMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
 
+  const weekRows = buildWeekRows();
   let cells = '';
-  for (let i = 0; i < startOffset; i++) cells += '<div class="day-cell empty"></div>';
+  let col = 0;                       // 0..6 across the 7 day columns
+  let rowIdx = 0;                    // which calendar row we are on
+  const closeRow = () => {           // drop the week card into column 8
+    const w = weekRows[rowIdx];
+    cells += '<div class="week-slot">' + (w ? weekCardHTML(w) : '') + '</div>';
+    rowIdx++; col = 0;
+  };
+
+  for (let i = 0; i < startOffset; i++) { cells += '<div class="day-cell empty"></div>'; col++; }
 
   for (let day = 1; day <= daysInMonth; day++) {
     const data = dayMap[day];
@@ -1206,6 +1324,13 @@ function renderCalendar() {
     }
     if (isToday) cls += ' is-today';
     cells += `<div class="${cls}" onclick="openDrawer(${day})" title="${MONTH_NAMES[viewMonth]} ${day}">${inner}</div>`;
+    col++;
+    if (col === 7) closeRow();       // row complete -> emit its week card
+  }
+  // Pad the final partial row so its week card still lands in column 8.
+  if (col > 0) {
+    while (col < 7) { cells += '<div class="day-cell empty"></div>'; col++; }
+    closeRow();
   }
   grid.innerHTML = cells;
 }
@@ -1213,55 +1338,59 @@ function renderCalendar() {
 /* ══════════════════════════════════════════════════════════
    RENDER — WEEKLY SUMMARY
 ══════════════════════════════════════════════════════════ */
-function renderWeekly() {
-  const container = document.getElementById('weeklySidebar');
+/* Week rows, one entry per CALENDAR ROW.
+   The old version merged a short trailing week into the previous one, because
+   the cards lived in a detached sidebar where a 2-day "Week 5" looked odd.
+   Now each card sits beside its own row, so a short week is self-explanatory —
+   and merging would break the 1:1 row alignment that makes it readable. */
+function buildWeekRows() {
   const trades = getMonthTrades();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstOfMonth = new Date(viewYear, viewMonth, 1);
   let startOffset = firstOfMonth.getDay() - 1;
   if (startOffset < 0) startOffset = 6;
 
-  // Group days into calendar weeks (Monday-start rows)
   const weeks = [];
-  let weekIdx = 0;
   for (let day = 1; day <= daysInMonth; day++) {
-    const cellIndex = startOffset + day - 1;
-    weekIdx = Math.floor(cellIndex / 7);
-    if (!weeks[weekIdx]) weeks[weekIdx] = [];
-    weeks[weekIdx].push(day);
-  }
-
-  // If the final week is only a short tail (3 days or fewer), merge it into
-  // the previous week — so a "Week 5" card only appears when the month
-  // genuinely has a substantial 5th week.
-  if (weeks.length > 1 && weeks[weeks.length - 1].length <= 3) {
-    const tail = weeks.pop();
-    weeks[weeks.length - 1].push(...tail);
+    const w = Math.floor((startOffset + day - 1) / 7);
+    if (!weeks[w]) weeks[w] = [];
+    weeks[w].push(day);
   }
 
   const dayMap = buildDayMap(trades);
-  container.innerHTML = weeks.map((days, i) => {
+  return weeks.map((days, i) => {
     let pnl = 0, rr = 0, count = 0, wins = 0;
-    days.forEach(d => {
+    (days || []).forEach(d => {
       const data = dayMap[d];
       if (data) { pnl += data.pnl; rr += data.rr; count += data.trades.length; wins += data.wins; }
     });
     const winRate = count ? Math.round(wins / count * 100) : 0;
-    const pnlCls = pnl > 0 ? 'green' : pnl < 0 ? 'red' : '';
-    const cardCls = 'week-card' + (pnl > 0 ? ' pos' : pnl < 0 ? ' neg' : '');
-    const activeDays = days.filter(d => dayMap[d]).length;
-    return `<div class="${cardCls}">
+    const activeDays = (days || []).filter(d => dayMap[d]).length;
+    return { i, days: days || [], pnl, rr, count, wins, winRate, activeDays };
+  });
+}
+
+function weekCardHTML(w) {
+  const pnlCls = w.pnl > 0 ? 'green' : w.pnl < 0 ? 'red' : '';
+  const cardCls = 'week-card' + (w.pnl > 0 ? ' pos' : w.pnl < 0 ? ' neg' : '');
+  return `<div class="${cardCls}">
       <div class="week-head">
-        <span class="week-title">Week ${i + 1}</span>
-        <span class="week-days">${activeDays}d</span>
+        <span class="week-title">Week ${w.i + 1}</span>
+        <span class="week-days">${w.activeDays}d</span>
       </div>
-      <div class="week-value ${pnlCls}">${count ? primaryValue(pnl, rr) : '$0'}</div>
+      <div class="week-value ${pnlCls}">${w.count ? primaryValue(w.pnl, w.rr) : '$0'}</div>
       <div class="week-sub">
-        <span class="week-chip">${count} trade${count === 1 ? '' : 's'}</span>
-        ${count ? `<span class="week-chip">${winRate}% WR</span>` : ''}
+        <span class="week-chip">${w.count} trade${w.count === 1 ? '' : 's'}</span>
+        ${w.count ? `<span class="week-chip">${w.winRate}% WR</span>` : ''}
       </div>
     </div>`;
-  }).join('');
+}
+
+/* Stacked copy for narrow screens — same data, shown by CSS below 900px. */
+function renderWeekly() {
+  const container = document.getElementById('weeklySidebar');
+  if (!container) return;
+  container.innerHTML = buildWeekRows().map(weekCardHTML).join('');
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1408,20 +1537,88 @@ function onMonthYearSelect() {
 /* ══════════════════════════════════════════════════════════
    EXPORTS
 ══════════════════════════════════════════════════════════ */
+async /* ── Display Stats ────────────────────────────────────────────────────
+   Toggles are applied as classes on the calendar card, so showing/hiding a
+   stat is pure CSS — no re-render, no extra Firestore reads. */
+function toggleDisplayStats(e) {
+  if (e) e.stopPropagation();
+  const pop = document.getElementById('dsPop');
+  const btn = document.getElementById('dsBtn');
+  if (!pop) return;
+  const open = pop.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function applyDisplayStats() {
+  const card = document.getElementById('calendarCard');
+  if (!card) return;
+  const on = id => { const el = document.getElementById(id); return !el || el.checked; };
+  card.classList.toggle('hide-pnl',   !on('dsPnl'));
+  card.classList.toggle('hide-count', !on('dsCount'));
+  card.classList.toggle('hide-wr',    !on('dsWR'));
+  /* R Multiple drives the value mode rather than visibility: unchecking it
+     falls back to the $ view, which is what the mode buttons already do. */
+  const rrEl = document.getElementById('dsRR');
+  if (rrEl && !rrEl.checked && displayMode === 'rr') setDisplayMode('dollar');
+}
+
+document.addEventListener('click', e => {
+  const pop = document.getElementById('dsPop');
+  const btn = document.getElementById('dsBtn');
+  if (!pop || !pop.classList.contains('open')) return;
+  if (!pop.contains(e.target) && !(btn && btn.contains(e.target))) {
+    pop.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const pop = document.getElementById('dsPop');
+  if (pop) pop.classList.remove('open');
+});
+
 async function exportPNG() {
   const card = document.getElementById('calendarCard');
+  /* Drop focus before capture — a focused button paints its ring into the
+     canvas — and flag the card so the .exporting rules above apply. */
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  card.classList.add('exporting');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   try {
-    const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const canvas = await html2canvas(card, {
+      backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-card').trim() || '#fff',
+      scale: 2, useCORS: true, logging: false,
+      onclone: doc => {   // strip any residual ring in the cloned DOM
+        doc.querySelectorAll('.day-cell').forEach(el => { el.style.boxShadow = 'none'; });
+      }
+    });
     const link = document.createElement('a');
     link.download = `tradeva-calendar-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch (e) { alert('Could not export PNG. Please try again.'); }
+  finally { card.classList.remove('exporting'); }
 }
 
 /* ══════════════════════════════════════════════════════════
    MONTHLY REPORT MODAL
 ══════════════════════════════════════════════════════════ */
+/* Fit a value to its box: try the full number first, drop to the compact
+   form only if it would overflow, and shrink one step as a last resort.
+   Measured rather than guessed, because "+$10,300" fits where "-$124,500"
+   does not — a fixed rule would either clip or abbreviate unnecessarily. */
+function fitReportValue(el, full, compact) {
+  if (!el) return;
+  el.style.fontSize = '';
+  el.textContent = full;
+  const overflows = () => el.scrollWidth > el.clientWidth + 1;
+  if (!overflows()) return;
+  el.textContent = compact;
+  if (!overflows()) return;
+  const base = parseFloat(getComputedStyle(el).fontSize) || 23;
+  el.style.fontSize = Math.max(15, base * 0.82).toFixed(1) + 'px';
+}
+
 function openReportModal() {
   const trades = getMonthTrades();
   const dayMap = buildDayMap(trades);
@@ -1442,16 +1639,33 @@ function openReportModal() {
 
   document.getElementById('reportMonth').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
   const rp = document.getElementById('reportNetProfit');
-  rp.textContent = fmtMoney(netProfit);
   rp.className = 'report-stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+  fitReportValue(rp, fmtMoney(netProfit), fmtMoneyCompact(netProfit));
   document.getElementById('reportNetRR').textContent = fmtRR(netRR);
   document.getElementById('reportWinRate').textContent = winRate + '%';
   document.getElementById('reportDaysSplit').textContent = winDays + ' / ' + lossDays;
-  document.getElementById('reportBestDay').textContent = bestDay ? MONTH_NAMES[viewMonth].slice(0,3) + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—';
-  document.getElementById('reportWorstDay').textContent = worstDay ? MONTH_NAMES[viewMonth].slice(0,3) + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—';
+  const mon = MONTH_NAMES[viewMonth].slice(0, 3);
+  fitReportValue(document.getElementById('reportBestDay'),
+    bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—',
+    bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoneyCompact(bestDay.pnl) : '—');
+  fitReportValue(document.getElementById('reportWorstDay'),
+    worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—',
+    worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoneyCompact(worstDay.pnl) : '—');
   document.getElementById('reportGeneratedDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  document.getElementById('reportModalOverlay').classList.add('open');
+  const overlay = document.getElementById('reportModalOverlay');
+  overlay.classList.add('open');
+  /* Re-fit after the modal is actually laid out — scrollWidth/clientWidth
+     are meaningless while it is still display:none. */
+  requestAnimationFrame(() => {
+    fitReportValue(document.getElementById('reportNetProfit'), fmtMoney(netProfit), fmtMoneyCompact(netProfit));
+    fitReportValue(document.getElementById('reportBestDay'),
+      bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—',
+      bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoneyCompact(bestDay.pnl) : '—');
+    fitReportValue(document.getElementById('reportWorstDay'),
+      worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—',
+      worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoneyCompact(worstDay.pnl) : '—');
+  });
   document.body.style.overflow = 'hidden';
 }
 function closeReportModal() {
