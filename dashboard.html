@@ -1348,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 import { auth, hydrateProfileSidebar } from "./tradeva-firebase.js";
 import { initAccountSwitcher, resolveSelectedAccount, resolveSelectedAccountCached,
          getSelectedAccountId } from "./tradeva-accounts.js";
-import { getSummary, getSummaryCached, ensureDaily, verifySummary } from "./tradeva-summary.js";
+import { getSummary, getSummaryCached, ensureDaily } from "./tradeva-summary.js";
 import { fbperf } from "./tradeva-fbperf.js";
 /* Instrumentation is opt-in now. Both perf.js and fbperf were reporting on
    every production load, which costs a console table plus a Resource Timing
@@ -1493,7 +1493,16 @@ function tvWhenAuthed(){
     const idleVerify = window.requestIdleCallback || (cb => setTimeout(cb, 400));
     idleVerify(async () => {
       try {
-        const fixed = await verifySummary(accId, summary);
+        /* Loaded dynamically, on purpose. A STATIC import of a name the
+           deployed module does not export is a hard module error — the whole
+           dashboard fails to execute and renders blank. That is far worse
+           than skipping an integrity check, and it is exactly what happens
+           when dashboard.html and tradeva-summary.js are deployed out of
+           step. Dynamic + optional means a version mismatch degrades to
+           "no self-heal this load" instead of "no dashboard". */
+        const mod = await import("./tradeva-summary.js");
+        if (typeof mod.verifySummary !== "function") return;   // older module
+        const fixed = await mod.verifySummary(accId, summary);
         if (!fixed) return;                       // already in sync
         window.__tvSetDashboardSummary(fixed, accObj);
         window.__tvSetDashboardTrades(fixed.recent || [], accObj);
