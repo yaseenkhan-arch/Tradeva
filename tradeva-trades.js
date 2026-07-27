@@ -21,7 +21,7 @@ import {
    would double-count every counter on the same document. applyStatsDelta
    stays exported for any page still importing it directly. */
 import {
-  onTradeCreated, onTradeUpdated, onTradeDeleted
+  onTradeCreated, onTradeUpdated, onTradeDeleted, markSummaryDirty
 } from "./tradeva-summary.js";
 
 function uid() {
@@ -144,8 +144,22 @@ async function createTrade(accountId, data, images = {}) {
   if (images.exit)  patch.exitImg  = await uploadTradeImage(accountId, refDoc.id, "exit",  images.exit);
   if (Object.keys(patch).length) await updateDoc(refDoc, patch);
 
-  // Summary + daily aggregate update — no full collection read
-  onTradeCreated(accountId, payload).catch(e => console.warn("summary update failed:", e));
+  /* AWAITED, deliberately. This was fire-and-forget, which lost a race:
+     trades-new.html redirects 1300ms after createTrade() resolves, and the
+     summary update is a transaction (read + write) plus a batch commit —
+     more than 1300ms at a ~570ms round trip. Navigation cancelled the
+     pending writes, so the trade saved but the dashboard summary did not.
+
+     Awaiting costs the save a round trip, but the alternative is a
+     dashboard that silently disagrees with every other page. If the write
+     genuinely fails we still return the id — the trade exists — and mark
+     the summary dirty so the next dashboard load repairs it. */
+  try {
+    await onTradeCreated(accountId, payload);
+  } catch (e) {
+    console.warn("summary update failed, flagging for repair:", e);
+    await markSummaryDirty(accountId);
+  }
 
   return refDoc.id;
 }
@@ -161,7 +175,12 @@ async function updateTrade(accountId, tradeId, data, images = {}) {
   // An edit can change pnl/outcome/rawDate, so pass both states: the counters
   // are adjusted exactly and the order-dependent fields are flagged for repair.
   if (before) {
-    await onTradeUpdated(accountId, before, { ...before, ...data });
+    try {
+      await onTradeUpdated(accountId, before, { ...before, ...data });
+    } catch (e) {
+      console.warn("summary update failed, flagging for repair:", e);
+      await markSummaryDirty(accountId);
+    }
   }
 }
 
@@ -172,7 +191,16 @@ async function deleteTrade(accountId, tradeId) {
   await deleteTradeImage(accountId, tradeId, "entry");
   await deleteTradeImage(accountId, tradeId, "exit");
   await deleteDoc(tradeDoc(accountId, tradeId));
-  if (existing) onTradeDeleted(accountId, existing).catch(e => console.warn("summary update failed:", e));
+  /* Awaited for the same reason as createTrade: trade-detail.html navigates
+     away right after a delete, which would cancel a fire-and-forget write. */
+  if (existing) {
+    try {
+      await onTradeDeleted(accountId, existing);
+    } catch (e) {
+      console.warn("summary update failed, flagging for repair:", e);
+      await markSummaryDirty(accountId);
+    }
+  }
 }
 
 async function getTrade(accountId, tradeId) {
