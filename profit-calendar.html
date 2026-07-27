@@ -281,7 +281,11 @@ body {
 .day-cell.win-day  .day-primary { color: var(--green); }
 .day-cell.loss-day .day-primary { color: var(--red); }
 
-.day-meta { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 7px; min-width: 0; }
+/* Win rate sits directly under the R value; trade count is always the last
+   row. Giving each its own row also means the trade label gets the full cell
+   width, which is what lets "2 trades" fit on a phone where "2T" was needed. */
+.day-meta { padding-top: 6px; display: flex; align-items: center; min-width: 0; }
+.day-foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; min-width: 0; }
 /* Nothing in a cell may push past its box — compactNum() keeps the string
    short, and these keep a long one from spilling if it ever slips through. */
 .day-cell { overflow: hidden; }
@@ -348,7 +352,18 @@ body {
 .ds-row input:checked + .ds-box::after { opacity: 1; transform: rotate(45deg) scale(1); }
 .ds-row input:focus-visible + .ds-box { box-shadow: 0 0 0 3px rgba(59,130,246,0.22); }
 .ds-label { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
-@media (max-width: 560px) { .ds-pop { right: auto; left: 0; transform-origin: top left; } }
+/* On a phone the popover is anchored to the VIEWPORT, not the button: the
+   gear sits near the right edge, so an absolutely-positioned menu ran off
+   screen. Fixed positioning with symmetric insets keeps it fully visible at
+   any width without measuring. */
+@media (max-width: 560px) {
+  .ds-pop {
+    position: fixed; top: auto; left: 14px; right: 14px; width: auto;
+    min-width: 0; max-width: none; transform-origin: top center;
+    transform: translateY(-6px) scale(0.98);
+  }
+  .ds-pop.open { transform: none; }
+}
 
 .week-slot { display: flex; }
 .week-slot .week-card { width: 100%; }
@@ -512,8 +527,8 @@ body {
 /* Display Stats visibility — every metric is an independent row. */
 .calendar-card.hide-pnl   .day-primary   { display: none; }
 .calendar-card.hide-rr    .day-secondary { display: none; }
-.calendar-card.hide-count .day-trades    { display: none; }
-.calendar-card.hide-wr    .day-winrate   { display: none; }
+.calendar-card.hide-count .day-foot      { display: none; }
+.calendar-card.hide-wr    .day-meta      { display: none; }
 .day-secondary {
   font-size: 12.5px; font-weight: 700; margin-top: 2px;
   color: var(--text-muted); font-variant-numeric: tabular-nums;
@@ -542,22 +557,25 @@ body {
   .page-title { font-size: 21px; }
   .month-label { min-width: 96px; font-size: 13px; }
   .day-drawer { width: 100%; max-width: 100%; }
-
-  /* Match dashboard.html and analytics.html exactly: 20px 16px 90px.
-     The calendar was on 16px 12px, which is why it read as misaligned
-     against the other pages rather than actually broken. */
   .main { margin-right: 0; padding: 20px 16px 90px; overflow-x: hidden; }
 
-  .calendar-card { padding: 14px 10px; border-radius: 16px; }
-  .calendar-grid, .weekday-row { gap: 6px; }
+  .calendar-card { padding: 14px 8px; border-radius: 16px; }
+  .calendar-grid, .weekday-row { gap: 5px; }
   .weekday-row { margin-bottom: 10px; }
   .weekday-label { font-size: 10px; letter-spacing: 0.1em; font-weight: 700; }
-  .day-cell { min-height: 96px; padding: 9px 6px; border-radius: 13px; }
-  .day-num { font-size: 11.5px; }
-  .day-primary { font-size: 14.5px; margin-top: 5px; letter-spacing: -0.02em; }
-  .day-secondary { font-size: 11px; }
-  .day-meta { padding-top: 6px; gap: 4px; }
-  .day-trades { font-size: 9.5px; }
+
+  /* Cells are sized to their CONTENT, not to a tall fixed minimum. The old
+     min-height left dead space at the bottom while the P&L above it was
+     being clipped — the height was never the constraint, the WIDTH was.
+     Tightening the horizontal padding and the value's tracking is what
+     actually lets "+$4.3K" render instead of "+$...". */
+  .day-cell { min-height: 0; padding: 8px 5px; border-radius: 12px; }
+  .day-num { font-size: 11px; }
+  .day-primary { font-size: 13.5px; margin-top: 4px; letter-spacing: -0.04em; }
+  .day-secondary { font-size: 10.5px; margin-top: 1px; letter-spacing: -0.02em; }
+  .day-meta { padding-top: 5px; }
+  .day-foot { padding-top: 4px; }
+  .day-trades { font-size: 9.5px; letter-spacing: -0.01em; }
   .day-winrate { font-size: 9px; padding: 1px 5px; }
   .week-value { font-size: 18px; }
 
@@ -566,15 +584,16 @@ body {
   .toolbar-right .btn-outline, .toolbar-right .btn-primary { flex: 1; justify-content: center; }
 }
 
-/* Nothing is hidden by width any more. Below 560px the meta row WRAPS
-   instead — the previous build dropped the win-rate pill here, which is
-   why stats appeared to vanish on a phone. */
+/* Nothing is hidden by width. Rows are already full-width, so the metrics
+   simply get tighter rather than disappearing. */
 @media (max-width: 560px) {
-  .day-cell { min-height: 100px; padding: 8px 5px; }
-  .day-primary { font-size: 13.5px; }
-  .day-secondary { font-size: 10.5px; }
-  .day-meta { flex-wrap: wrap; row-gap: 3px; }
-  .day-trades, .day-winrate { font-size: 9px; }
+  .calendar-card { padding: 12px 6px; }
+  .calendar-grid, .weekday-row { gap: 4px; }
+  .day-cell { padding: 7px 4px; }
+  .day-primary { font-size: 12.5px; }
+  .day-secondary { font-size: 10px; }
+  .day-trades { font-size: 9px; }
+  .day-winrate { font-size: 8.5px; padding: 1px 4px; }
 }
 
 @media (max-width: 480px) {
@@ -582,19 +601,20 @@ body {
   .weekly-sidebar { grid-template-columns: 1fr 1fr; }
   .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
   .report-grid { grid-template-columns: 1fr 1fr; }
-  .day-cell { min-height: 94px; }
-  .day-primary { font-size: 13px; }
+  .day-primary { font-size: 12px; }
+  .day-secondary { font-size: 9.5px; }
 }
 
 @media (max-width: 380px) {
   .main { padding-left: 12px; padding-right: 12px; }
-  .calendar-card { padding: 12px 7px; }
-  .calendar-grid, .weekday-row { gap: 4px; }
-  .day-cell { min-height: 88px; padding: 7px 4px; border-radius: 11px; }
+  .calendar-card { padding: 10px 5px; }
+  .calendar-grid, .weekday-row { gap: 3px; }
+  .day-cell { padding: 6px 3px; border-radius: 11px; }
   .day-num { font-size: 10.5px; }
-  .day-primary { font-size: 12px; }
-  .day-secondary { font-size: 10px; }
-  .day-trades, .day-winrate { font-size: 8.5px; }
+  .day-primary { font-size: 11.5px; }
+  .day-secondary { font-size: 9.5px; }
+  .day-trades { font-size: 8.5px; }
+  .day-winrate { font-size: 8px; padding: 0 4px; }
   .weekly-sidebar { grid-template-columns: 1fr; }
 }
 
@@ -1193,7 +1213,11 @@ const fmtMoneyCompact = v => (v >= 0 ? '+$' : '-$') + compactNum(v);
 let COMPACT = false;   // abbreviate at all
 let TIGHT = false;     // abbreviate harder — smallest phones
 const compactQuery = window.matchMedia('(max-width: 900px)');
-const tightQuery   = window.matchMedia('(max-width: 400px)');
+/* Raised from 400px to 560px. Measured against real cell widths, the
+   6-character form ("+$4.3K") needs ~47px inside a ~40px box on a phone —
+   which is exactly what produced "+$...". The 4-5 character form ("+$4K",
+   "+$850") fits at every mobile width, so the whole phone range uses it. */
+const tightQuery   = window.matchMedia('(max-width: 560px)');
 
 function syncDensity() {
   const c = compactQuery.matches, t = tightQuery.matches;
@@ -1212,7 +1236,10 @@ TIGHT = tightQuery.matches;
 const fmtMoneyAuto = v => (COMPACT ? fmtMoneyCompact(v) : fmtMoney(v));
 
 /* "2 trades" is fine until the cell gets tight; then "2T". */
-const fmtTrades = n => COMPACT ? n + 'T' : n + ' trade' + (n === 1 ? '' : 's');
+/* Always spelled out. The "2T" form was introduced when the count shared a
+   row with the win-rate pill; now that it owns a full-width row of its own
+   there is space for the real word at every breakpoint. */
+const fmtTrades = n => n + ' trade' + (n === 1 ? '' : 's');
 const fmtMoneyFull = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtRR = v => (v >= 0 ? '+' : '') + v.toFixed(1) + 'R';
 const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
@@ -1308,8 +1335,10 @@ function renderCalendar() {
         <div class="day-primary">${fmtMoneyAuto(data.pnl)}</div>
         <div class="day-secondary">${fmtRR(data.rr)}</div>
         <div class="day-meta">
-          <span class="day-trades">${fmtTrades(n)}</span>
           <span class="day-winrate">${winRate}%</span>
+        </div>
+        <div class="day-foot">
+          <span class="day-trades">${fmtTrades(n)}</span>
         </div>`;
     } else {
       inner = `<div class="day-top"><span class="day-num">${day}</span>${isToday ? '<span class="today-dot"></span>' : ''}</div>`;
@@ -1533,6 +1562,19 @@ function toggleDisplayStats(e) {
   if (!pop) return;
   const open = pop.classList.toggle('open');
   if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+  /* Under 560px the menu is position:fixed, so it needs a top coordinate.
+     Anchor it under the gear, then clamp so it can never run off the bottom
+     of a short screen either. */
+  if (open && window.matchMedia('(max-width: 560px)').matches && btn) {
+    pop.style.top = '0px';
+    const r = btn.getBoundingClientRect();
+    const h = pop.offsetHeight || 220;
+    const top = Math.min(r.bottom + 10, window.innerHeight - h - 14);
+    pop.style.top = Math.max(14, top) + 'px';
+  } else {
+    pop.style.top = '';
+  }
 }
 
 function applyDisplayStats() {
