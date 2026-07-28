@@ -206,7 +206,10 @@ body {
 }
 .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
 .stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
-.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); }
+/* nowrap + hidden overflow is what makes scrollWidth > clientWidth mean
+   something in fitReportValue(). Without it a long value silently wraps to a
+   second line instead of reporting that it does not fit. */
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .stat-value.green { color: var(--green); }
 .stat-value.red { color: var(--red); }
 .stat-sub { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
@@ -395,7 +398,7 @@ body {
 .week-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
 .week-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
 .week-days { font-size: 10px; font-weight: 600; color: var(--text-faint); }
-.week-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); line-height: 1.1; transition: color var(--t) var(--ease); }
+.week-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); line-height: 1.1; transition: color var(--t) var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .week-value.green { color: var(--green); }
 .week-value.red { color: var(--red); }
 .week-sub { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
@@ -1192,31 +1195,29 @@ function compactNum(v) {
 
 const fmtMoneyCompact = v => (v >= 0 ? '+$' : '-$') + compactNum(v);
 
-/* COMPACT is driven by a matchMedia listener rather than measuring each
-   cell: measurement would force a layout on every render, and the cutoff is
-   a property of the viewport, not of any one value. */
-/* COMPACT decides WHETHER to abbreviate, never how precisely. The old TIGHT
-   tier dropped decimals on small screens and produced wrong numbers; it is
-   gone. Formatting is now identical at every width. */
-let COMPACT = false;
-const compactQuery = window.matchMedia('(max-width: 900px)');
-/* Raised from 400px to 560px. Measured against real cell widths, the
-   6-character form ("+$4.3K") needs ~47px inside a ~40px box on a phone —
-   which is exactly what produced "+$...". The 4-5 character form ("+$4K",
-   "+$850") fits at every mobile width, so the whole phone range uses it. */
+/* Day cells and week cards are ALWAYS compact, at every width.
+   The previous viewport switch (matchMedia 900px) served the FULL number on
+   desktop, which is what clipped "+$1,500,000" to "+$1,500,00" — .day-primary
+   ellipsizes, so the overflow was silent. No cell is ever wide enough for a
+   7-figure value, so the value is abbreviated everywhere and the exact figure
+   stays one tap away in the day drawer.
 
-function syncDensity() {
-  if (compactQuery.matches === COMPACT) return;
-  COMPACT = compactQuery.matches;
-  if (typeof renderAll === 'function') renderAll();
-}
-COMPACT = compactQuery.matches;
-compactQuery.addEventListener
-  ? compactQuery.addEventListener('change', syncDensity)
-  : compactQuery.addListener(syncDensity);   // older Safari
+   One rule at every width also means a PNG export renders exactly like the
+   screen it was taken from, and there is no longer a resize path that can
+   re-render the grid mid-interaction. */
+const fmtMoneyAuto = v => fmtMoneyCompact(v);
 
-/* Money for on-card display: compact on small screens, full on desktop. */
-const fmtMoneyAuto = v => (COMPACT ? fmtMoneyCompact(v) : fmtMoney(v));
+/* The summary stat cards DO measure (see fitReportValue) because they are
+   wide enough to show the exact figure most months. That measurement is
+   width-dependent, so re-fit them on resize — debounced, and only the cards:
+   the grid's format no longer depends on the viewport. */
+let statFitTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(statFitTimer);
+  statFitTimer = setTimeout(() => {
+    if (typeof renderSummary === 'function') renderSummary();
+  }, 150);
+});
 
 /* "2 trades" is fine until the cell gets tight; then "2T". */
 /* Always spelled out. The "2T" form was introduced when the count shared a
@@ -1252,8 +1253,16 @@ function renderSummary() {
   const avgDaily = tradingDays ? netProfit / tradingDays : 0;
 
   const npEl = document.getElementById('statNetProfit');
-  npEl.textContent = primaryValue(netProfit, netRR);
   npEl.className = 'stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+  /* A stat card has room for "+$2,686,500", so it shows it — and drops to
+     the compact form only when the exact figure would overflow. Same
+     compactNum() the cells use; same measured fallback the Monthly Report
+     uses. R and % modes are already short, so they never need fitting. */
+  if (displayMode === 'rr' || displayMode === 'percent') {
+    npEl.textContent = primaryValue(netProfit, netRR);
+  } else {
+    fitReportValue(npEl, fmtMoney(netProfit), fmtMoneyCompact(netProfit));
+  }
 
   document.getElementById('statNetRR').textContent = fmtRR(netRR);
   document.getElementById('statWinRate').textContent = winRate + '%';
@@ -1264,8 +1273,14 @@ function renderSummary() {
   document.getElementById('statAvgRR').textContent = fmtRR(avgRR);
 
   const adEl = document.getElementById('statAvgDaily');
-  adEl.textContent = displayMode === 'percent' ? fmtPct(avgDaily) : displayMode === 'rr' ? fmtRR(tradingDays ? netRR / tradingDays : 0) : fmtMoney(avgDaily);
   adEl.className = 'stat-value ' + (avgDaily >= 0 ? 'green' : 'red');
+  if (displayMode === 'percent') {
+    adEl.textContent = fmtPct(avgDaily);
+  } else if (displayMode === 'rr') {
+    adEl.textContent = fmtRR(tradingDays ? netRR / tradingDays : 0);
+  } else {
+    fitReportValue(adEl, fmtMoney(avgDaily), fmtMoneyCompact(avgDaily));
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1618,7 +1633,12 @@ async function exportPNG() {
 /* Fit a value to its box: try the full number first, drop to the compact
    form only if it would overflow, and shrink one step as a last resort.
    Measured rather than guessed, because "+$10,300" fits where "-$124,500"
-   does not — a fixed rule would either clip or abbreviate unnecessarily. */
+   does not — a fixed rule would either clip or abbreviate unnecessarily.
+
+   Shared by the Monthly Report and the summary stat cards. NOT used for day
+   cells: measuring 31 of them would force a layout on every render, and no
+   cell is wide enough for the full figure anyway, so those are always
+   compact. The element must be white-space: nowrap for this to work. */
 function fitReportValue(el, full, compact) {
   if (!el) return;
   el.style.fontSize = '';
