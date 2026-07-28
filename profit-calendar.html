@@ -286,8 +286,12 @@ body {
    The px fallback on the line above applies where container queries are
    unsupported, so nothing breaks on older browsers. */
 .day-primary {
+  /* --dp-max is the ceiling for this breakpoint; --dp-w is the value's width
+     in em, set inline per cell by renderCalendar(). The @supports block at the
+     end of the stylesheet turns the two into an actual size. */
+  --dp-max: 19px;
+  --dp-w: 4;
   font-size: 19px;
-  font-size: clamp(10px, 16cqi, 19px);
   font-weight: 800; letter-spacing: -0.5px; line-height: 1.1;
   margin-top: 10px; color: var(--text-primary); transition: color var(--t) var(--ease);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -585,7 +589,7 @@ body {
      actually lets "+$4.3K" render instead of "+$...". */
   .day-cell { min-height: 0; padding: 8px 5px; border-radius: 12px; }
   .day-num { font-size: 11px; }
-  .day-primary { font-size: 13.5px; margin-top: 4px; letter-spacing: -0.04em; }
+  .day-primary { font-size: 13.5px; --dp-max: 13.5px; margin-top: 4px; letter-spacing: -0.04em; }
   .day-secondary { font-size: 10.5px; margin-top: 1px; letter-spacing: -0.02em; }
   .day-meta { padding-top: 5px; }
   .day-foot { padding-top: 4px; }
@@ -604,7 +608,7 @@ body {
   .calendar-card { padding: 12px 6px; }
   .calendar-grid, .weekday-row { gap: 4px; }
   .day-cell { padding: 7px 4px; }
-  .day-primary { font-size: 12.5px; }
+  .day-primary { font-size: 12.5px; --dp-max: 12.5px; }
   .day-secondary { font-size: 10px; }
   .day-trades { font-size: 9px; }
   .day-winrate { font-size: 8.5px; padding: 1px 4px; }
@@ -615,7 +619,7 @@ body {
   .weekly-sidebar { grid-template-columns: 1fr 1fr; }
   .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
   .report-grid { grid-template-columns: 1fr 1fr; }
-  .day-primary { font-size: 12px; }
+  .day-primary { font-size: 12px; --dp-max: 12px; }
   .day-secondary { font-size: 9.5px; }
 }
 
@@ -625,11 +629,30 @@ body {
   .calendar-grid, .weekday-row { gap: 3px; }
   .day-cell { padding: 6px 3px; border-radius: 11px; }
   .day-num { font-size: 10.5px; }
-  .day-primary { font-size: 11.5px; }
+  .day-primary { font-size: 11.5px; --dp-max: 11.5px; }
   .day-secondary { font-size: 9.5px; }
   .day-trades { font-size: 8.5px; }
   .day-winrate { font-size: 8px; padding: 0 4px; }
   .weekly-sidebar { grid-template-columns: 1fr; }
+}
+
+/* ── Day value auto-fit ──────────────────────────────────────────────────
+   Last rule in the sheet on purpose: it has to outrank every breakpoint's
+   fallback font-size above, and cascade order — not specificity — is what
+   decides that.
+
+   The value gets its breakpoint's ceiling when it fits, and shrinks only as
+   far as its own length requires. 100cqi is the cell's content box (the cell
+   is the query container), --dp-w is the string's width in em set inline by
+   renderCalendar(), and 1.06 is headroom for hinting and subpixel rounding.
+   Nothing shrinks below 9px; past that the ellipsis is the lesser evil.
+
+   Wrapped in @supports so a browser without container query units keeps the
+   fixed breakpoint sizes instead of collapsing onto the 4-em default. */
+@supports (font-size: 1cqi) {
+  .day-primary {
+    font-size: max(9px, min(var(--dp-max), calc(100cqi / (var(--dp-w) * 1.06))));
+  }
 }
 
 </style>
@@ -1181,7 +1204,13 @@ function compactNum(v) {
      enter is worse than a number that needs a narrower font. */
   const trunc = (x, dp) => {
     const f = 10 ** dp;
-    const t = (Math.trunc(x * f) / f).toFixed(dp);
+    /* toPrecision(12) before truncating. Binary floats land a hair BELOW the
+       decimal value often enough to matter here: 1.15 * 100 evaluates to
+       114.99999999999999, so a bare Math.trunc turned $1,150,000 into
+       "$1.14M". Rounding to 12 significant digits first snaps that back to
+       115 while leaving genuinely-below values (999.999 * 10 = 9999.99)
+       untouched, so $999,999 still reads "$999.9K" and never "$1000K". */
+    const t = (Math.trunc(Number((x * f).toPrecision(12))) / f).toFixed(dp);
     return dp === 0 ? t : t.replace(/\.0+$|(\.\d*[1-9])0+$/, '$1');
   };
 
@@ -1194,6 +1223,25 @@ function compactNum(v) {
 }
 
 const fmtMoneyCompact = v => (v >= 0 ? '+$' : '-$') + compactNum(v);
+
+/* Width of a formatted value, in em, at Inter 800.
+   The day cell sizes its value from this (see --dp-w below) instead of using
+   one fixed px size per breakpoint, which is what clipped "+$3.2K" to "+$3..."
+   while the shorter "+$1K" in the neighbouring cell had room to spare.
+
+   Deliberately a lookup table and not a measurement: measuring 31 cells forces
+   a layout on every render, and canvas measureText would silently disagree
+   with the DOM until Inter finishes loading. The figures are rounded UP from
+   Inter's advance widths and the negative letter-spacing is ignored, so the
+   estimate always errs wide — a value one pixel smaller than it needed to be
+   is invisible, a truncated one is the bug being fixed. */
+const EM_WIDTH = { '+': 0.62, '-': 0.42, '$': 0.62, '.': 0.30, ',': 0.30,
+                   'K': 0.66, 'M': 0.90, 'B': 0.66, 'R': 0.65, '%': 0.92, ' ': 0.26 };
+const strEm = s => {
+  let w = 0;
+  for (const ch of String(s)) w += (ch >= '0' && ch <= '9') ? 0.62 : (EM_WIDTH[ch] ?? 0.62);
+  return w.toFixed(2);
+};
 
 /* Day cells and week cards are ALWAYS compact, at every width.
    The previous viewport switch (matchMedia 900px) served the FULL number on
@@ -1325,12 +1373,13 @@ function renderCalendar() {
       cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'flat-day');
       const n = data.trades.length;
       const winRate = Math.round(data.wins / n * 100);
+      const primary = primaryValue(data.pnl, data.rr);
       inner = `
         <div class="day-top">
           <span class="day-num">${day}</span>
           ${isToday ? '<span class="today-dot"></span>' : ''}
         </div>
-        <div class="day-primary">${fmtMoneyAuto(data.pnl)}</div>
+        <div class="day-primary" style="--dp-w:${strEm(primary)}">${primary}</div>
         <div class="day-secondary">${fmtRR(data.rr)}</div>
         <div class="day-meta">
           <span class="day-winrate">${winRate}%</span>
@@ -1642,13 +1691,25 @@ async function exportPNG() {
 function fitReportValue(el, full, compact) {
   if (!el) return;
   el.style.fontSize = '';
+  const fits = () => el.scrollWidth <= el.clientWidth + 1;
+
   el.textContent = full;
-  const overflows = () => el.scrollWidth > el.clientWidth + 1;
-  if (!overflows()) return;
+  if (fits()) return;
+
   el.textContent = compact;
-  if (!overflows()) return;
+  if (fits()) return;
+
+  /* Step down until it fits. The old version dropped one 18% step and stopped
+     at a 15px floor, which is why "Jun 17 · +$1.5M" still came out as
+     "Jun 17 · +$1.!" on a phone — the compact form was already correct, the
+     box was simply narrower than one step could cover. A loop costs a handful
+     of layout reads on three elements, and only when the modal opens. */
   const base = parseFloat(getComputedStyle(el).fontSize) || 23;
-  el.style.fontSize = Math.max(15, base * 0.82).toFixed(1) + 'px';
+  const floor = Math.max(10, base * 0.55);
+  for (let size = base - 1; size >= floor; size -= 1) {
+    el.style.fontSize = size + 'px';
+    if (fits()) return;
+  }
 }
 
 function openReportModal() {
