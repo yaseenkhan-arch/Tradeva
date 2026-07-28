@@ -8,16 +8,16 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Tradeva — Trade Detail</title>
+<title>Tradeva — Profit Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 
 /* ══════════════════════════════════════════════════════════
-   TOKENS & RESET
+   TOKENS & RESET — identical to the rest of Tradeva
 ══════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -46,8 +46,8 @@
   --radius-btn:   10px;
   --shadow-card:  0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
   --shadow-hover: 0 6px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-btn:   0 4px 12px rgba(59,130,246,0.35);
 }
-
 [data-theme="dark"] {
   --bg-page:      #080C14;
   --bg-card:      #0F1623;
@@ -63,6 +63,7 @@
   --red-bg:       #1E0808;
   --red-border:   #7F1D1D;
   --shadow-card:  0 1px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 6px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -77,13 +78,13 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SIDEBAR
+   SIDEBAR — identical to Dashboard
 ══════════════════════════════════════════════════════════ */
 .sidebar { position: fixed; top: 0; right: 0; width: var(--sidebar-w); height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow: hidden; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
 .sidebar-top { padding: 18px 14px 14px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; transition: border-color var(--t) var(--ease); }
 .profile-pill { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background var(--t) var(--ease), transform var(--t) var(--ease); text-decoration: none; }
 .profile-pill:hover { background: var(--border-light); transform: translateX(-2px); }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; background-size: cover; background-position: center; }
 .profile-info { flex: 1; min-width: 0; }
 .profile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); transition: color var(--t) var(--ease); }
 .profile-role { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
@@ -116,644 +117,516 @@ body {
 .toggle-track.on .toggle-knob { transform: translateX(16px); }
 
 /* ══════════════════════════════════════════════════════════
-   MAIN
+   MAIN SHELL
 ══════════════════════════════════════════════════════════ */
-.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; }
+/* min-width:0 lets grid/flex children shrink below their content width —
+   without it a wide row forces the page wider than the viewport, which is
+   what produced the horizontal scroll and the dead strip on the right. */
+.main { flex: 1; margin-right: var(--sidebar-w); padding: 28px 32px 80px; min-height: 100vh; transition: margin var(--t) var(--ease); width: 100%; min-width: 0; }
 
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
-.page-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
-
-.back-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--bg-card);
-  color: var(--text-muted); cursor: pointer; text-decoration: none;
-  flex-shrink: 0;
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
-}
-.back-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
-.back-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); box-shadow: var(--shadow-card); }
-
-.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.page-header-left { display: flex; align-items: center; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
+.mob-menu-btn { display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; margin-right: 12px; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
 .mob-menu-btn:hover { background: var(--border-light); transform: scale(1.05); }
 .mob-menu-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; }
 
-.page-title-block { min-width: 0; }
-.page-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; transition: color var(--t) var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; transition: color var(--t) var(--ease); }
-
-.btn-danger {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 10px 18px; border-radius: var(--radius-btn);
-  border: none; background: var(--red);
-  color: #fff; font-size: 13px; font-weight: 600;
+/* Month nav group */
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.month-nav-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); cursor: pointer;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.month-nav-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); }
+.month-nav-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.month-label {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  min-width: 130px; text-align: center; transition: color var(--t) var(--ease);
+}
+.today-btn {
+  padding: 9px 16px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
   cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.today-btn:hover { background: var(--border-light); color: var(--text-primary); transform: translateY(-1px); }
+
+/* Toolbar row: filters trigger + export + report */
+.toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: var(--radius-btn);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), transform var(--t) var(--ease);
+  white-space: nowrap;
+}
+.btn-outline:hover { background: var(--border-light); color: var(--text-primary); border-color: var(--text-faint); transform: translateY(-1px); }
+.btn-outline svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 600; padding: 9px 16px;
+  border-radius: var(--radius-btn); border: none; cursor: pointer;
   transition: background var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
-  white-space: nowrap; flex-shrink: 0;
+  white-space: nowrap; font-family: 'Inter', sans-serif;
 }
-.btn-danger:hover { background: #DC2626; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(239,68,68,0.35); }
-.btn-danger:active { transform: translateY(0); }
-.btn-danger svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.btn-primary svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+.toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* ── Detail Grid ── */
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+/* Filters drawer/bar */
+.filter-bar { display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.filter-bar.open { display: flex; }
+.select-wrap { position: relative; }
+.select-wrap select {
+  appearance: none; -webkit-appearance: none;
+  padding: 8px 30px 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--bg-page); color: var(--text-primary); font-size: 12.5px; font-weight: 500;
+  font-family: 'Inter', sans-serif; cursor: pointer; outline: none;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
+.select-wrap select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.select-wrap::after { content: ''; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-faint); pointer-events: none; }
 
-.detail-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: 24px;
-  box-shadow: var(--shadow-card);
+/* ══════════════════════════════════════════════════════════
+   MONTH SUMMARY CARDS — identical to dashboard stat-card
+══════════════════════════════════════════════════════════ */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 18px 20px; box-shadow: var(--shadow-card);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; transition: color var(--t) var(--ease); }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; transition: color var(--t) var(--ease); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-sub { font-size: 11px; color: var(--text-muted); transition: color var(--t) var(--ease); }
+
+/* Display mode segmented control */
+.mode-toggle-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; justify-content: flex-end; }
+.mode-toggle-label { font-size: 12px; color: var(--text-muted); font-weight: 500; transition: color var(--t) var(--ease); }
+
+/* ══════════════════════════════════════════════════════════
+   CALENDAR LAYOUT
+══════════════════════════════════════════════════════════ */
+.calendar-layout { display: block; }
+
+.calendar-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 20px; box-shadow: var(--shadow-card);
   transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
+/* 8 columns: 7 weekdays + the week summary card.
+   The week cards used to live in a SEPARATE sibling container, so their rows
+   could only ever line up by coincidence. Making the card the 8th cell of the
+   same grid means CSS aligns each week card to its own calendar row exactly,
+   with no JS measuring and no drift when a cell grows. */
+.weekday-row { display: grid; grid-template-columns: repeat(7, 1fr) 168px; gap: 8px; margin-bottom: 8px; }
+.weekday-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; padding-bottom: 4px; transition: color var(--t) var(--ease); }
 
-.detail-card-title {
-  font-size: 16px; font-weight: 700; color: var(--text-primary);
-  margin-bottom: 20px;
-  transition: color var(--t) var(--ease);
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr) 168px; gap: 8px; align-items: stretch; min-width: 0; }
+.day-cell, .week-slot, .weekday-label { min-width: 0; }
+/* Establishes the container that .day-primary's cqi units measure. */
+.day-cell { container-type: inline-size; }
+.day-cell {
+  position: relative; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--bg-card); padding: 12px 12px 11px; min-height: 104px;
+  display: flex; flex-direction: column; cursor: pointer; overflow: hidden;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease),
+              border-color var(--t) var(--ease), background var(--t) var(--ease);
+}
+.day-cell:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--text-faint); }
+.day-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; box-shadow: none; }
+.day-cell.empty:hover { transform: none; box-shadow: none; }
+.day-cell.no-trade { background: var(--bg-page); }
+.day-cell.no-trade .day-num { opacity: 0.55; }
+
+.day-cell.win-day  { background: var(--green-bg); border-color: var(--green-border); }
+.day-cell.loss-day { background: var(--red-bg);   border-color: var(--red-border); }
+.day-cell.flat-day { background: var(--bg-page); }
+/* Today marker.
+   THE BLUE CIRCLE BUG: html2canvas cannot rasterise `inset` box-shadow. It
+   falls back to painting the shadow as a solid OUTER shape, which is the
+   large blue blob that appeared over the current day in every exported PNG.
+   An inset ring is drawn here with a real border instead — identical on
+   screen, and it exports correctly because it is a border, not a shadow. */
+.day-cell.is-today { border: 2px solid var(--accent); }
+.day-cell.is-today.win-day  { border-color: var(--green); }
+.day-cell.is-today.loss-day { border-color: var(--red); }
+/* Belt and braces: during capture, kill every shadow and focus ring in the
+   card. Browsers also paint :focus outlines into the canvas. */
+.exporting .day-cell, .exporting .week-card { box-shadow: none !important; }
+.exporting *:focus, .exporting *:focus-visible { outline: none !important; box-shadow: none !important; }
+.exporting .today-dot { display: none !important; }
+
+.day-top { display: flex; align-items: center; justify-content: space-between; }
+.day-num { font-size: 12px; font-weight: 700; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.day-cell.win-day  .day-num { color: var(--green); }
+.day-cell.loss-day .day-num { color: var(--red); }
+.today-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* Hero P&L — the number the eye should land on first */
+/* The value scales to its container instead of being truncated or rounded.
+   cqi = 1% of the cell's inline size, so a long string like "+$999.9K" or
+   "+$1.25M" shrinks to fit rather than clipping — and crucially, the NUMBER
+   is never altered to make it fit. clamp() keeps it legible at the small end
+   and caps it at the original 19px, so ordinary values look identical.
+   The px fallback on the line above applies where container queries are
+   unsupported, so nothing breaks on older browsers. */
+.day-primary {
+  font-size: 19px;
+  font-size: clamp(10px, 16cqi, 19px);
+  font-weight: 800; letter-spacing: -0.5px; line-height: 1.1;
+  margin-top: 10px; color: var(--text-primary); transition: color var(--t) var(--ease);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.day-cell.win-day  .day-primary { color: var(--green); }
+.day-cell.loss-day .day-primary { color: var(--red); }
+
+/* Win rate sits directly under the R value; trade count is always the last
+   row. Giving each its own row also means the trade label gets the full cell
+   width, which is what lets "2 trades" fit on a phone where "2T" was needed. */
+.day-meta { padding-top: 6px; display: flex; align-items: center; min-width: 0; }
+.day-foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; min-width: 0; }
+/* Nothing in a cell may push past its box — compactNum() keeps the string
+   short, and these keep a long one from spilling if it ever slips through. */
+.day-cell { overflow: hidden; }
+.day-primary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.day-trades, .day-winrate { flex-shrink: 0; }
+.day-trades { font-size: 10.5px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
+.day-winrate { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: rgba(0,0,0,0.05); color: var(--text-muted); }
+[data-theme="dark"] .day-winrate { background: rgba(255,255,255,0.08); }
+.day-cell.win-day  .day-winrate { background: rgba(16,185,129,0.16); color: var(--green); }
+.day-cell.loss-day .day-winrate { background: rgba(239,68,68,0.16); color: var(--red); }
+
+/* ── Weekly summary rail ── */
+/* Stacked fallback, shown only below 900px where 8 columns will not fit. */
+.weekly-sidebar { display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+
+/* ── Display Stats popover ───────────────────────────────────────────
+   Anchored to its trigger rather than the page, so it cannot drift on
+   scroll. Opacity+transform transition (not display) so it can animate. */
+.ds-wrap { position: relative; display: inline-flex; margin-left: auto; }
+.ds-btn {
+  width: 36px; height: 36px; padding: 0; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--bg-card); color: var(--text-muted); cursor: pointer;
+  transition: background 150ms var(--ease), color 150ms var(--ease), border-color 150ms var(--ease);
+}
+.ds-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.ds-btn:hover { background: var(--bg-page); color: var(--text-primary); border-color: var(--text-faint); }
+.ds-btn[aria-expanded="true"] { background: var(--accent-bg, rgba(59,130,246,0.1)); color: var(--accent); border-color: var(--accent); }
+.ds-pop {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 60;
+  min-width: 232px; padding: 8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(15,18,26,0.05), 0 14px 34px rgba(15,18,26,0.14);
+  opacity: 0; transform: translateY(-6px) scale(0.97);
+  transform-origin: top right; pointer-events: none;
+  transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+}
+.ds-pop.open { opacity: 1; transform: none; pointer-events: auto; }
+.ds-pop-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--text-faint); padding: 8px 10px 10px;
+}
+.ds-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 11px; cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+.ds-row:hover { background: var(--bg-page); }
+.ds-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ds-box {
+  width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
+  border: 1.6px solid var(--border); background: var(--bg-card);
+  position: relative; transition: background 140ms var(--ease), border-color 140ms var(--ease);
+}
+.ds-box::after {
+  content: ''; position: absolute; left: 6px; top: 2.5px;
+  width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0.6); opacity: 0;
+  transition: opacity 140ms var(--ease), transform 140ms var(--ease);
+}
+.ds-row input:checked + .ds-box { background: var(--accent); border-color: var(--accent); }
+.ds-row input:checked + .ds-box::after { opacity: 1; transform: rotate(45deg) scale(1); }
+.ds-row input:focus-visible + .ds-box { box-shadow: 0 0 0 3px rgba(59,130,246,0.22); }
+.ds-label { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+/* On a phone the popover is anchored to the VIEWPORT, not the button: the
+   gear sits near the right edge, so an absolutely-positioned menu ran off
+   screen. Fixed positioning with symmetric insets keeps it fully visible at
+   any width without measuring. */
+@media (max-width: 560px) {
+  .ds-pop {
+    position: fixed; top: auto; left: 14px; right: 14px; width: auto;
+    min-width: 0; max-width: none; transform-origin: top center;
+    transform: translateY(-6px) scale(0.98);
+  }
+  .ds-pop.open { transform: none; }
 }
 
-.detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.detail-row:last-child { margin-bottom: 0; }
-.detail-field { display: flex; flex-direction: column; gap: 4px; }
-.detail-label { font-size: 12px; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.detail-value { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
-.detail-value.dir-long  { color: var(--green); }
-.detail-value.dir-short { color: var(--red); }
-.detail-value.pnl-pos { color: var(--green); font-size: 24px; }
-.detail-value.pnl-neg { color: var(--red);  font-size: 24px; }
-
-.rule-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 8px;
-  font-size: 13px; font-weight: 700;
-  width: fit-content;
+.week-slot { display: flex; }
+.week-slot .week-card { width: 100%; }
+.weekday-label.week-col { text-align: left; padding-left: 4px; }
+.week-card {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow-card); overflow: hidden;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease),
+              box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
 }
-.rule-badge.followed { background: var(--green); color: #fff; }
-.rule-badge.broken   { background: var(--red); color: #fff; }
-.rule-badge.unset     { background: var(--border-light); color: var(--text-faint); }
-.rule-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
-
-.setup-text {
-  font-size: 14px; color: var(--text-primary); line-height: 1.6;
-  transition: color var(--t) var(--ease);
+.week-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--border); transition: background var(--t) var(--ease);
 }
+.week-card.pos::before { background: var(--green); }
+.week-card.neg::before { background: var(--red); }
+.week-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.week-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.week-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+.week-days { font-size: 10px; font-weight: 600; color: var(--text-faint); }
+.week-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); line-height: 1.1; transition: color var(--t) var(--ease); }
+.week-value.green { color: var(--green); }
+.week-value.red { color: var(--red); }
+.week-sub { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.week-chip { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--bg-page); border: 1px solid var(--border); color: var(--text-muted); }
 
-/* ── Evidence images ── */
-.evidence-card { margin-bottom: 16px; }
-.evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.evidence-item { display: flex; flex-direction: column; gap: 8px; }
-.evidence-label { font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.evidence-img-wrap {
-  border-radius: 12px; overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--bg-page);
-  aspect-ratio: 16/10;
-  display: flex; align-items: center; justify-content: center;
-  transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
-  cursor: pointer;
+/* ══════════════════════════════════════════════════════════
+   DAY DETAIL DRAWER
+══════════════════════════════════════════════════════════ */
+.drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; opacity: 0; transition: opacity var(--t) var(--ease); }
+.drawer-overlay.open { display: block; opacity: 1; }
+.day-drawer {
+  position: fixed; top: 0; right: 0; height: 100vh; width: 400px; max-width: 92vw;
+  background: var(--bg-card); border-left: 1px solid var(--border);
+  z-index: 301; transform: translateX(100%);
+  transition: transform 280ms var(--ease), background var(--t) var(--ease), border-color var(--t) var(--ease);
+  display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,0.15);
 }
-.evidence-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.evidence-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-faint); }
-.evidence-empty svg { width: 28px; height: 28px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; }
-.evidence-empty span { font-size: 12px; }
+.day-drawer.open { transform: translateX(0); }
+.drawer-header { padding: 22px 22px 18px; border-bottom: 1px solid var(--border-light); display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; transition: border-color var(--t) var(--ease); }
+.drawer-date { font-size: 17px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-outcome-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; display: inline-block; }
+.drawer-close-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-page); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background var(--t) var(--ease), transform var(--t) var(--ease); }
+.drawer-close-btn:hover { background: var(--border-light); transform: rotate(90deg); }
+.drawer-close-btn svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px 22px 32px; }
 
-/* ── Notes Card ── */
-.notes-card { margin-bottom: 16px; }
-.notes-text { font-size: 14px; color: var(--text-primary); line-height: 1.7; white-space: pre-wrap; transition: color var(--t) var(--ease); }
-.notes-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
+.drawer-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.drawer-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.drawer-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 4px; transition: color var(--t) var(--ease); }
+.drawer-stat-value { font-size: 16px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-stat-value.green { color: var(--green); }
+.drawer-stat-value.red { color: var(--red); }
 
-/* ── Image Lightbox ── */
-.lightbox {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.85); z-index: 999;
-  align-items: center; justify-content: center;
-  padding: 40px;
-  opacity: 0; transition: opacity var(--t) var(--ease);
-}
-.lightbox.open { display: flex; opacity: 1; }
-.lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-.lightbox-close {
-  position: absolute; top: 24px; right: 24px;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(255,255,255,0.1); border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background var(--t) var(--ease);
-}
-.lightbox-close:hover { background: rgba(255,255,255,0.2); }
-.lightbox-close svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; }
+.drawer-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 18px 0 10px; transition: color var(--t) var(--ease); }
+.drawer-section-title:first-child { margin-top: 0; }
 
-/* ── Confirm Modal ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5); z-index: 998;
-  align-items: center; justify-content: center;
-  opacity: 0; transition: opacity var(--t) var(--ease);
-  padding: 20px;
+.drawer-trade-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
 }
+.drawer-trade-left { display: flex; flex-direction: column; gap: 2px; }
+.drawer-trade-pair { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.drawer-trade-dir { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 5px; width: fit-content; }
+.drawer-trade-right { display: flex; align-items: center; gap: 10px; }
+.drawer-trade-pnl { font-size: 13px; font-weight: 700; }
+.view-trade-link {
+  font-size: 11px; font-weight: 600; color: var(--accent); text-decoration: none;
+  padding: 4px 9px; border-radius: 7px; border: 1px solid var(--border);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+  white-space: nowrap;
+}
+.view-trade-link:hover { background: var(--accent-bg); border-color: var(--accent); }
+
+.drawer-notes-box {
+  background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px; font-size: 13px; color: var(--text-primary); line-height: 1.6;
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+.drawer-notes-empty { color: var(--text-faint); font-style: italic; }
+.drawer-empty-state { text-align: center; padding: 40px 10px; color: var(--text-faint); font-size: 13px; }
+
+/* ══════════════════════════════════════════════════════════
+   MONTHLY REPORT MODAL
+══════════════════════════════════════════════════════════ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--t) var(--ease); padding: 20px; }
 .modal-overlay.open { display: flex; opacity: 1; }
-.modal-box {
-  background: var(--bg-card); border-radius: var(--radius-card);
-  padding: 28px; max-width: 380px; width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  transform: scale(0.95); transition: transform var(--t) var(--ease), background var(--t) var(--ease);
+.report-modal-box {
+  background: var(--bg-card); border-radius: var(--radius-card); max-width: 460px; width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3); transform: scale(0.95);
+  transition: transform var(--t) var(--ease), background var(--t) var(--ease);
+  overflow: hidden;
 }
-.modal-overlay.open .modal-box { transform: scale(1); }
-.modal-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--red-bg); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-.modal-icon svg { width: 22px; height: 22px; stroke: var(--red); fill: none; stroke-width: 2; stroke-linecap: round; }
-.modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; transition: color var(--t) var(--ease); }
-.modal-text { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5; transition: color var(--t) var(--ease); }
-.modal-actions { display: flex; gap: 10px; }
-.modal-btn {
-  flex: 1; padding: 10px; border-radius: var(--radius-btn);
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  font-family: 'Inter', sans-serif; border: none;
-  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+.modal-overlay.open .report-modal-box { transform: scale(1); }
+.report-modal-close {
+  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.06); border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 2; transition: background var(--t) var(--ease);
 }
-.modal-btn-cancel { background: var(--border-light); color: var(--text-primary); }
-.modal-btn-cancel:hover { background: var(--border); }
-.modal-btn-confirm { background: var(--red); color: #fff; }
-.modal-btn-confirm:hover { background: #DC2626; }
+.report-modal-close:hover { background: rgba(0,0,0,0.12); }
+.report-modal-close svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.report-card { padding: 38px 34px 30px; position: relative; background: var(--bg-card); transition: background var(--t) var(--ease); }
+.report-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 0; }
+.report-brand-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.report-brand-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.report-brand-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.report-brand-name { font-size: 17px; font-weight: 800; letter-spacing: 0.11em; color: var(--text-primary); transition: color var(--t) var(--ease); }
+.report-brand-sub { font-size: 15px; font-weight: 500; letter-spacing: 0.13em; color: var(--text-faint); }
+/* Hairline under the lockup — the same separation the P&L card footer uses. */
+.report-brand-rule { height: 1px; background: var(--border-light); margin: 22px 0 0; }
+.report-month { font-size: 30px; font-weight: 800; color: var(--text-primary); margin: 22px 0 4px; letter-spacing: -0.035em; line-height: 1.05; transition: color var(--t) var(--ease); }
+.report-month-sub { font-size: 13px; font-weight: 500; color: var(--text-faint); margin-bottom: 26px; letter-spacing: 0.01em; }
+
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.report-stat { background: var(--bg-page); border: 1px solid var(--border); border-radius: 16px; padding: 17px 18px; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
+.report-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.11em; color: var(--text-faint); margin-bottom: 8px; line-height: 1.35; min-height: 2.7em; display: flex; align-items: flex-end; transition: color var(--t) var(--ease); }
+.report-stat-value { font-size: 23px; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; transition: color var(--t) var(--ease); }
+.report-stat-value.green { color: var(--green); }
+.report-stat-value.red { color: var(--red); }
+
+.report-highlight-row { display: flex; gap: 14px; margin-bottom: 24px; }
+.report-highlight { flex: 1; min-width: 0; border-radius: 16px; padding: 17px 18px; }
+.report-highlight.best { background: var(--green-bg); border: 1px solid var(--green-border); }
+.report-highlight.worst { background: var(--red-bg); border: 1px solid var(--red-border); }
+.report-highlight-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 8px; }
+.report-highlight.best .report-highlight-label { color: var(--green); }
+.report-highlight.worst .report-highlight-label { color: var(--red); }
+.report-highlight-value { font-size: 16px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; transition: color var(--t) var(--ease); }
+
+.report-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 11px; font-weight: 500; color: var(--text-faint); transition: border-color var(--t) var(--ease), color var(--t) var(--ease); }
+
+.report-download-btn {
+  width: 100%; padding: 13px; border: none; background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background var(--t) var(--ease);
+}
+.report-download-btn:hover { background: var(--accent-hover); }
+.report-download-btn svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; }
 
 /* ══════════════════════════════════════════════════════════
    MOBILE
 ══════════════════════════════════════════════════════════ */
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 98; opacity: 0; transition: opacity var(--t) var(--ease); }
 .sidebar-overlay.open { opacity: 1; }
-.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 200; justify-content: space-around; transition: background var(--t) var(--ease), border-color var(--t) var(--ease); }
 .mob-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-decoration: none; transition: color var(--t) var(--ease), transform var(--t) var(--ease); border-radius: 10px; }
 .mob-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
 .mob-item:hover { transform: translateY(-2px); }
 .mob-item.active { color: var(--accent); }
+
+@media (max-width: 1100px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+  .weekly-sidebar { grid-template-columns: repeat(4, 1fr); display: grid; }
+}
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* Display Stats visibility — every metric is an independent row. */
+.calendar-card.hide-pnl   .day-primary   { display: none; }
+.calendar-card.hide-rr    .day-secondary { display: none; }
+.calendar-card.hide-count .day-foot      { display: none; }
+.calendar-card.hide-wr    .day-meta      { display: none; }
+.day-secondary {
+  font-size: 12.5px; font-weight: 700; margin-top: 2px;
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden;
+}
+.day-cell.win-day  .day-secondary { color: var(--green); opacity: 0.85; }
+.day-cell.loss-day .day-secondary { color: var(--red);   opacity: 0.85; }
+
+/* Below 900px the 8th column no longer fits: fall back to 7 columns and
+   show the stacked week cards underneath. */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .calendar-grid, .weekday-row { grid-template-columns: repeat(7, 1fr); }
+  .week-slot { display: none; }
+  .weekday-label.week-col { display: none; }
+  .weekly-sidebar { display: grid; }
+}
 
 @media (max-width: 768px) {
   .sidebar { transform: translateX(100%); transition: transform var(--t) var(--ease), background var(--t) var(--ease); box-shadow: -8px 0 32px rgba(0,0,0,0.15); }
   .sidebar.open { transform: translateX(0); }
   .sidebar-overlay { display: block; pointer-events: none; }
   .sidebar-overlay.open { pointer-events: auto; }
-  .main { margin-right: 0; padding: 16px 14px 90px; }
   .mobile-nav { display: flex; }
   .mob-menu-btn { display: flex; }
-  .page-header { flex-wrap: wrap; }
-  .page-title { font-size: 20px; }
-  .btn-danger span { display: none; }
-  .btn-danger { padding: 10px 12px; }
-  .detail-grid { grid-template-columns: 1fr; }
-  .detail-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .evidence-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 420px) {
-  .detail-row { grid-template-columns: 1fr; gap: 14px; }
+  .page-title { font-size: 21px; }
+  .month-label { min-width: 96px; font-size: 13px; }
+  .day-drawer { width: 100%; max-width: 100%; }
+  .main { margin-right: 0; padding: 20px 16px 90px; overflow-x: hidden; }
+
+  .calendar-card { padding: 14px 8px; border-radius: 16px; }
+  .calendar-grid, .weekday-row { gap: 5px; }
+  .weekday-row { margin-bottom: 10px; }
+  .weekday-label { font-size: 10px; letter-spacing: 0.1em; font-weight: 700; }
+
+  /* Cells are sized to their CONTENT, not to a tall fixed minimum. The old
+     min-height left dead space at the bottom while the P&L above it was
+     being clipped — the height was never the constraint, the WIDTH was.
+     Tightening the horizontal padding and the value's tracking is what
+     actually lets "+$4.3K" render instead of "+$...". */
+  .day-cell { min-height: 0; padding: 8px 5px; border-radius: 12px; }
+  .day-num { font-size: 11px; }
+  .day-primary { font-size: 13.5px; margin-top: 4px; letter-spacing: -0.04em; }
+  .day-secondary { font-size: 10.5px; margin-top: 1px; letter-spacing: -0.02em; }
+  .day-meta { padding-top: 5px; }
+  .day-foot { padding-top: 4px; }
+  .day-trades { font-size: 9.5px; letter-spacing: -0.01em; }
+  .day-winrate { font-size: 9px; padding: 1px 5px; }
+  .week-value { font-size: 18px; }
+
+  .toolbar-row { flex-direction: row; align-items: center; }
+  .toolbar-right { width: 100%; display: flex; gap: 8px; }
+  .toolbar-right .btn-outline, .toolbar-right .btn-primary { flex: 1; justify-content: center; }
 }
 
-/* ══════════════════════════════════════════════════════════
-   P&L CARD GENERATOR
-   (self-contained module — reuses existing detail-card shell,
-   tokens, spacing, radius and shadow from the rest of the app)
-══════════════════════════════════════════════════════════ */
-.pnlgen-header { margin-bottom: 18px; }
-.pnlgen-title-row { display: flex; align-items: center; gap: 10px; }
-.badge-new {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
-  padding: 3px 9px; border-radius: 20px;
-  background: var(--green-bg); color: var(--green);
-  border: 1px solid var(--green-border);
-  transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease);
-}
-.pnlgen-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; transition: color var(--t) var(--ease); }
-.pnlgen-section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 4px 0 10px; transition: color var(--t) var(--ease); }
-
-/* ── Live preview stage ── */
-.pnlgen-preview-wrap {
-  display: flex; justify-content: center; align-items: center;
-  padding: 28px 16px;
-  background: var(--bg-page);
-  border-radius: var(--radius-btn);
-  margin-bottom: 22px;
-  transition: background var(--t) var(--ease);
-  overflow: hidden;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   P&L CARD — the card IS the material
-   ----------------------------------------------------------------------
-   One surface. The theme paints that surface: background, lighting, glow,
-   texture, AND the ink/tile/chip tokens that sit on it. There is no card
-   floating on a wallpaper — #pnlCard is the whole artifact, so whatever
-   html2canvas captures is exactly the themed card the user is looking at.
-
-   A theme sets nine tokens and a background. It never touches layout,
-   typography, spacing or radii — those are identical in all six.
-
-   Sizes are calc(var(--u) * Npx) against a 925-wide reference card. JS sets
-   --u from the rendered box; CSS aspect-ratio is never used for layout
-   because html2canvas does not compute it.
-   ══════════════════════════════════════════════════════════════════════ */
-.pnl-card {
-  --card-ar: 0.70;          /* content ratio used to derive --u */
-  --u: 1;
-
-  /* the nine tokens every theme repaints */
-  --ink:      #14110C;
-  --ink-2:    #8A8175;
-  --tile:     rgba(255,255,255,0.55);
-  --chip:     #FFFFFF;
-  --hair:     rgba(20,17,12,0.09);
-  --pill:     #14110C;
-  --pill-ink: #FBF7F1;
-  --qr-bg:    #FFFFFF;
-  --grain:    rgba(20,17,12,0.05);
-
-  position: relative;
-  width: 100%;
-  max-width: 620px;
-  aspect-ratio: 1 / 1;              /* preview fallback; JS sets px height */
-  border-radius: calc(var(--u) * 46px);
-  overflow: hidden;
-  isolation: isolate;
-  color: var(--ink);
-  transition: opacity 250ms cubic-bezier(0.32,0.72,0,1),
-              transform 250ms cubic-bezier(0.32,0.72,0,1);
-  box-shadow:
-    0 calc(var(--u) * 3px)  calc(var(--u) * 8px)  rgba(11,13,18,0.06),
-    0 calc(var(--u) * 20px) calc(var(--u) * 44px) rgba(11,13,18,0.13);
-}
-.pnl-card[data-size="portrait"] { aspect-ratio: 1080 / 1350; }
-.pnl-card[data-size="story"]    { aspect-ratio: 1080 / 1920; }
-
-/* Candle layer still renders (pnlRenderChartBg untouched) but is hidden —
-   the themes carry the atmosphere now. Delete this rule to bring it back. */
-.pnl-chart-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: none; }
-.pnl-ornament { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: none; }
-
-.pnl-content {
-  position: relative; z-index: 1;
-  height: 100%; width: 100%;
-  display: flex; flex-direction: column;
-  gap: calc(var(--u) * 30px);
-  padding: calc(var(--u) * 54px) calc(var(--u) * 50px) calc(var(--u) * 44px);
-  box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── header ─────────────────────────────────────────────────────────── */
-.pnl-top { display: flex; align-items: center; gap: calc(var(--u) * 14px); flex-shrink: 0; }
-.pnl-logo { display: flex; align-items: center; gap: calc(var(--u) * 11px); margin-right: auto; min-width: 0; }
-.pnl-logo-icon { width: calc(var(--u) * 35px); height: calc(var(--u) * 35px); object-fit: contain; display: block; flex-shrink: 0; }
-.pnl-logo-mark { font-size: calc(var(--u) * 30px); font-weight: 800; letter-spacing: 0.11em; color: var(--ink); }
-.pnl-logo-sub  { font-size: calc(var(--u) * 28px); font-weight: 500; letter-spacing: 0.13em; color: var(--ink-2); }
-.pnl-date { font-size: calc(var(--u) * 28px); font-weight: 500; color: var(--ink-2); letter-spacing: 0.045em; white-space: nowrap; }
-.pnl-outcome-badge {
-  font-size: calc(var(--u) * 28px); font-weight: 700; letter-spacing: 0.08em;
-  padding: calc(var(--u) * 15px) calc(var(--u) * 30px);
-  border-radius: calc(var(--u) * 999px);
-  background: var(--pnl-accent-bg); color: var(--pnl-accent);
-  white-space: nowrap; line-height: 1;
-}
-
-/* ── pair ───────────────────────────────────────────────────────────── */
-.pnl-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 30px); min-height: 0; }
-.pnl-main-info { display: flex; flex-direction: column; min-width: 0; }
-.pnl-pair-row { display: flex; align-items: center; gap: calc(var(--u) * 26px); min-width: 0; }
-.pnl-pair {
-  font-size: calc(var(--u) * 118px); font-weight: 800;
-  letter-spacing: -0.052em; line-height: 0.86;
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.pnl-pair-sub {
-  margin-top: calc(var(--u) * 18px);
-  font-size: calc(var(--u) * 28px); font-weight: 500;
-  letter-spacing: 0.055em; color: var(--ink-2);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.pnl-dir-badge {
-  flex-shrink: 0;
-  font-size: calc(var(--u) * 30px); font-weight: 700; letter-spacing: 0.07em;
-  padding: calc(var(--u) * 17px) calc(var(--u) * 34px);
-  border-radius: calc(var(--u) * 999px);
-  background: var(--pill); color: var(--pill-ink);
-  white-space: nowrap; line-height: 1;
-}
-.pnl-dir-short { background: var(--pnl-accent); color: #FFFFFF; }
-
-/* ── metric tiles ───────────────────────────────────────────────────── */
-.pnl-metrics { display: flex; gap: calc(var(--u) * 26px); }
-.pnl-stat-block {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column; gap: calc(var(--u) * 14px);
-  padding: calc(var(--u) * 28px) calc(var(--u) * 34px);
-  border-radius: calc(var(--u) * 28px);
-  background: var(--tile);
-  border: 1px solid var(--hair);
-}
-.pnl-stat-label { font-size: calc(var(--u) * 23px); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-2); }
-.pnl-stat-value {
-  font-size: calc(var(--u) * 48px); font-weight: 800;
-  letter-spacing: -0.035em; line-height: 1;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* ── SIGNATURE: the realized P&L band ─────────────────────────────── */
-.pnl-hero {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: calc(var(--u) * 24px);
-  padding: calc(var(--u) * 34px) calc(var(--u) * 38px);
-  border-radius: calc(var(--u) * 30px);
-  background: var(--pnl-accent-bg);
-  border: 1px solid var(--pnl-accent-line);
-}
-.pnl-hero .pnl-stat-label { font-size: calc(var(--u) * 24px); }
-.pnl-value-big {
-  font-size: calc(var(--u) * 68px); font-weight: 800;
-  letter-spacing: -0.05em; line-height: 1;
-  color: var(--pnl-accent); text-align: right;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* ── details panel ──────────────────────────────────────────────────── */
-.pnl-info-panel {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: calc(var(--u) * 30px) calc(var(--u) * 24px);
-  padding: calc(var(--u) * 34px) calc(var(--u) * 32px);
-  border-radius: calc(var(--u) * 34px);
-  background: var(--tile);
-  border: 1px solid var(--hair);
-  min-width: 0; box-sizing: border-box;
-}
-.pnl-info-row { display: flex; align-items: center; gap: calc(var(--u) * 20px); min-width: 0; }
-.pnl-info-icon {
-  width: calc(var(--u) * 62px); height: calc(var(--u) * 62px);
-  border-radius: 50%; background: var(--chip);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  border: 1px solid var(--hair);
-}
-.pnl-info-row svg {
-  width: calc(var(--u) * 27px); height: calc(var(--u) * 27px);
-  stroke: var(--ink); fill: none; stroke-width: 2;
-  stroke-linecap: round; stroke-linejoin: round;
-}
-.pnl-info-row > div { display: flex; flex-direction: column; gap: calc(var(--u) * 6px); min-width: 0; }
-.pnl-info-label { font-size: calc(var(--u) * 21px); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
-.pnl-info-value { font-size: calc(var(--u) * 31px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* ── footer ─────────────────────────────────────────────────────────── */
-.pnl-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: calc(var(--u) * 20px);
-  padding-top: calc(var(--u) * 34px);
-  border-top: 1px solid var(--hair);
-  flex-shrink: 0;
-}
-.pnl-trader { display: flex; align-items: center; gap: calc(var(--u) * 22px); min-width: 0; }
-.pnl-avatar {
-  width: calc(var(--u) * 78px); height: calc(var(--u) * 78px);
-  border-radius: 50%; flex-shrink: 0;
-  background: var(--pill); color: var(--pill-ink);
-  display: flex; align-items: center; justify-content: center;
-  font-size: calc(var(--u) * 32px); font-weight: 700;
-  overflow: hidden; position: relative;
-}
-.pnl-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pnl-trader-info { display: flex; flex-direction: column; gap: calc(var(--u) * 5px); min-width: 0; }
-.pnl-username { font-size: calc(var(--u) * 33px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(var(--u) * 380px); }
-.pnl-trader-label { font-size: calc(var(--u) * 26px); color: var(--ink-2); font-weight: 500; }
-.pnl-qr-block { display: flex; align-items: center; gap: calc(var(--u) * 18px); flex-shrink: 0; }
-.pnl-qr-text { display: none; }
-.pnl-qr-wrap {
-  width: calc(var(--u) * 112px); height: calc(var(--u) * 112px);
-  background: var(--qr-bg); border-radius: calc(var(--u) * 22px);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden; flex-shrink: 0; padding: calc(var(--u) * 12px);
-  box-sizing: border-box; border: 1px solid var(--hair);
-}
-.pnl-qr-wrap img, .pnl-qr-wrap canvas { width: 100%; height: 100%; display: block; }
-
-/* ── outcome colours ────────────────────────────────────────────────
-   Emerald for a win, luxury crimson for a loss. Dark themes get a
-   stronger tint and a hairline, or the band disappears into the surface. */
-.pnl-card[data-outcome="win"] {
-  --pnl-accent: #00B37E; --pnl-accent-bg: rgba(0,179,126,0.11); --pnl-accent-line: rgba(0,179,126,0.16);
-}
-.pnl-card[data-outcome="loss"] {
-  --pnl-accent: #F0325B; --pnl-accent-bg: rgba(240,50,91,0.085); --pnl-accent-line: rgba(240,50,91,0.14);
-}
-.pnl-card[data-outcome="be"] {
-  --pnl-accent: #78808C; --pnl-accent-bg: rgba(120,128,140,0.11); --pnl-accent-line: rgba(120,128,140,0.18);
-}
-.pnl-accent-text { color: var(--pnl-accent); }
-
-/* Midnight is now the only dark surface — Aurora and Noir became light
-   themes, and the brightened accents would glare on pastel. */
-.pnl-card[data-template="midnight"][data-outcome="win"] {
-  --pnl-accent: #2BE0A4; --pnl-accent-bg: rgba(43,224,164,0.13); --pnl-accent-line: rgba(43,224,164,0.24);
-}
-.pnl-card[data-template="midnight"][data-outcome="loss"] {
-  --pnl-accent: #FF4D6F; --pnl-accent-bg: rgba(255,77,111,0.14); --pnl-accent-line: rgba(255,77,111,0.26);
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   THEMES — the surface itself
-   Glows are layered radial-gradients, never blurred elements: html2canvas
-   cannot rasterise filter:blur(), so a blurred orb would look right in the
-   preview and vanish from every download.
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* 1 — Minimal · pure white, fine grain, Apple-quiet */
-.pnl-card[data-template="minimal"] {
-  --ink: #0B0D12; --ink-2: #9AA0A8;
-  --tile: #F5F6F8; --chip: #FFFFFF;
-  --hair: rgba(11,13,18,0.065);
-  --pill: #0B0D12; --pill-ink: #FFFFFF;
-  --grain: rgba(11,13,18,0.038);
-  background:
-    radial-gradient(circle, var(--grain) calc(var(--u) * 1.5px), rgba(0,0,0,0) calc(var(--u) * 1.5px)),
-    linear-gradient(180deg, #FFFFFF 0%, #FAFBFC 100%);
-  background-size: calc(var(--u) * 38px) calc(var(--u) * 38px), 100% 100%;
-}
-
-/* 2 — Aqua Dream · soft pink / indigo / mint / cream on near-white
-   Circle radii are calc(var(--u) * Npx) rather than fixed px: the source
-   values are sized for a 925-wide card, so at a 1080 export a fixed 400px
-   circle would cover a different fraction of the surface than in the
-   preview. Scaling them keeps the download identical to what you see. */
-.pnl-card[data-template="aqua"] {
-  --ink: #0B0D12; --ink-2: #98A0AB;
-  --tile: rgba(255,255,255,0.60); --chip: #FFFFFF;
-  --hair: rgba(11,13,18,0.07);
-  --pill: #0B0D12; --pill-ink: #FFFFFF; --qr-bg: #FFFFFF;
-  background-color: #F8FAFC;
-  background-image:
-    radial-gradient(calc(var(--u) * 400px) circle at 10% 0%,    #FFD1DC 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 90% 0%,    #A5B4FC 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,    #99F6E0 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 100%, #FEF3C7 0%, transparent 70%);
-}
-
-/* 2 — Midnight · #0F1115, grid, red glow, texture */
-.pnl-card[data-template="midnight"] {
-  --ink: #F2F3F5; --ink-2: #7C838D;
-  --tile: rgba(255,255,255,0.042); --chip: rgba(255,255,255,0.07);
-  --hair: rgba(255,255,255,0.08);
-  --pill: #F2F3F5; --pill-ink: #0F1115; --qr-bg: #FFFFFF;
-  --grain: rgba(255,255,255,0.035);
-  background:
-    radial-gradient(circle, var(--grain) calc(var(--u) * 1.4px), rgba(0,0,0,0) calc(var(--u) * 1.4px)),
-    radial-gradient(52% 34% at 50% 100%, rgba(240,50,91,0.26) 0%, rgba(240,50,91,0) 64%),
-    radial-gradient(64% 44% at 50% 0%,   rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%),
-    #0F1115;
-  background-size: calc(var(--u) * 44px) calc(var(--u) * 44px), 100% 100%, 100% 100%, 100% 100%;
-}
-.pnl-card[data-template="midnight"] .pnl-ornament { display: block; }
-
-/* 3 — Peach Sunset · warm coral / peach on cream
-   NOTE: replaced a DARK theme. The ink tokens are flipped to dark — the
-   old white --ink would have been unreadable on this cream surface. */
-.pnl-card[data-template="peach"] {
-  --ink: #2B1810; --ink-2: #A08573;
-  --tile: rgba(255,255,255,0.58); --chip: #FFFDFB;
-  --hair: rgba(43,24,16,0.10);
-  --pill: #2B1810; --pill-ink: #FFFBEB; --qr-bg: #FFFFFF;
-  background-color: #FFFBEB;
-  background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,    #FF9A8B 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 20%, #FFDAB9 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 50% 100%, #FFE4B5 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 80% 80%,  #FFC8A2 0%, transparent 70%);
-}
-
-/* 4 — Champagne Gold · warm cream, gold mesh, never yellow */
-.pnl-card[data-template="champagne"] {
-  --ink: #2E2412; --ink-2: #9A8862;
-  --tile: rgba(255,255,255,0.52); --chip: #FFFDF6;
-  --hair: rgba(46,36,18,0.11);
-  --pill: #2E2412; --pill-ink: #FBF6EA;
-  --grain: rgba(46,36,18,0.045);
-  background:
-    radial-gradient(circle, var(--grain) calc(var(--u) * 1.6px), rgba(0,0,0,0) calc(var(--u) * 1.6px)),
-    radial-gradient(54% 38% at 94% 0%,  rgba(193,155,92,0.52) 0%, rgba(193,155,92,0) 66%),
-    radial-gradient(46% 34% at 4% 92%,  rgba(168,134,80,0.34) 0%, rgba(168,134,80,0) 70%),
-    radial-gradient(38% 28% at 58% 54%, rgba(226,204,164,0.40) 0%, rgba(226,204,164,0) 72%),
-    linear-gradient(160deg, #FDFAF1 0%, #EFE2C9 100%);
-  background-size: calc(var(--u) * 40px) calc(var(--u) * 40px), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-}
-
-/* 5 — Abstract Liquid · soft white, organic colour blobs */
-.pnl-card[data-template="liquid"] {
-  --ink: #0B0D12; --ink-2: #9AA0A8;
-  --tile: rgba(255,255,255,0.62); --chip: #FFFFFF;
-  --hair: rgba(11,13,18,0.07);
-  --pill: #0B0D12; --pill-ink: #FFFFFF;
-  background:
-    radial-gradient(38% 28% at 90% 6%,  rgba(129,140,248,0.40) 0%, rgba(129,140,248,0) 72%),
-    radial-gradient(44% 32% at 4% 86%,  rgba(94,234,212,0.38) 0%, rgba(94,234,212,0) 72%),
-    radial-gradient(32% 24% at 76% 100%,rgba(251,191,36,0.28) 0%, rgba(251,191,36,0) 72%),
-    radial-gradient(28% 22% at 30% 2%,  rgba(244,114,182,0.24) 0%, rgba(244,114,182,0) 72%),
-    linear-gradient(180deg, #FFFFFF 0%, #F7F8FB 100%);
-}
-
-/* 6 — Mint Ocean · emerald / cyan / teal on pale aqua
-   Also replaced a DARK theme, so the ink tokens are flipped to dark. */
-.pnl-card[data-template="mint"] {
-  --ink: #06231F; --ink-2: #6E9691;
-  --tile: rgba(255,255,255,0.58); --chip: #FFFFFF;
-  --hair: rgba(6,35,31,0.09);
-  --pill: #06231F; --pill-ink: #F0FDFD; --qr-bg: #FFFFFF;
-  background-color: #F0FDFD;
-  background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,   #6EE7B7 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 10%,#67E8F9 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,  #5EEAD4 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 90%,#BAE6FD 0%, transparent 70%);
-}
-
-.pnl-grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
-
-/* ── responsive ──────────────────────────────────────────────────────
-   The card needs no font-size media queries: every size is
-   calc(var(--u) * Npx) and --u is derived from the rendered box, so the
-   composition is identical at 320px and at 620px — it is the same card,
-   smaller. That is why the old @media blocks broke it: they replaced the
-   scaled values with fixed pixels and the layout collided.
-
-   These rules only reclaim width on small screens so --u can be as large
-   as the device allows, and give the pair row somewhere to go if a symbol
-   is unusually long. */
+/* Nothing is hidden by width. Rows are already full-width, so the metrics
+   simply get tighter rather than disappearing. */
 @media (max-width: 560px) {
-  .pnlgen-preview-wrap { padding-left: 0; padding-right: 0; }
-  .pnl-card { max-width: 100%; }
+  .calendar-card { padding: 12px 6px; }
+  .calendar-grid, .weekday-row { gap: 4px; }
+  .day-cell { padding: 7px 4px; }
+  .day-primary { font-size: 12.5px; }
+  .day-secondary { font-size: 10px; }
+  .day-trades { font-size: 9px; }
+  .day-winrate { font-size: 8.5px; padding: 1px 4px; }
 }
-@media (max-width: 380px) {
-  /* Only at this width can a long symbol crowd the badge. Wrapping is
-     preferable to shrinking type that is already proportional. */
-  .pnl-pair-row { flex-wrap: wrap; row-gap: calc(var(--u) * 14px); }
-}
-
-/* ── Template selector (horizontal scroll) ── */
-.tpl-row { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 22px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-.tpl-row::-webkit-scrollbar { height: 5px; }
-.tpl-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-.tpl-chip {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  flex-shrink: 0; width: 84px;
-  background: none; border: none; cursor: pointer;
-  padding: 3px; border-radius: var(--radius-btn);
-  transition: transform var(--t) var(--ease);
-  font-family: 'Inter', sans-serif;
-}
-.tpl-chip:hover { transform: translateY(-2px); }
-.tpl-swatch { width: 100%; aspect-ratio: 4/3; border-radius: 10px; border: 2px solid var(--border); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
-.tpl-chip.active .tpl-swatch { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-.tpl-chip-label { font-size: 11px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
-.tpl-chip.active .tpl-chip-label { color: var(--accent); }
-.tpl-swatch-minimal   { background: linear-gradient(180deg, #FFFFFF, #F4F5F7); }
-.tpl-swatch-aqua      { background: radial-gradient(circle at 12% 4%, #FFD1DC, transparent 68%), radial-gradient(circle at 92% 4%, #A5B4FC, transparent 68%), radial-gradient(circle at 4% 92%, #99F6E0, transparent 68%), #F8FAFC; }
-.tpl-swatch-champagne { background: radial-gradient(circle at 90% 4%, #C19B5C, #FDFAF1 64%), linear-gradient(160deg, #FDFAF1, #EFE2C9); }
-.tpl-swatch-liquid    { background: radial-gradient(circle at 86% 10%, #818CF8, #FFFFFF 62%); }
-.tpl-swatch-midnight  { background: radial-gradient(circle at 50% 100%, #F0325B, #0F1115 58%); }
-.tpl-swatch-peach     { background: radial-gradient(circle at 4% 4%, #FF9A8B, transparent 70%), radial-gradient(circle at 96% 22%, #FFDAB9, transparent 70%), radial-gradient(circle at 52% 96%, #FFE4B5, transparent 70%), #FFFBEB; }
-.tpl-swatch-mint      { background: radial-gradient(circle at 4% 4%, #6EE7B7, transparent 70%), radial-gradient(circle at 96% 10%, #67E8F9, transparent 70%), radial-gradient(circle at 4% 92%, #5EEAD4, transparent 70%), #F0FDFD; }
-
-/* ── Size selector ── */
-.pnlsize-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
-.pnlsize-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 12px 8px; border-radius: var(--radius-btn);
-  border: 1.5px solid var(--border); background: var(--bg-page);
-  cursor: pointer; font-family: 'Inter', sans-serif;
-  transition: all var(--t) var(--ease);
-}
-.pnlsize-btn:hover { background: var(--border-light); }
-.pnlsize-btn.active { border-color: var(--accent); border-width: 2px; background: var(--accent-bg); }
-.pnlsize-title { font-size: 13px; font-weight: 700; color: var(--text-primary); transition: color var(--t) var(--ease); }
-.pnlsize-btn.active .pnlsize-title { color: var(--accent); }
-.pnlsize-sub { font-size: 10px; color: var(--text-faint); transition: color var(--t) var(--ease); }
-
-/* ── Download button ── */
-.pnl-download-btn {
-  width: 100%; padding: 14px;
-  border: none; border-radius: var(--radius-btn);
-  background: var(--green); color: #fff;
-  font-size: 14px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  cursor: pointer; font-family: 'Inter', sans-serif;
-  transition: filter var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
-}
-.pnl-download-btn:hover:not(:disabled) { filter: brightness(0.94); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-.pnl-download-btn:active:not(:disabled) { transform: translateY(0); }
-.pnl-download-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
-.pnl-download-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 480px) {
-  .pnlgen-preview-wrap { padding: 16px 8px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .weekly-sidebar { grid-template-columns: 1fr 1fr; }
+  .drawer-stats-grid { grid-template-columns: 1fr 1fr; }
+  .report-grid { grid-template-columns: 1fr 1fr; }
+  .day-primary { font-size: 12px; }
+  .day-secondary { font-size: 9.5px; }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
+  .main { padding-left: 12px; padding-right: 12px; }
+  .calendar-card { padding: 10px 5px; }
+  .calendar-grid, .weekday-row { gap: 3px; }
+  .day-cell { padding: 6px 3px; border-radius: 11px; }
+  .day-num { font-size: 10.5px; }
+  .day-primary { font-size: 11.5px; }
+  .day-secondary { font-size: 9.5px; }
+  .day-trades { font-size: 8.5px; }
+  .day-winrate { font-size: 8px; padding: 0 4px; }
+  .weekly-sidebar { grid-template-columns: 1fr; }
 }
 
 </style>
@@ -807,7 +680,7 @@ try {
       <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
       Dashboard
     </a>
-    <a href="trades.html" class="nav-item active">
+    <a href="trades.html" class="nav-item">
       <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/><line x1="13" y1="3" x2="13" y2="6.5"/><line x1="10" y1="3" x2="13" y2="3"/></svg>
       Trades
     </a>
@@ -815,7 +688,7 @@ try {
       <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
       Analytics
     </a>
-    <a href="profit-calendar.html" class="nav-item">
+    <a href="profit-calendar.html" class="nav-item active">
       <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/></svg>
       Profit Calendar
     </a>
@@ -897,297 +770,115 @@ try {
       <button class="mob-menu-btn" onclick="openSidebar()">
         <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
       </button>
-      <a href="trades.html" class="back-btn" title="Back to Trades">
+      <div>
+        <h1 class="page-title">Profit Calendar</h1>
+        <p class="page-subtitle">Review your daily trading performance and consistency.</p>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="changeMonth(-1)" title="Previous Month">
         <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
-      </a>
-      <div class="page-title-block">
-        <h1 class="page-title" id="tradeTitle">Loading…</h1>
-        <p class="page-subtitle" id="tradeSubtitle"></p>
-      </div>
+      </button>
+      <span class="month-label" id="monthLabel">June 2026</span>
+      <button class="month-nav-btn" onclick="changeMonth(1)" title="Next Month">
+        <svg viewBox="0 0 14 14"><polyline points="5,2 10,7 5,12"/></svg>
+      </button>
+      <button class="today-btn" onclick="goToToday()">Today</button>
     </div>
-    <button class="btn-danger" onclick="confirmDelete()">
-      <svg viewBox="0 0 14 14"><polyline points="1,3.5 13,3.5"/><path d="M5 3.5V2h4v1.5M11.5 3.5l-1 9H3.5l-1-9"/></svg>
-      <span>Delete</span>
-    </button>
   </div>
 
-  <!-- Execution Details + Discipline & Psychology -->
-  <div class="detail-grid">
-
-    <div class="detail-card">
-      <div class="detail-card-title">Execution Details</div>
-
-      <div class="detail-row">
-        <div class="detail-field">
-          <span class="detail-label">Direction</span>
-          <span class="detail-value" id="dDirection">—</span>
-        </div>
-        <div class="detail-field">
-          <span class="detail-label">Session</span>
-          <span class="detail-value" id="dSession">—</span>
-        </div>
-      </div>
-
-      <div class="detail-row">
-        <div class="detail-field">
-          <span class="detail-label">Entry Price</span>
-          <span class="detail-value" id="dEntry">—</span>
-        </div>
-        <div class="detail-field">
-          <span class="detail-label">Exit Price</span>
-          <span class="detail-value" id="dExit">—</span>
-        </div>
-      </div>
-
-      <div class="detail-row">
-        <div class="detail-field">
-          <span class="detail-label">R:R</span>
-          <span class="detail-value" id="dRR">—</span>
-        </div>
-        <div class="detail-field">
-          <span class="detail-label">Pips</span>
-          <span class="detail-value" id="dPips">—</span>
-        </div>
-      </div>
-
-      <div class="detail-row" style="margin-bottom:0;">
-        <div class="detail-field">
-          <span class="detail-label">PnL</span>
-          <span class="detail-value" id="dPnl">—</span>
-        </div>
-      </div>
+  <!-- Toolbar: PNG + Monthly Report -->
+  <div class="toolbar-row">
+    <div class="toolbar-right">
+      <button class="btn-outline" onclick="exportPNG()">
+        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.2"/><polyline points="1.5,11 5.5,7.5 8,9.5 10.5,7 14.5,10.5"/></svg>
+        PNG
+      </button>
+      <button class="btn-primary" onclick="openReportModal()">
+        <svg viewBox="0 0 15 15"><rect x="1.5" y="1.5" width="12" height="12" rx="2"/><path d="M4.5 8l2 2 4-4.5"/></svg>
+        Monthly Report
+      </button>
     </div>
-
-    <div class="detail-card">
-      <div class="detail-card-title">Discipline &amp; Psychology</div>
-
-      <div class="detail-field" style="margin-bottom:20px;">
-        <span class="detail-label">Rule Adherence</span>
-        <div id="dRules" style="margin-top:6px;">
-          <span class="rule-badge unset">Not set</span>
-        </div>
-      </div>
-
-      <div class="detail-field" style="margin-bottom:20px;">
-        <span class="detail-label">Trade Type</span>
-        <span class="detail-value" id="dTradeType" style="font-size:14px;">—</span>
-      </div>
-
-      <div class="detail-field" style="margin-bottom:20px;">
-        <span class="detail-label">HTF Bias</span>
-        <span class="detail-value" id="dBias" style="font-size:14px;">—</span>
-      </div>
-
-      <div class="detail-field">
-        <span class="detail-label">Setup Analysis</span>
-        <p class="setup-text" id="dSetup" style="margin-top:4px;">No analysis recorded.</p>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Evidence -->
-  <div class="detail-card evidence-card">
-    <div class="detail-card-title">Evidence</div>
-    <div class="evidence-grid">
-      <div class="evidence-item">
-        <span class="evidence-label">Entry Screenshot</span>
-        <div class="evidence-img-wrap" id="entryImgWrap" onclick="openLightbox('entry')">
-          <div class="evidence-empty">
-            <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
-            <span>No image</span>
-          </div>
-        </div>
-      </div>
-      <div class="evidence-item">
-        <span class="evidence-label">Exit Screenshot</span>
-        <div class="evidence-img-wrap" id="exitImgWrap" onclick="openLightbox('exit')">
-          <div class="evidence-empty">
-            <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
-            <span>No image</span>
-          </div>
-        </div>
+  <!-- Month Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Net Profit</div>
+      <div class="stat-value" id="statNetProfit">—</div>
+      <div class="stat-sub" id="statNetProfitSub">this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net RR</div>
+      <div class="stat-value" id="statNetRR">—</div>
+      <div class="stat-sub">cumulative RR earned</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-value" id="statWinRate">—</div>
+      <div class="stat-sub" id="statWinRateSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Winning Days</div>
+      <div class="stat-value green" id="statWinDays">—</div>
+      <div class="stat-sub">green days this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Losing Days</div>
+      <div class="stat-value red" id="statLossDays">—</div>
+      <div class="stat-sub">red days this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Trading Days</div>
+      <div class="stat-value" id="statTradingDays">—</div>
+      <div class="stat-sub">days with 1+ trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average RR</div>
+      <div class="stat-value" id="statAvgRR">—</div>
+      <div class="stat-sub">per trade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Daily Profit</div>
+      <div class="stat-value" id="statAvgDaily">—</div>
+      <div class="stat-sub">on trading days</div>
+    </div>
+  </div>
+
+  <!-- Display Stats (gear owns every cell metric) -->
+  <div class="mode-toggle-wrap">
+    <div class="ds-wrap">
+      <button class="ds-btn" id="dsBtn" onclick="toggleDisplayStats(event)" aria-haspopup="true" aria-expanded="false" aria-label="Display settings" title="Display settings">
+        <!-- Lucide `settings` -->
+        <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <div class="ds-pop" id="dsPop" role="menu">
+        <div class="ds-pop-title">Display stats</div>
+        <label class="ds-row"><input type="checkbox" id="dsPnl" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Daily P&amp;L</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsRR" onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">R Multiple</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsCount" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Number of trades</span></label>
+        <label class="ds-row"><input type="checkbox" id="dsWR" checked onchange="applyDisplayStats()"><span class="ds-box"></span><span class="ds-label">Win rate</span></label>
       </div>
     </div>
   </div>
 
-  <!-- P&L Card Generator -->
-  <div class="detail-card pnlgen-section">
-    <div class="pnlgen-header">
-      <div class="pnlgen-title-row">
-        <span class="detail-card-title" style="margin-bottom:0;">P&amp;L Card</span>
-        <span class="badge-new">New</span>
+  <!-- Calendar + Weekly Sidebar -->
+  <div class="calendar-layout">
+    <div class="calendar-card" id="calendarCard">
+      <div class="weekday-row">
+        <div class="weekday-label">Mon</div>
+        <div class="weekday-label">Tue</div>
+        <div class="weekday-label">Wed</div>
+        <div class="weekday-label">Thu</div>
+        <div class="weekday-label">Fri</div>
+        <div class="weekday-label">Sat</div>
+        <div class="weekday-label">Sun</div>
+        <div class="weekday-label week-col">Week</div>
       </div>
-      <p class="pnlgen-subtitle">Create and download your trade performance card</p>
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
-    <!-- Live Preview -->
-    <div class="pnlgen-preview-wrap">
-      <div class="pnl-card" id="pnlCard" data-template="minimal" data-outcome="win" data-direction="long" data-size="square">
-        <svg class="pnl-chart-bg" id="pnlChartBg" viewBox="0 0 400 400" preserveAspectRatio="none"></svg>
-        <!-- Theme ornament. Plain SVG lines rather than a CSS repeating-gradient,
-             because html2canvas rasterises shapes reliably and repeating
-             gradients inconsistently. Shown only by themes that ask for it. -->
-        <svg class="pnl-ornament" viewBox="0 0 400 400" preserveAspectRatio="none">
-          <g class="pnl-grid-line-group">
-            <line class="pnl-grid-line" x1="0"   y1="50"  x2="400" y2="50"/>
-            <line class="pnl-grid-line" x1="0"   y1="100" x2="400" y2="100"/>
-            <line class="pnl-grid-line" x1="0"   y1="150" x2="400" y2="150"/>
-            <line class="pnl-grid-line" x1="0"   y1="200" x2="400" y2="200"/>
-            <line class="pnl-grid-line" x1="0"   y1="250" x2="400" y2="250"/>
-            <line class="pnl-grid-line" x1="0"   y1="300" x2="400" y2="300"/>
-            <line class="pnl-grid-line" x1="0"   y1="350" x2="400" y2="350"/>
-            <line class="pnl-grid-line" x1="50"  y1="0" x2="50"  y2="400"/>
-            <line class="pnl-grid-line" x1="100" y1="0" x2="100" y2="400"/>
-            <line class="pnl-grid-line" x1="150" y1="0" x2="150" y2="400"/>
-            <line class="pnl-grid-line" x1="200" y1="0" x2="200" y2="400"/>
-            <line class="pnl-grid-line" x1="250" y1="0" x2="250" y2="400"/>
-            <line class="pnl-grid-line" x1="300" y1="0" x2="300" y2="400"/>
-            <line class="pnl-grid-line" x1="350" y1="0" x2="350" y2="400"/>
-          </g>
-        </svg>
-
-        <div class="pnl-content">
-          <div class="pnl-top">
-            <div class="pnl-logo">
-              <img class="pnl-logo-icon" src="logo-transparent.png" alt="" crossorigin="anonymous" decoding="async">
-              <span class="pnl-logo-mark">TRADEVA</span>
-              <span class="pnl-logo-sub">PNL</span>
-            </div>
-            <span class="pnl-date" id="pnlDate">—</span>
-            <span class="pnl-outcome-badge" id="pnlOutcomeBadge">WIN</span>
-          </div>
-
-          <div class="pnl-body">
-            <div class="pnl-main-info">
-              <div class="pnl-pair-row">
-                <span class="pnl-pair" id="pnlPair">—</span>
-                <span class="pnl-dir-badge" id="pnlDirBadge">LONG</span>
-              </div>
-              <div class="pnl-pair-sub" id="pnlPairSub">—</div>
-            </div>
-
-            <div class="pnl-metrics">
-              <div class="pnl-stat-block">
-                <span class="pnl-stat-label">R:R</span>
-                <span class="pnl-stat-value pnl-accent-text" id="pnlRR">—</span>
-              </div>
-              <div class="pnl-stat-block">
-                <span class="pnl-stat-label">Pips</span>
-                <span class="pnl-stat-value pnl-accent-text" id="pnlPips">—</span>
-              </div>
-            </div>
-
-            <div class="pnl-hero">
-              <span class="pnl-stat-label">Realized P&amp;L</span>
-              <span class="pnl-value-big" id="pnlPnl">—</span>
-            </div>
-
-            <div class="pnl-info-panel">
-              <div class="pnl-info-row">
-                <span class="pnl-info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                <div><span class="pnl-info-label">Session</span><span class="pnl-info-value" id="pnlSession">—</span></div>
-              </div>
-              <div class="pnl-info-row">
-                <span class="pnl-info-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></span>
-                <div><span class="pnl-info-label">Entry</span><span class="pnl-info-value" id="pnlEntry">—</span></div>
-              </div>
-              <div class="pnl-info-row">
-                <span class="pnl-info-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-                <div><span class="pnl-info-label">Exit</span><span class="pnl-info-value" id="pnlExit">—</span></div>
-              </div>
-              <div class="pnl-info-row">
-                <span class="pnl-info-icon"><svg viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
-                <div><span class="pnl-info-label">Type</span><span class="pnl-info-value" id="pnlTradeType">—</span></div>
-              </div>
-              <div class="pnl-info-row">
-                <span class="pnl-info-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
-                <div><span class="pnl-info-label">HTF Bias</span><span class="pnl-info-value" id="pnlBias">—</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="pnl-footer">
-            <div class="pnl-trader">
-              <div class="pnl-avatar" id="pnlAvatar">
-                <img id="pnlAvatarImg" src="" alt="" style="display:none;">
-                <span id="pnlAvatarInitials">K</span>
-              </div>
-              <div class="pnl-trader-info">
-                <span class="pnl-username" id="pnlUsername">@trader</span>
-                <span class="pnl-trader-label">Verified Trader</span>
-              </div>
-            </div>
-            <div class="pnl-qr-block">
-              <span class="pnl-qr-text">Scan to view<br>on Tradeva</span>
-              <div class="pnl-qr-wrap" id="pnlQrWrap"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card Template -->
-    <div class="pnlgen-section-label">Card Template</div>
-    <div class="tpl-row">
-      <button class="tpl-chip active" data-tpl="minimal" onclick="pnlSetTemplate('minimal')">
-        <span class="tpl-swatch tpl-swatch-minimal"></span>
-        <span class="tpl-chip-label">Minimal</span>
-      </button>
-      <button class="tpl-chip" data-tpl="aqua" onclick="pnlSetTemplate('aqua')">
-        <span class="tpl-swatch tpl-swatch-aqua"></span>
-        <span class="tpl-chip-label">Aqua Dream</span>
-      </button>
-      <button class="tpl-chip" data-tpl="champagne" onclick="pnlSetTemplate('champagne')">
-        <span class="tpl-swatch tpl-swatch-champagne"></span>
-        <span class="tpl-chip-label">Champagne</span>
-      </button>
-      <button class="tpl-chip" data-tpl="liquid" onclick="pnlSetTemplate('liquid')">
-        <span class="tpl-swatch tpl-swatch-liquid"></span>
-        <span class="tpl-chip-label">Liquid</span>
-      </button>
-      <button class="tpl-chip" data-tpl="midnight" onclick="pnlSetTemplate('midnight')">
-        <span class="tpl-swatch tpl-swatch-midnight"></span>
-        <span class="tpl-chip-label">Midnight</span>
-      </button>
-      <button class="tpl-chip" data-tpl="peach" onclick="pnlSetTemplate('peach')">
-        <span class="tpl-swatch tpl-swatch-peach"></span>
-        <span class="tpl-chip-label">Peach Sunset</span>
-      </button>
-      <button class="tpl-chip" data-tpl="mint" onclick="pnlSetTemplate('mint')">
-        <span class="tpl-swatch tpl-swatch-mint"></span>
-        <span class="tpl-chip-label">Mint Ocean</span>
-      </button>
-    </div>
-
-    <!-- Card Size -->
-    <div class="pnlgen-section-label">Card Size</div>
-    <div class="pnlsize-row">
-      <button class="pnlsize-btn active" data-size="square" onclick="pnlSetSize('square')">
-        <span class="pnlsize-title">Square</span>
-        <span class="pnlsize-sub">1080 × 1080</span>
-      </button>
-      <button class="pnlsize-btn" data-size="portrait" onclick="pnlSetSize('portrait')">
-        <span class="pnlsize-title">Portrait</span>
-        <span class="pnlsize-sub">1080 × 1350</span>
-      </button>
-      <button class="pnlsize-btn" data-size="story" onclick="pnlSetSize('story')">
-        <span class="pnlsize-title">Story</span>
-        <span class="pnlsize-sub">1080 × 1920</span>
-      </button>
-    </div>
-
-    <!-- Download -->
-    <button class="pnl-download-btn" id="pnlDownloadBtn" onclick="pnlDownloadCard()">
-      <svg viewBox="0 0 16 16"><path d="M8 1v9.5M4.5 7L8 10.5 11.5 7"/><path d="M2 12.5v1a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1"/></svg>
-      <span>Download P&amp;L Card</span>
-    </button>
-  </div>
-
-  <!-- Notes -->
-  <div class="detail-card notes-card">
-    <div class="detail-card-title">Trade Notes</div>
-    <p class="notes-text" id="dNotes"><span class="notes-empty">No notes recorded for this trade.</span></p>
+    <div class="weekly-sidebar" id="weeklySidebar"></div>
   </div>
 
 </main>
@@ -1198,7 +889,7 @@ try {
     <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/></svg>
     Home
   </a>
-  <a href="trades.html" class="mob-item active">
+  <a href="trades.html" class="mob-item">
     <svg viewBox="0 0 16 16"><polyline points="1,11 5,6 8,9 13,3"/></svg>
     Trades
   </a>
@@ -1210,575 +901,842 @@ try {
     <svg viewBox="0 0 16 16"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="5" width="3" height="10" rx="1"/><rect x="12" y="2" width="3" height="13" rx="1"/></svg>
     Analytics
   </a>
-  <a href="profit-calendar.html" class="mob-item">
+  <a href="profit-calendar.html" class="mob-item active">
     <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><line x1="1.5" y1="6.5" x2="14.5" y2="6.5"/></svg>
     Calendar
   </a>
 </nav>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
-  <button class="lightbox-close" onclick="closeLightbox(event)">
-    <svg viewBox="0 0 18 18"><line x1="2" y1="2" x2="16" y2="16"/><line x1="16" y1="2" x2="2" y2="16"/></svg>
-  </button>
-  <img id="lightboxImg" src="" alt="Trade screenshot">
+<!-- Day Detail Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="day-drawer" id="dayDrawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-date" id="drawerDate">—</div>
+      <span class="drawer-outcome-badge" id="drawerOutcomeBadge"></span>
+    </div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">
+      <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
 </div>
 
-<!-- Delete Confirm Modal -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <svg viewBox="0 0 22 22"><polyline points="1,5 21,5"/><path d="M7,5V2.5h8V5M18,5l-1.5,15H5.5L4,5"/></svg>
+<!-- Monthly Report Modal -->
+<div class="modal-overlay" id="reportModalOverlay" onclick="closeReportModalOutside(event)">
+  <div class="report-modal-box" id="reportModalBox">
+    <button class="report-modal-close" onclick="closeReportModal()">
+      <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+    </button>
+    <div class="report-card" id="reportCard">
+      <div class="report-brand">
+        <!-- Official Tradeva mark. Referenced as a FILE, not inlined base64:
+             the P&L card embeds this same image as a ~172KB data URI, which is
+             most of that page's weight. logo-transparent.png is already in the
+             repo root, is same-origin (so html2canvas can rasterise it), and
+             gets cached across pages. -->
+        <div class="report-brand-icon">
+          <img src="logo-transparent.png" alt="Tradeva" class="report-brand-img">
+        </div>
+        <span class="report-brand-name">TRADEVA</span>
+        <span class="report-brand-sub">REPORT</span>
+      </div>
+      <div class="report-brand-rule"></div>
+      <div class="report-month" id="reportMonth">June 2026</div>
+      <div class="report-month-sub">Monthly performance summary</div>
+
+      <div class="report-grid">
+        <div class="report-stat">
+          <div class="report-stat-label">Net Profit</div>
+          <div class="report-stat-value green" id="reportNetProfit">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Net RR</div>
+          <div class="report-stat-value" id="reportNetRR">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Win Rate</div>
+          <div class="report-stat-value" id="reportWinRate">—</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-label">Winning / Losing Days</div>
+          <div class="report-stat-value" id="reportDaysSplit">—</div>
+        </div>
+      </div>
+
+      <div class="report-highlight-row">
+        <div class="report-highlight best">
+          <div class="report-highlight-label">Best Day</div>
+          <div class="report-highlight-value" id="reportBestDay">—</div>
+        </div>
+        <div class="report-highlight worst">
+          <div class="report-highlight-label">Worst Day</div>
+          <div class="report-highlight-value" id="reportWorstDay">—</div>
+        </div>
+      </div>
+
+      <div class="report-footer">
+        <span>Generated by Tradeva</span>
+        <span id="reportGeneratedDate">—</span>
+      </div>
     </div>
-    <div class="modal-title">Delete this trade?</div>
-    <div class="modal-text">This action is permanent and cannot be undone. All data for this trade will be removed.</div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <button class="modal-btn modal-btn-confirm" onclick="deleteTrade()">Delete</button>
-    </div>
+    <button class="report-download-btn" onclick="downloadReportPNG()">
+      <svg viewBox="0 0 16 16"><path d="M8 1v9.5M4.5 7L8 10.5 11.5 7"/><path d="M2 12.5v1a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1"/></svg>
+      Download PNG
+    </button>
   </div>
 </div>
 
 <script>
+/* ══════════════════════════════════════════════════════════
+   TRADEVA — PROFIT-CALENDAR.JS
+══════════════════════════════════════════════════════════ */
+
 /* ── THEME ── */
 const html = document.documentElement;
 function applyTheme(mode, save) {
   const dark = mode === 'dark';
-  if (dark) html.setAttribute('data-theme','dark'); else html.removeAttribute('data-theme');
+  if (dark) html.setAttribute('data-theme', 'dark'); else html.removeAttribute('data-theme');
   const track = document.getElementById('themeTrack');
   const label = document.getElementById('themeLabel');
-  if (dark) track.classList.add('on'); else track.classList.remove('on');
-  label.innerHTML = dark
-    ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
-    : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  if (track) { if (dark) track.classList.add('on'); else track.classList.remove('on'); }
+  if (label) {
+    label.innerHTML = dark
+      ? `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 9.5A6 6 0 015 2a6 6 0 000 12 6 6 0 007.5-4.5z"/></svg> Dark mode`
+      : `<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/><line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/></svg> Light mode`;
+  }
   if (save) localStorage.setItem('tradeva_theme', mode);
 }
-function toggleTheme() {
-  applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
-}
+function toggleTheme() { applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true); }
 applyTheme(localStorage.getItem('tradeva_theme') || 'light', false);
 
 /* ── SIDEBAR ── */
-function openSidebar() {
-  document.querySelector('.sidebar').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.querySelector('.sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+function openSidebar() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+/* ── PROFILE ──
+   Lives in tradeva-firebase.js now (hydrateProfileSidebar) so every page
+   shares one implementation. The module block below calls it. */
+
+/* ══════════════════════════════════════════════════════════
+   DATA LAYER
+   Reads real trades from tradeva_trades localStorage.
+   CALENDAR_SAMPLE_TRADES below is the demo fallback shown
+   only when no real trades exist yet.
+══════════════════════════════════════════════════════════ */
+const ACCOUNT_BALANCE = 50000; // used for % mode — replace with real account equity when available
+
+const CALENDAR_SAMPLE_TRADES = [
+  { id: 1,  rawDate: '2026-06-02', date: 'Jun 2, 2026',  pair: 'EURUSD', dir: 'Long',  rr: 2.0, pnl: 800,   outcome: 'Win',  session: 'London',   notes: 'Clean trend continuation off H4 demand.' },
+  { id: 2,  rawDate: '2026-06-03', date: 'Jun 3, 2026',  pair: 'GBPJPY', dir: 'Short', rr: 1.4, pnl: 420,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 3,  rawDate: '2026-06-03', date: 'Jun 3, 2026',  pair: 'XAUUSD', dir: 'Long',  rr: -1,  pnl: -260,  outcome: 'Loss', session: 'New York', notes: 'Chased entry. Rushed it.' },
+  { id: 4,  rawDate: '2026-06-05', date: 'Jun 5, 2026',  pair: 'XAUUSD', dir: 'Short', rr: 2.8, pnl: 1750,  outcome: 'Win',  session: 'New York', notes: 'A+ setup, patient entry at premium.' },
+  { id: 5,  rawDate: '2026-06-09', date: 'Jun 9, 2026',  pair: 'GBPUSD', dir: 'Long',  rr: -1,  pnl: -340,  outcome: 'Loss', session: 'London',   notes: '' },
+  { id: 6,  rawDate: '2026-06-09', date: 'Jun 9, 2026',  pair: 'EURUSD', dir: 'Long',  rr: -0.6, pnl: -180, outcome: 'Loss', session: 'London',   notes: 'Two losses — stopped for the day.' },
+  { id: 7,  rawDate: '2026-06-10', date: 'Jun 10, 2026', pair: 'GBPUSD', dir: 'Short', rr: 2.5, pnl: 750,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 8,  rawDate: '2026-06-12', date: 'Jun 12, 2026', pair: 'USDCAD', dir: 'Long',  rr: 1.8, pnl: 540,   outcome: 'Win',  session: 'New York', notes: '' },
+  { id: 9,  rawDate: '2026-06-16', date: 'Jun 16, 2026', pair: 'XAUUSD', dir: 'Long',  rr: 2.6, pnl: 2250,  outcome: 'Win',  session: 'New York', notes: 'NFP momentum. Best trade this month.' },
+  { id: 10, rawDate: '2026-06-18', date: 'Jun 18, 2026', pair: 'GBPJPY', dir: 'Long',  rr: 1.6, pnl: 560,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 11, rawDate: '2026-06-19', date: 'Jun 19, 2026', pair: 'EURUSD', dir: 'Short', rr: -1,  pnl: -290,  outcome: 'Loss', session: 'Overlap',  notes: 'Friday chop. Should have skipped.' },
+  { id: 12, rawDate: '2026-06-20', date: 'Jun 20, 2026', pair: 'EURUSD', dir: 'Short', rr: 2.2, pnl: 800,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 13, rawDate: '2026-06-23', date: 'Jun 23, 2026', pair: 'USDCHF', dir: 'Short', rr: 2.0, pnl: 620,   outcome: 'Win',  session: 'London',   notes: '' },
+  { id: 14, rawDate: '2026-06-24', date: 'Jun 24, 2026', pair: 'XAUUSD', dir: 'Short', rr: 1.2, pnl: 380,   outcome: 'Win',  session: 'New York', notes: '' },
+  { id: 15, rawDate: '2026-06-26', date: 'Jun 26, 2026', pair: 'GBPUSD', dir: 'Long',  rr: -1,  pnl: -420,  outcome: 'Loss', session: 'London',   notes: '' },
+  { id: 16, rawDate: '2026-06-30', date: 'Jun 30, 2026', pair: 'USDCHF', dir: 'Short', rr: 2.0, pnl: 980,   outcome: 'Win',  session: 'London',   notes: 'Strong close to the month.' },
+];
+
+/* Trades come from Firestore (selected account) via the module at the
+   bottom of this page. Demo data shows only until the first real trade. */
+let TRADES = [];
+let DEMO_MODE = false;
+let DATA_READY = false;
+
+function getAllTrades() {
+  if (TRADES && TRADES.length) return TRADES;
+  return DEMO_MODE ? CALENDAR_SAMPLE_TRADES : [];
 }
 
-/* ── PROFILE SIDEBAR ── */
-function loadProfileSidebar() {
-  const p = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
-  const photo = localStorage.getItem('tradeva_photo');
-  const fname = p.fname || 'Kham';
-  const lname = p.lname || '';
-  const account = p.account || 'Pro Trader';
-  const initials = (fname.charAt(0) + (lname.charAt(0) || '')).toUpperCase() || 'KH';
-  document.getElementById('sidebarName').textContent = fname;
-  document.getElementById('sidebarRole').textContent = account;
-  const av = document.getElementById('sidebarAvatar');
-  if (photo) {
-    av.style.backgroundImage = 'url(' + photo + ')';
-    av.style.backgroundSize = 'cover';
-    av.style.backgroundPosition = 'center';
-    av.style.color = 'transparent';
-    av.textContent = '';
-  } else {
-    av.textContent = initials;
-  }
-}
-
-/* ── TRADE STORE (populated from Firestore by the module below) ── */
-let CURRENT_ACCOUNT_ID = null;
-
-/* Called by the Firestore module once the trade arrives */
-window.__tvRenderTrade = function (accountId, trade) {
-  CURRENT_ACCOUNT_ID = accountId;
-  renderTradeDetail(trade);
+/* Called by the Firestore module once trades arrive */
+window.__tvSetCalendarTrades = function (rows) {
+  TRADES = Array.isArray(rows) ? rows : [];
+  DEMO_MODE = TRADES.length === 0;
+  DATA_READY = true;
+  initViewDate();
+  renderAll();
 };
 
-/* ── GET TRADE ID FROM URL ── */
-function getTradeId() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('id');   // Firestore doc id (string)
-}
-
-let currentTrade = null;
-
-/* ── RENDER TRADE DETAIL ── */
-function renderTradeDetail(tradeArg) {
-  const trade = tradeArg || currentTrade;
-  currentTrade = trade;
-
-  if (!trade) {
-    document.getElementById('tradeTitle').textContent = 'Trade not found';
-    return;
+/* Parse a trade's date into a Date object.
+   Handles both rawDate (yyyy-mm-dd, from trades-new.html) and
+   display date strings like "Jun 20, 2026". */
+function parseTradeDate(t) {
+  if (t.rawDate) {
+    const d = new Date(t.rawDate + 'T00:00:00');
+    if (!isNaN(d)) return d;
   }
-
-  const fmtPrice = v => v ? parseFloat(v).toString() : '—';
-  const fmtPnl = v => {
-    if (v === undefined || v === null) return '—';
-    const sign = v >= 0 ? '+' : '-';
-    return sign + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  };
-
-  // Title & subtitle
-  document.getElementById('tradeTitle').textContent = trade.pair + ' Trade';
-  document.getElementById('tradeSubtitle').textContent = trade.date + (trade.session ? ' • ' + trade.session : '');
-  document.title = 'Tradeva — ' + trade.pair + ' Trade';
-
-  // Execution Details
-  const isLong = trade.dir === 'Long';
-  const dDir = document.getElementById('dDirection');
-  dDir.textContent = trade.dir || '—';
-  dDir.className = 'detail-value ' + (isLong ? 'dir-long' : 'dir-short');
-
-  document.getElementById('dSession').textContent = trade.session || '—';
-  document.getElementById('dEntry').textContent = fmtPrice(trade.entry);
-  document.getElementById('dExit').textContent = fmtPrice(trade.exit);
-  document.getElementById('dRR').textContent = trade.rr ? trade.rr + 'R' : '—';
-  document.getElementById('dPips').textContent = trade.pips || '—';
-
-  const dPnl = document.getElementById('dPnl');
-  dPnl.textContent = fmtPnl(trade.pnl);
-  dPnl.className = 'detail-value ' + (trade.pnl >= 0 ? 'pnl-pos' : 'pnl-neg');
-
-  // Discipline & Psychology
-  const rulesEl = document.getElementById('dRules');
-  if (trade.rulesFollowed === 'Yes') {
-    rulesEl.innerHTML = `<span class="rule-badge followed"><svg viewBox="0 0 12 12"><polyline points="1.5,6 4.5,9 10.5,2"/></svg> Followed Rules</span>`;
-  } else if (trade.rulesFollowed === 'No') {
-    rulesEl.innerHTML = `<span class="rule-badge broken"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> Broke Rules</span>`;
-  } else {
-    rulesEl.innerHTML = `<span class="rule-badge unset">Not set</span>`;
+  if (t.date) {
+    const d = new Date(t.date);
+    if (!isNaN(d)) return d;
   }
-
-  document.getElementById('dTradeType').textContent = trade.tradeType || '—';
-  document.getElementById('dBias').textContent = trade.htfBias || '—';
-  document.getElementById('dSetup').textContent = trade.notes || 'No analysis recorded.';
-  if (!trade.notes) document.getElementById('dSetup').style.color = 'var(--text-faint)';
-
-  // Evidence images
-  setEvidenceImage('entryImgWrap', trade.entryImg);
-  setEvidenceImage('exitImgWrap', trade.exitImg);
-
-  // Notes
-  const notesEl = document.getElementById('dNotes');
-  if (trade.notes) {
-    notesEl.innerHTML = '';
-    notesEl.textContent = trade.notes;
-  } else {
-    notesEl.innerHTML = '<span class="notes-empty">No notes recorded for this trade.</span>';
-  }
-
-  // P&L Card Generator — reads currentTrade, no duplicate data source
-  renderPnlCard();
+  return null;
 }
 
-function setEvidenceImage(wrapId, imgSrc) {
-  const wrap = document.getElementById(wrapId);
-  if (imgSrc) {
-    wrap.innerHTML = `<img src="${imgSrc}" alt="Screenshot">`;
-    wrap.style.cursor = 'pointer';
-  } else {
-    wrap.innerHTML = `<div class="evidence-empty">
-      <svg viewBox="0 0 28 28"><rect x="2" y="6" width="24" height="18" rx="2"/><circle cx="9" cy="13" r="2"/><polyline points="2,21 10,14 14,17 20,12 26,18"/></svg>
-      <span>No image</span>
-    </div>`;
-    wrap.style.cursor = 'default';
-  }
-}
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let viewYear = 2026;
+let viewMonth = 5; // 0-indexed: June 2026 default (sample data month)
+/* The $ / R / % segmented control is gone — the gear popover owns every cell
+   metric now. P&L and R Multiple are independent rows that can be shown
+   together, rather than one value swapping between formats. This stays
+   'dollar' so the month-summary cards and week cards keep reading in $. */
+const displayMode = 'dollar';
 
-/* ── LIGHTBOX ── */
-function openLightbox(which) {
-  if (!currentTrade) return;
-  const src = which === 'entry' ? currentTrade.entryImg : currentTrade.exitImg;
-  if (!src) return;
-  document.getElementById('lightboxImg').src = src;
-  document.getElementById('lightbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeLightbox(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-}
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-/* ── DELETE MODAL ── */
-function confirmDelete() {
-  document.getElementById('deleteModal').classList.add('open');
-}
-function closeDeleteModal() {
-  document.getElementById('deleteModal').classList.remove('open');
-}
-async function deleteTrade() {
-  const id = getTradeId();
-  if (!id || !CURRENT_ACCOUNT_ID) { window.location.href = 'trades.html'; return; }
-  try {
-    if (typeof window.__tvDeleteTrade !== 'function') throw new Error('Still loading — try again in a moment.');
-    await window.__tvDeleteTrade(CURRENT_ACCOUNT_ID, id);
-    window.location.href = 'trades.html';
-  } catch (e) {
-    console.error('Delete failed:', e);
-    alert(e.message || 'Could not delete this trade. Please try again.');
+/* Initialize view to current month if user has real trades this month,
+   otherwise default to the sample-data month so the page never looks empty. */
+function initViewDate() {
+  const now = new Date();
+  const trades = getAllTrades();
+  const hasThisMonth = trades.some(t => {
+    const d = parseTradeDate(t);
+    return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  // Jump to the current month when the user has real trades; otherwise
+  // land on whatever month their most recent trade lives in.
+  if (TRADES && TRADES.length) {
+    if (hasThisMonth) { viewYear = now.getFullYear(); viewMonth = now.getMonth(); }
+    else {
+      let latest = null;
+      TRADES.forEach(t => { const d = parseTradeDate(t); if (d && (!latest || d > latest)) latest = d; });
+      if (latest) { viewYear = latest.getFullYear(); viewMonth = latest.getMonth(); }
+    }
   }
 }
 
 /* ══════════════════════════════════════════════════════════
-   P&L CARD GENERATOR  (modular, self-contained)
-   — Reads from the existing `currentTrade` global only.
-   — Does not duplicate or refetch trade data.
-   — Does not alter any function above this block.
+   AGGREGATION
 ══════════════════════════════════════════════════════════ */
-let pnlTemplate = 'minimal';
-let pnlSize = 'square';
-const PNL_SIZE_RATIOS = { square: 1 / 1, portrait: 1080 / 1350, story: 1080 / 1920 };
-
-/* Template switch */
-function pnlSetTemplate(tpl) {
-  pnlTemplate = tpl;
-  const card = document.getElementById('pnlCard');
-  card.style.transform = 'scale(0.975)';
-  card.style.opacity = '0.5';
-  setTimeout(() => {
-    card.setAttribute('data-template', tpl);
-    card.style.transform = '';
-    card.style.opacity = '1';
-  }, 250);
-  document.querySelectorAll('.tpl-chip').forEach(c => c.classList.toggle('active', c.dataset.tpl === tpl));
+function getMonthTrades() {
+  /* The filter bar was removed from the toolbar. These reads are guarded
+     rather than deleted so the filtering logic below stays intact and can
+     be re-enabled by restoring the selects — without it, a missing element
+     throws here and the whole calendar renders blank. */
+  const fPairEl = document.getElementById('fPair');
+  const fSessionEl = document.getElementById('fSession');
+  const pairFilter = fPairEl ? fPairEl.value : 'All Pairs';
+  const sessionFilter = fSessionEl ? fSessionEl.value : 'All Sessions';
+  let trades = getAllTrades().filter(t => {
+    const d = parseTradeDate(t);
+    return d && d.getFullYear() === viewYear && d.getMonth() === viewMonth;
+  });
+  if (pairFilter && !pairFilter.startsWith('All')) trades = trades.filter(t => t.pair === pairFilter);
+  if (sessionFilter && !sessionFilter.startsWith('All')) trades = trades.filter(t => (t.session || '').includes(sessionFilter));
+  return trades;
 }
 
-/* Size switch — also recalculates explicit height for the new ratio */
-function pnlSetSize(size) {
-  pnlSize = size;
-  document.getElementById('pnlCard').setAttribute('data-size', size);
-  document.querySelectorAll('.pnlsize-btn').forEach(b => b.classList.toggle('active', b.dataset.size === size));
-  pnlApplyCardDimensions();
+function buildDayMap(trades) {
+  const map = {};
+  trades.forEach(t => {
+    const d = parseTradeDate(t);
+    if (!d) return;
+    const day = d.getDate();
+    if (!map[day]) map[day] = { trades: [], pnl: 0, rr: 0, wins: 0 };
+    map[day].trades.push(t);
+    map[day].pnl += t.pnl || 0;
+    map[day].rr += t.rr || 0;
+    if ((t.pnl || 0) > 0) map[day].wins++;
+  });
+  return map;
 }
 
-/* IMPORTANT FIX: html2canvas does not reliably compute CSS `aspect-ratio`,
-   which caused overlapping/collapsed layouts in exported PNGs. Instead we
-   read the CSS-driven responsive width, then set an explicit pixel height
-   in JS. This makes the live preview and the exported image identical. */
-function pnlApplyCardDimensions() {
-  const card = document.getElementById('pnlCard');
+/* ══════════════════════════════════════════════════════════
+   FORMATTERS
+══════════════════════════════════════════════════════════ */
+const fmtMoney = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+/* ── compact values ────────────────────────────────────────────────────
+   A day cell on a 360px phone is roughly 44px of usable width. "+$10,300"
+   cannot fit there at a readable size, and shrinking the font until it does
+   is what made the current version unreadable. So the VALUE gets shorter
+   instead of the type getting smaller:
+
+     950     -> $950        4300   -> $4.3K
+     1000    -> $1K         10300  -> $10.3K
+     1200    -> $1.2K       124000 -> $124K      1400000 -> $1.4M
+
+   Below 1000 nothing is abbreviated. A trailing .0 is always dropped, so
+   1000 reads "$1K" and never "$1.0K". */
+function compactNum(v) {
+  const n = Math.abs(v);
+  if (n < 1000) return String(Math.round(n));
+
+  /* TRUNCATE, never round. Rounding at the top of a range crosses the
+     boundary: 999,999 would round to "1000K" instead of "999.9K". It also
+     silently inflates values, which is what turned $1,500 into "$2K" when
+     this used zero decimals on small screens. A number the user did not
+     enter is worse than a number that needs a narrower font. */
+  const trunc = (x, dp) => {
+    const f = 10 ** dp;
+    const t = (Math.trunc(x * f) / f).toFixed(dp);
+    return dp === 0 ? t : t.replace(/\.0+$|(\.\d*[1-9])0+$/, '$1');
+  };
+
+  /* K keeps 1 decimal, M and B keep 2 — enough to preserve every value in
+     the spec ($99.5K, $1.25M) without inventing precision. Trailing zeros
+     are dropped, so 15,000 is "15K" and never "15.0K". */
+  if (n < 1e6) return trunc(n / 1e3, 1) + 'K';
+  if (n < 1e9) return trunc(n / 1e6, 2) + 'M';
+  return trunc(n / 1e9, 2) + 'B';
+}
+
+const fmtMoneyCompact = v => (v >= 0 ? '+$' : '-$') + compactNum(v);
+
+/* COMPACT is driven by a matchMedia listener rather than measuring each
+   cell: measurement would force a layout on every render, and the cutoff is
+   a property of the viewport, not of any one value. */
+/* COMPACT decides WHETHER to abbreviate, never how precisely. The old TIGHT
+   tier dropped decimals on small screens and produced wrong numbers; it is
+   gone. Formatting is now identical at every width. */
+let COMPACT = false;
+const compactQuery = window.matchMedia('(max-width: 900px)');
+/* Raised from 400px to 560px. Measured against real cell widths, the
+   6-character form ("+$4.3K") needs ~47px inside a ~40px box on a phone —
+   which is exactly what produced "+$...". The 4-5 character form ("+$4K",
+   "+$850") fits at every mobile width, so the whole phone range uses it. */
+
+function syncDensity() {
+  if (compactQuery.matches === COMPACT) return;
+  COMPACT = compactQuery.matches;
+  if (typeof renderAll === 'function') renderAll();
+}
+COMPACT = compactQuery.matches;
+compactQuery.addEventListener
+  ? compactQuery.addEventListener('change', syncDensity)
+  : compactQuery.addListener(syncDensity);   // older Safari
+
+/* Money for on-card display: compact on small screens, full on desktop. */
+const fmtMoneyAuto = v => (COMPACT ? fmtMoneyCompact(v) : fmtMoney(v));
+
+/* "2 trades" is fine until the cell gets tight; then "2T". */
+/* Always spelled out. The "2T" form was introduced when the count shared a
+   row with the win-rate pill; now that it owns a full-width row of its own
+   there is space for the real word at every breakpoint. */
+const fmtTrades = n => n + ' trade' + (n === 1 ? '' : 's');
+const fmtMoneyFull = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtRR = v => (v >= 0 ? '+' : '') + v.toFixed(1) + 'R';
+const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
+
+function primaryValue(pnl, rr) {
+  if (displayMode === 'rr') return fmtRR(rr);
+  if (displayMode === 'percent') return fmtPct(pnl);
+  return fmtMoneyAuto(pnl);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — SUMMARY CARDS
+══════════════════════════════════════════════════════════ */
+function renderSummary() {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const days = Object.values(dayMap);
+
+  const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
+  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
+  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const winDays = days.filter(d => d.pnl > 0).length;
+  const lossDays = days.filter(d => d.pnl < 0).length;
+  const tradingDays = days.length;
+  const avgRR = trades.length ? netRR / trades.length : 0;
+  const avgDaily = tradingDays ? netProfit / tradingDays : 0;
+
+  const npEl = document.getElementById('statNetProfit');
+  npEl.textContent = primaryValue(netProfit, netRR);
+  npEl.className = 'stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+
+  document.getElementById('statNetRR').textContent = fmtRR(netRR);
+  document.getElementById('statWinRate').textContent = winRate + '%';
+  document.getElementById('statWinRateSub').textContent = wins + ' wins · ' + (trades.length - wins) + ' losses';
+  document.getElementById('statWinDays').textContent = winDays;
+  document.getElementById('statLossDays').textContent = lossDays;
+  document.getElementById('statTradingDays').textContent = tradingDays;
+  document.getElementById('statAvgRR').textContent = fmtRR(avgRR);
+
+  const adEl = document.getElementById('statAvgDaily');
+  adEl.textContent = displayMode === 'percent' ? fmtPct(avgDaily) : displayMode === 'rr' ? fmtRR(tradingDays ? netRR / tradingDays : 0) : fmtMoney(avgDaily);
+  adEl.className = 'stat-value ' + (avgDaily >= 0 ? 'green' : 'red');
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — CALENDAR GRID (Monday-start)
+══════════════════════════════════════════════════════════ */
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+
+  document.getElementById('monthLabel').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  let startOffset = firstOfMonth.getDay() - 1; // Monday-start
+  if (startOffset < 0) startOffset = 6;
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
+
+  const weekRows = buildWeekRows();
+  let cells = '';
+  let col = 0;                       // 0..6 across the 7 day columns
+  let rowIdx = 0;                    // which calendar row we are on
+  const closeRow = () => {           // drop the week card into column 8
+    const w = weekRows[rowIdx];
+    cells += '<div class="week-slot">' + (w ? weekCardHTML(w) : '') + '</div>';
+    rowIdx++; col = 0;
+  };
+
+  for (let i = 0; i < startOffset; i++) { cells += '<div class="day-cell empty"></div>'; col++; }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const data = dayMap[day];
+    const isToday = isCurrentMonth && today.getDate() === day;
+    let cls = 'day-cell no-trade';
+    let inner = `<span class="day-num">${day}</span>`;
+
+    if (data) {
+      const isWin = data.pnl > 0;
+      const isLoss = data.pnl < 0;
+      cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'flat-day');
+      const n = data.trades.length;
+      const winRate = Math.round(data.wins / n * 100);
+      inner = `
+        <div class="day-top">
+          <span class="day-num">${day}</span>
+          ${isToday ? '<span class="today-dot"></span>' : ''}
+        </div>
+        <div class="day-primary">${fmtMoneyAuto(data.pnl)}</div>
+        <div class="day-secondary">${fmtRR(data.rr)}</div>
+        <div class="day-meta">
+          <span class="day-winrate">${winRate}%</span>
+        </div>
+        <div class="day-foot">
+          <span class="day-trades">${fmtTrades(n)}</span>
+        </div>`;
+    } else {
+      inner = `<div class="day-top"><span class="day-num">${day}</span>${isToday ? '<span class="today-dot"></span>' : ''}</div>`;
+    }
+    if (isToday) cls += ' is-today';
+    cells += `<div class="${cls}" onclick="openDrawer(${day})" title="${MONTH_NAMES[viewMonth]} ${day}">${inner}</div>`;
+    col++;
+    if (col === 7) closeRow();       // row complete -> emit its week card
+  }
+  // Pad the final partial row so its week card still lands in column 8.
+  if (col > 0) {
+    while (col < 7) { cells += '<div class="day-cell empty"></div>'; col++; }
+    closeRow();
+  }
+  grid.innerHTML = cells;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER — WEEKLY SUMMARY
+══════════════════════════════════════════════════════════ */
+/* Week rows, one entry per CALENDAR ROW.
+   The old version merged a short trailing week into the previous one, because
+   the cards lived in a detached sidebar where a 2-day "Week 5" looked odd.
+   Now each card sits beside its own row, so a short week is self-explanatory —
+   and merging would break the 1:1 row alignment that makes it readable. */
+function buildWeekRows() {
+  const trades = getMonthTrades();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  let startOffset = firstOfMonth.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+
+  const weeks = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const w = Math.floor((startOffset + day - 1) / 7);
+    if (!weeks[w]) weeks[w] = [];
+    weeks[w].push(day);
+  }
+
+  const dayMap = buildDayMap(trades);
+  return weeks.map((days, i) => {
+    let pnl = 0, rr = 0, count = 0, wins = 0;
+    (days || []).forEach(d => {
+      const data = dayMap[d];
+      if (data) { pnl += data.pnl; rr += data.rr; count += data.trades.length; wins += data.wins; }
+    });
+    const winRate = count ? Math.round(wins / count * 100) : 0;
+    const activeDays = (days || []).filter(d => dayMap[d]).length;
+    return { i, days: days || [], pnl, rr, count, wins, winRate, activeDays };
+  });
+}
+
+function weekCardHTML(w) {
+  const pnlCls = w.pnl > 0 ? 'green' : w.pnl < 0 ? 'red' : '';
+  const cardCls = 'week-card' + (w.pnl > 0 ? ' pos' : w.pnl < 0 ? ' neg' : '');
+  return `<div class="${cardCls}">
+      <div class="week-head">
+        <span class="week-title">Week ${w.i + 1}</span>
+        <span class="week-days">${w.activeDays}d</span>
+      </div>
+      <div class="week-value ${pnlCls}">${w.count ? primaryValue(w.pnl, w.rr) : '$0'}</div>
+      <div class="week-sub">
+        <span class="week-chip">${w.count} trade${w.count === 1 ? '' : 's'}</span>
+        ${w.count ? `<span class="week-chip">${w.winRate}% WR</span>` : ''}
+      </div>
+    </div>`;
+}
+
+/* Stacked copy for narrow screens — same data, shown by CSS below 900px. */
+function renderWeekly() {
+  const container = document.getElementById('weeklySidebar');
+  if (!container) return;
+  container.innerHTML = buildWeekRows().map(weekCardHTML).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   DAY DRAWER
+══════════════════════════════════════════════════════════ */
+function openDrawer(day) {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const data = dayMap[day];
+
+  const dateStr = MONTH_NAMES[viewMonth] + ' ' + day + ', ' + viewYear;
+  document.getElementById('drawerDate').textContent = dateStr;
+
+  const badge = document.getElementById('drawerOutcomeBadge');
+  const body = document.getElementById('drawerBody');
+
+  if (!data) {
+    badge.style.display = 'none';
+    body.innerHTML = '<div class="drawer-empty-state">No trades on this day.<br>Rest days are part of the edge too. 🧘</div>';
+  } else {
+    const isWin = data.pnl > 0;
+    badge.style.display = 'inline-block';
+    badge.textContent = isWin ? 'Profitable Day' : data.pnl < 0 ? 'Losing Day' : 'Breakeven Day';
+    badge.style.background = isWin ? 'var(--green-bg)' : 'var(--red-bg)';
+    badge.style.color = isWin ? 'var(--green)' : 'var(--red)';
+
+    const winRate = Math.round(data.wins / data.trades.length * 100);
+    const avgRR = data.rr / data.trades.length;
+    const holdTimes = data.trades.map(t => t.timeInPos).filter(Boolean);
+
+    const tradeRows = data.trades.map(t => {
+      const isLong = t.dir === 'Long';
+      const pos = (t.pnl || 0) >= 0;
+      return `<div class="drawer-trade-row">
+        <div class="drawer-trade-left">
+          <span class="drawer-trade-pair">${t.pair}</span>
+          <span class="drawer-trade-dir" style="background:${isLong ? 'var(--green-bg)' : 'var(--red-bg)'};color:${isLong ? 'var(--green)' : 'var(--red)'};">${t.dir}</span>
+        </div>
+        <div class="drawer-trade-right">
+          <span class="drawer-trade-pnl" style="color:${pos ? 'var(--green)' : 'var(--red)'};">${fmtMoneyFull(t.pnl || 0)}</span>
+          <a class="view-trade-link" href="trade-detail.html?id=${t.id}">View Trade</a>
+        </div>
+      </div>`;
+    }).join('');
+
+    const notes = data.trades.map(t => t.notes).filter(Boolean);
+
+    body.innerHTML = `
+      <div class="drawer-stats-grid">
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily Profit</div>
+          <div class="drawer-stat-value ${data.pnl >= 0 ? 'green' : 'red'}">${fmtMoney(data.pnl)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily RR</div>
+          <div class="drawer-stat-value">${fmtRR(data.rr)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Daily %</div>
+          <div class="drawer-stat-value ${data.pnl >= 0 ? 'green' : 'red'}">${fmtPct(data.pnl)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Trades Taken</div>
+          <div class="drawer-stat-value">${data.trades.length}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Average RR</div>
+          <div class="drawer-stat-value">${fmtRR(avgRR)}</div>
+        </div>
+        <div class="drawer-stat">
+          <div class="drawer-stat-label">Avg Hold Time</div>
+          <div class="drawer-stat-value" style="font-size:14px;">${holdTimes.length ? holdTimes[0] : '—'}</div>
+        </div>
+      </div>
+
+      <div class="drawer-section-title">Trades (${data.trades.length})</div>
+      ${tradeRows}
+
+      <div class="drawer-section-title">Trading Notes</div>
+      <div class="drawer-notes-box">${notes.length ? notes.map(n => '• ' + n).join('<br>') : '<span class="drawer-notes-empty">No notes recorded for this day.</span>'}</div>
+    `;
+  }
+
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('dayDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('dayDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODE TOGGLE
+══════════════════════════════════════════════════════════ */
+/* setMode() removed with the $ / R / % control. */
+
+/* ══════════════════════════════════════════════════════════
+   MONTH NAVIGATION + FILTERS
+══════════════════════════════════════════════════════════ */
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  syncMonthYearSelects();
+  renderAll();
+}
+function goToToday() {
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  syncMonthYearSelects();
+  renderAll();
+}
+function populateMonthYearSelects() {
+  const mSel = document.getElementById('fMonth');
+  const ySel = document.getElementById('fYear');
+  if (!mSel || !ySel) return;   // filter bar removed from the toolbar
+  mSel.innerHTML = MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+  let years = '';
+  for (let y = 2024; y <= 2028; y++) years += `<option value="${y}">${y}</option>`;
+  ySel.innerHTML = years;
+  syncMonthYearSelects();
+}
+function syncMonthYearSelects() {
+  const mEl = document.getElementById('fMonth');
+  const yEl = document.getElementById('fYear');
+  if (mEl) mEl.value = viewMonth;
+  if (yEl) yEl.value = viewYear;
+}
+function onMonthYearSelect() {
+  viewMonth = parseInt(document.getElementById('fMonth').value, 10);
+  viewYear = parseInt(document.getElementById('fYear').value, 10);
+  renderAll();
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPORTS
+══════════════════════════════════════════════════════════ */
+/* ── Display Stats ────────────────────────────────────────────────────
+   Toggles are applied as classes on the calendar card, so showing/hiding a
+   stat is pure CSS — no re-render, no extra Firestore reads. */
+function toggleDisplayStats(e) {
+  if (e) e.stopPropagation();
+  const pop = document.getElementById('dsPop');
+  const btn = document.getElementById('dsBtn');
+  if (!pop) return;
+  const open = pop.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+  /* Under 560px the menu is position:fixed, so it needs a top coordinate.
+     Anchor it under the gear, then clamp so it can never run off the bottom
+     of a short screen either. */
+  if (open && window.matchMedia('(max-width: 560px)').matches && btn) {
+    pop.style.top = '0px';
+    const r = btn.getBoundingClientRect();
+    const h = pop.offsetHeight || 220;
+    const top = Math.min(r.bottom + 10, window.innerHeight - h - 14);
+    pop.style.top = Math.max(14, top) + 'px';
+  } else {
+    pop.style.top = '';
+  }
+}
+
+function applyDisplayStats() {
+  const card = document.getElementById('calendarCard');
   if (!card) return;
-  card.style.height = '';
-  const ratio = PNL_SIZE_RATIOS[pnlSize] || PNL_SIZE_RATIOS.square;
-  const width = card.offsetWidth;
-  if (!width) return;
-  const height = Math.round(width / ratio);
-  card.style.height = height + 'px';
-
-  /* The sheet floats centred on the stage. Its box is sized in JS for the
-     same reason the stage is: html2canvas does not compute CSS aspect-ratio,
-     so anything left to it collapses in the exported PNG.
-
-     --card-ar lives in CSS so the portrait/landscape decision is one value
-     in one place. Every size inside the sheet is calc(var(--u) * Npx) where
-     --u is the sheet width over 925 — the width of the reference card — so
-     square, portrait and story all stay visually identical. */
-  /* --u is the master scale. Every size in the card is calc(var(--u) * Npx)
-     against a 925-wide reference. Deriving it from the SHORTER of the width
-     and (height x content-ratio) means the same composition fits a square,
-     a portrait and a story export without reflowing: the type scales down
-     rather than the layout breaking. The 0.98 is slack so a long pair name
-     or a five-figure P&L can grow without clipping. */
-  const ar = parseFloat(getComputedStyle(card).getPropertyValue('--card-ar')) || 0.70;
-  const u = (Math.min(width, height * ar) / 925) * 0.98;
-  card.style.setProperty('--u', u.toFixed(4));
+  const on = id => { const el = document.getElementById(id); return !el || el.checked; };
+  card.classList.toggle('hide-pnl',   !on('dsPnl'));
+  card.classList.toggle('hide-rr',    !on('dsRR'));
+  card.classList.toggle('hide-count', !on('dsCount'));
+  card.classList.toggle('hide-wr',    !on('dsWR'));
+  /* Note: `on()` defaults to true for a MISSING element, so R Multiple must
+     be read explicitly — it is the one box that starts unchecked. */
+  const rrEl = document.getElementById('dsRR');
+  card.classList.toggle('hide-rr', !(rrEl && rrEl.checked));
 }
 
-let pnlResizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(pnlResizeTimer);
-  pnlResizeTimer = setTimeout(pnlApplyCardDimensions, 150);
+document.addEventListener('click', e => {
+  const pop = document.getElementById('dsPop');
+  const btn = document.getElementById('dsBtn');
+  if (!pop || !pop.classList.contains('open')) return;
+  if (!pop.contains(e.target) && !(btn && btn.contains(e.target))) {
+    pop.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const pop = document.getElementById('dsPop');
+  if (pop) pop.classList.remove('open');
 });
 
-/* Instrument subtitle for the line under the pair: "XAU / USD - SPOT GOLD".
-   Anything not listed falls back to splitting a 6-character symbol 3/3, which
-   covers every standard FX pair. Unknown symbols show the class only. */
-const PNL_INSTRUMENTS = {
-  XAUUSD: 'Spot Gold',   XAGUSD: 'Spot Silver', USOIL: 'Crude Oil',
-  UKOIL:  'Brent Crude', BTCUSD: 'Bitcoin',     ETHUSD: 'Ethereum',
-  US30:   'Dow Jones',   NAS100: 'Nasdaq 100',  SPX500: 'S&P 500',
-  GER40:  'DAX 40',      UK100:  'FTSE 100',    JP225:  'Nikkei 225'
-};
-
-function pnlPairSubtitle(pair) {
-  const sym = String(pair || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (!sym) return '';
-  const named = PNL_INSTRUMENTS[sym];
-  if (named) {
-    const split = sym.length === 6 ? sym.slice(0, 3) + ' / ' + sym.slice(3) : sym;
-    return split + '  •  ' + named.toUpperCase();
-  }
-  if (sym.length === 6) return sym.slice(0, 3) + ' / ' + sym.slice(3) + '  •  FOREX';
-  return sym;
-}
-
-/* Deterministic pseudo-random generator so each trade's chart is stable across renders */
-function pnlSeededRandom(seed) {
-  let s = (seed || 1) % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return function () {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-/* Draw decorative candlestick background — trends up for wins, down for losses */
-function pnlRenderChartBg(isLong, seedNum) {
-  const svg = document.getElementById('pnlChartBg');
-  if (!svg) return;
-  const rand = pnlSeededRandom(seedNum);
-  const candleCount = 26;
-  const w = 400, h = 400;
-  const topClear = 100;    // keeps candles clear of logo / date / WIN-LOSS badge
-  const bottomClear = 96;  // keeps candles clear of the footer
-  const zoneTop = topClear;
-  const zoneBottom = h - bottomClear;
-  const zoneH = zoneBottom - zoneTop;
-  const step = w / candleCount;
-
-  let cursor = isLong ? zoneBottom - zoneH * 0.06 : zoneTop + zoneH * 0.06;
-  let markup = '';
-
-  for (let i = 0; i < candleCount; i++) {
-    const drift = (isLong ? -1 : 1) * (zoneH * 0.02 + rand() * zoneH * 0.035);
-    const open = cursor;
-    cursor = Math.max(zoneTop + 6, Math.min(zoneBottom - 6, cursor + drift + (rand() - 0.5) * zoneH * 0.03));
-    const close = cursor;
-    const high = Math.max(zoneTop, Math.min(open, close) - (rand() * zoneH * 0.045 + zoneH * 0.01));
-    const low = Math.min(zoneBottom, Math.max(open, close) + (rand() * zoneH * 0.045 + zoneH * 0.01));
-    const bodyTop = Math.min(open, close);
-    const bodyH = Math.max(2.5, Math.abs(close - open));
-    const bodyW = step * 0.42;
-    const cx = i * step + step * 0.3;
-    const isUpCandle = close < open;
-
-    markup += `<line x1="${(cx + bodyW / 2).toFixed(1)}" y1="${high.toFixed(1)}" x2="${(cx + bodyW / 2).toFixed(1)}" y2="${low.toFixed(1)}" class="pnl-wick"/>`;
-    markup += `<rect x="${cx.toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}" rx="1" class="${isUpCandle ? 'pnl-candle-up' : 'pnl-candle-down'}"/>`;
-  }
-  svg.innerHTML = markup;
-
-}
-
-/* IMPORTANT FIX: QR generation is now a real Promise that the caller can
-   await, and the result is written as an <img> (not a live <canvas>),
-   which html2canvas captures far more reliably. If the CDN library fails
-   to load, a deterministic placeholder pattern is drawn instead — so the
-   box is never left blank. */
-function pnlGenerateQr(text) {
-  return new Promise((resolve) => {
-    const wrap = document.getElementById('pnlQrWrap');
-    if (!wrap) return resolve();
-
-    if (window.QRCode && window.QRCode.toDataURL) {
-      QRCode.toDataURL(text, { width: 136, margin: 0, color: { dark: '#000000', light: '#ffffff' } }, function (err, url) {
-        if (!err && url) {
-          wrap.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = url;
-          img.alt = 'QR code';
-          wrap.appendChild(img);
-        } else {
-          pnlDrawFallbackQr(wrap);
-        }
-        resolve();
-      });
-    } else {
-      pnlDrawFallbackQr(wrap);
-      resolve();
-    }
-  });
-}
-
-/* Fallback QR-style placeholder (used only if the CDN library didn't load) */
-function pnlDrawFallbackQr(wrap) {
-  const size = 136, cells = 14, cellSize = size / cells;
-  const canvas = document.createElement('canvas');
-  canvas.width = size; canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = '#000';
-  const rand = pnlSeededRandom(99);
-  for (let y = 0; y < cells; y++) {
-    for (let x = 0; x < cells; x++) {
-      if (rand() > 0.55) ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-    }
-  }
-  [[0, 0], [cells - 3, 0], [0, cells - 3]].forEach(([cx, cy]) => {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(cx * cellSize, cy * cellSize, cellSize * 3, cellSize * 3);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect((cx + 0.6) * cellSize, (cy + 0.6) * cellSize, cellSize * 1.8, cellSize * 1.8);
-    ctx.fillStyle = '#000';
-    ctx.fillRect((cx + 1) * cellSize, (cy + 1) * cellSize, cellSize, cellSize);
-  });
-  wrap.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = canvas.toDataURL();
-  img.alt = 'QR code';
-  wrap.appendChild(img);
-}
-
-/* Populate the live preview from currentTrade — called automatically
-   at the end of renderTradeDetail(), and whenever trade data changes. */
-async function renderPnlCard() {
-  if (!currentTrade) return;
-  const t = currentTrade;
-  const isWin = (t.pnl || 0) >= 0;
-  const card = document.getElementById('pnlCard');
-  if (!card) return;
-
-  card.setAttribute('data-outcome', isWin ? 'win' : 'loss');
-
-  document.getElementById('pnlDate').textContent = (t.date || '').toUpperCase();
-  document.getElementById('pnlOutcomeBadge').textContent = isWin ? 'WIN' : 'LOSS';
-
-  document.getElementById('pnlPair').textContent = t.pair || '—';
-  const pairSub = document.getElementById('pnlPairSub');
-  if (pairSub) pairSub.textContent = pnlPairSubtitle(t.pair);
-
-  const isLong = t.dir === 'Long';
-  const dirBadge = document.getElementById('pnlDirBadge');
-  dirBadge.textContent = isLong ? 'LONG ↗' : 'SHORT ↘';
-  dirBadge.className = 'pnl-dir-badge ' + (isLong ? 'pnl-dir-long' : 'pnl-dir-short');
-  card.setAttribute('data-direction', isLong ? 'long' : 'short');
-
-  document.getElementById('pnlRR').textContent = (t.rr || t.rr === 0) ? (t.rr >= 0 ? '+' : '') + t.rr + 'R' : '—';
-  document.getElementById('pnlPips').textContent = (t.pips !== undefined && t.pips !== null && t.pips !== '') ? t.pips : '—';
-
-  const pnlVal = t.pnl || 0;
-  document.getElementById('pnlPnl').textContent =
-    (pnlVal >= 0 ? '+$' : '-$') + Math.abs(pnlVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  document.getElementById('pnlSession').textContent = t.session || '—';
-  document.getElementById('pnlEntry').textContent = (t.entry || t.entry === 0) ? parseFloat(t.entry) : '—';
-  document.getElementById('pnlExit').textContent = (t.exit || t.exit === 0) ? parseFloat(t.exit) : '—';
-  document.getElementById('pnlTradeType').textContent = t.tradeType || '—';
-  document.getElementById('pnlBias').textContent = t.htfBias || '—';
-
-  // Trader identity — read from the same saved profile used across the app (no new data source)
-  const profile = JSON.parse(localStorage.getItem('tradeva_profile') || '{}');
-  const photo = localStorage.getItem('tradeva_photo');
-  const rawUsername = profile.username || 'trader';
-  document.getElementById('pnlUsername').textContent = rawUsername.startsWith('@') ? rawUsername : '@' + rawUsername;
-
-  // IMPORTANT FIX: avatar now uses a real <img> + <span> toggle instead of
-  // background-image, so it always clips cleanly and exports reliably.
-  const avatarImg = document.getElementById('pnlAvatarImg');
-  const avatarInitials = document.getElementById('pnlAvatarInitials');
-  if (photo) {
-    avatarImg.src = photo;
-    avatarImg.style.display = 'block';
-    avatarInitials.style.display = 'none';
-  } else {
-    const initials = ((profile.fname || 'K').charAt(0) + ((profile.lname || '').charAt(0) || '')).toUpperCase();
-    avatarImg.style.display = 'none';
-    avatarInitials.style.display = 'block';
-    avatarInitials.textContent = initials || 'K';
-  }
-
-  pnlRenderChartBg(isLong, t.id || 7);
-  await pnlGenerateQr('https://tradeva.app/trade-detail.html?id=' + (t.id || ''));
-
-  // Download button colour mirrors the outcome (green win / red loss)
-  const dlBtn = document.getElementById('pnlDownloadBtn');
-  if (dlBtn) dlBtn.style.background = isWin ? 'var(--green)' : 'var(--red)';
-
-  pnlApplyCardDimensions();
-}
-
-/* Export the live preview as a high-resolution PNG matching the selected size */
-async function pnlDownloadCard() {
-  const card = document.getElementById('pnlCard');
-  const btn = document.getElementById('pnlDownloadBtn');
-  if (!card || !btn || typeof html2canvas === 'undefined') {
-    alert('Image export is still loading — please try again in a moment.');
-    return;
-  }
-
-  const originalHTML = btn.innerHTML;
-  btn.innerHTML = '<span>Generating…</span>';
-  btn.disabled = true;
-
-  // Safety net: guarantee correct height + a ready QR image right before capture
-  pnlApplyCardDimensions();
-  const t = currentTrade || {};
-  await pnlGenerateQr('https://tradeva.app/trade-detail.html?id=' + (t.id || ''));
+async function exportPNG() {
+  const card = document.getElementById('calendarCard');
+  /* Drop focus before capture — a focused button paints its ring into the
+     canvas — and flag the card so the .exporting rules above apply. */
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  card.classList.add('exporting');
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-  const sizeMap = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920] };
-  const [targetW] = sizeMap[pnlSize] || sizeMap.square;
-  const scale = targetW / card.offsetWidth;
-
   try {
     const canvas = await html2canvas(card, {
-      backgroundColor: null,
-      scale: scale,
-      useCORS: true,
-      allowTaint: false,
-      logging: false,
-      windowWidth: document.documentElement.scrollWidth,
+      backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-card').trim() || '#fff',
+      scale: 2, useCORS: true, logging: false,
+      onclone: doc => {   // strip any residual ring in the cloned DOM
+        doc.querySelectorAll('.day-cell').forEach(el => { el.style.boxShadow = 'none'; });
+      }
     });
     const link = document.createElement('a');
-    link.download = `tradeva-${(t.pair || 'trade').toLowerCase()}-${pnlSize}.png`;
-    link.href = canvas.toDataURL('image/png', 1.0);
+    link.download = `tradeva-calendar-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.png`;
+    link.href = canvas.toDataURL('image/png');
     link.click();
-  } catch (err) {
-    console.error('P&L card export failed:', err);
-    alert('Could not generate the image. Please try again.');
-  } finally {
-    btn.innerHTML = originalHTML;
-    btn.disabled = false;
-  }
+  } catch (e) { alert('Could not export PNG. Please try again.'); }
+  finally { card.classList.remove('exporting'); }
 }
 
-/* ── INIT ── */
-document.addEventListener('DOMContentLoaded', () => {
-  loadProfileSidebar();
-  // trade renders once Firestore data arrives (see module below)
-});
-</script>
-<!-- Trade detail data + account switcher (module) -->
-<script type="module">
-import { auth } from "./tradeva-firebase.js";
-import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
-import { getTrade, deleteTrade as fsDeleteTrade } from "./tradeva-trades.js";
-function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
+/* ══════════════════════════════════════════════════════════
+   MONTHLY REPORT MODAL
+══════════════════════════════════════════════════════════ */
+/* Fit a value to its box: try the full number first, drop to the compact
+   form only if it would overflow, and shrink one step as a last resort.
+   Measured rather than guessed, because "+$10,300" fits where "-$124,500"
+   does not — a fixed rule would either clip or abbreviate unnecessarily. */
+function fitReportValue(el, full, compact) {
+  if (!el) return;
+  el.style.fontSize = '';
+  el.textContent = full;
+  const overflows = () => el.scrollWidth > el.clientWidth + 1;
+  if (!overflows()) return;
+  el.textContent = compact;
+  if (!overflows()) return;
+  const base = parseFloat(getComputedStyle(el).fontSize) || 23;
+  el.style.fontSize = Math.max(15, base * 0.82).toFixed(1) + 'px';
+}
 
-// expose delete to the page script
-window.__tvDeleteTrade = async function (accountId, tradeId) {
-  return await fsDeleteTrade(accountId, tradeId);
-};
+function openReportModal() {
+  const trades = getMonthTrades();
+  const dayMap = buildDayMap(trades);
+  const days = Object.entries(dayMap);
+
+  const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
+  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
+  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const winDays = days.filter(([, d]) => d.pnl > 0).length;
+  const lossDays = days.filter(([, d]) => d.pnl < 0).length;
+
+  let bestDay = null, worstDay = null;
+  days.forEach(([day, d]) => {
+    if (!bestDay || d.pnl > bestDay.pnl) bestDay = { day, pnl: d.pnl };
+    if (!worstDay || d.pnl < worstDay.pnl) worstDay = { day, pnl: d.pnl };
+  });
+
+  document.getElementById('reportMonth').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+  const rp = document.getElementById('reportNetProfit');
+  rp.className = 'report-stat-value ' + (netProfit >= 0 ? 'green' : 'red');
+  fitReportValue(rp, fmtMoney(netProfit), fmtMoneyCompact(netProfit));
+  document.getElementById('reportNetRR').textContent = fmtRR(netRR);
+  document.getElementById('reportWinRate').textContent = winRate + '%';
+  document.getElementById('reportDaysSplit').textContent = winDays + ' / ' + lossDays;
+  const mon = MONTH_NAMES[viewMonth].slice(0, 3);
+  fitReportValue(document.getElementById('reportBestDay'),
+    bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—',
+    bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoneyCompact(bestDay.pnl) : '—');
+  fitReportValue(document.getElementById('reportWorstDay'),
+    worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—',
+    worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoneyCompact(worstDay.pnl) : '—');
+  document.getElementById('reportGeneratedDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const overlay = document.getElementById('reportModalOverlay');
+  overlay.classList.add('open');
+  /* Re-fit after the modal is actually laid out — scrollWidth/clientWidth
+     are meaningless while it is still display:none. */
+  requestAnimationFrame(() => {
+    fitReportValue(document.getElementById('reportNetProfit'), fmtMoney(netProfit), fmtMoneyCompact(netProfit));
+    fitReportValue(document.getElementById('reportBestDay'),
+      bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoney(bestDay.pnl) : '—',
+      bestDay ? mon + ' ' + bestDay.day + ' · ' + fmtMoneyCompact(bestDay.pnl) : '—');
+    fitReportValue(document.getElementById('reportWorstDay'),
+      worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoney(worstDay.pnl) : '—',
+      worstDay ? mon + ' ' + worstDay.day + ' · ' + fmtMoneyCompact(worstDay.pnl) : '—');
+  });
+  document.body.style.overflow = 'hidden';
+}
+function closeReportModal() {
+  document.getElementById('reportModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeReportModalOutside(e) {
+  if (e.target === document.getElementById('reportModalOverlay')) closeReportModal();
+}
+async function downloadReportPNG() {
+  const card = document.getElementById('reportCard');
+  try {
+    const canvas = await html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const link = document.createElement('a');
+    link.download = `tradeva-report-${MONTH_NAMES[viewMonth].toLowerCase()}-${viewYear}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) { alert('Could not generate the report image. Please try again.'); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MASTER RENDER + INIT
+══════════════════════════════════════════════════════════ */
+function renderAll() {
+  renderSummary();
+  renderCalendar();
+  renderWeekly();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  populateMonthYearSelects();
+  // calendar renders once Firestore trades arrive (see module below)
+});
+
+</script>
+<!-- Calendar data + account switcher (module) -->
+<script type="module">
+import { auth, hydrateProfileSidebar } from "./tradeva-firebase.js";
+import { initAccountSwitcher, resolveSelectedAccount } from "./tradeva-accounts.js";
+import { listTrades } from "./tradeva-trades.js";
+
+/* One shared implementation for every page — see tradeva-firebase.js.
+   Called after the imports (not in the auth-guard block, which runs before
+   the sidebar markup exists). Paints from localStorage instantly, then
+   reconciles against users/{uid} only if that snapshot is incomplete. */
+hydrateProfileSidebar();
+function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
 
 (async () => {
   await tvWhenAuthed();
   await initAccountSwitcher();
-
-  const params = new URLSearchParams(location.search);
-  const tradeId = params.get("id");
-
   try {
     const acc = await resolveSelectedAccount();
-    if (!acc) { document.getElementById("tradeTitle").textContent = "No trading account"; return; }
-    window.CURRENT_ACCOUNT_ID = acc.id;
-
-    if (!tradeId) { document.getElementById("tradeTitle").textContent = "Trade not found"; return; }
-    const trade = await getTrade(acc.id, tradeId);
-    if (!trade) { document.getElementById("tradeTitle").textContent = "Trade not found"; return; }
-
-    window.__tvRenderTrade(acc.id, trade);
+    if (!acc) { window.__tvSetCalendarTrades([]); return; }
+    const rows = await listTrades(acc.id);
+    window.__tvSetCalendarTrades(rows);
   } catch (e) {
-    console.error("Loading trade failed:", e);
-    const el = document.getElementById("tradeTitle");
-    if (el) el.textContent = "Couldn't load this trade";
+    console.error("Calendar load failed:", e);
+    window.__tvSetCalendarTrades([]);
   }
 })();
 </script>
