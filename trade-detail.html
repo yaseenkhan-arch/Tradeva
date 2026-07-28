@@ -280,6 +280,24 @@ body {
 .modal-btn-confirm { background: var(--red); color: #fff; }
 .modal-btn-confirm:hover { background: #DC2626; }
 
+/* A delete is several round trips to Mumbai — the doc, its two images, and
+   the summary hooks — so it is never instant. Without a visible busy state
+   the modal looks frozen and the button gets clicked again, which fires a
+   second concurrent delete. */
+.modal-btn:disabled { cursor: default; opacity: 0.75; }
+.modal-btn-confirm:disabled:hover { background: var(--red); }
+.modal-btn-cancel:disabled:hover { background: var(--border-light); }
+.modal-btn.is-busy { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.modal-btn.is-busy::before {
+  content: ''; width: 13px; height: 13px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+  border-radius: 50%; animation: tvbtnspin 0.7s linear infinite;
+}
+@keyframes tvbtnspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .modal-btn.is-busy::before { animation-duration: 2.4s; }
+}
+
 /* ══════════════════════════════════════════════════════════
    MOBILE
 ══════════════════════════════════════════════════════════ */
@@ -1233,8 +1251,8 @@ try {
     <div class="modal-title">Delete this trade?</div>
     <div class="modal-text">This action is permanent and cannot be undone. All data for this trade will be removed.</div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <button class="modal-btn modal-btn-confirm" onclick="deleteTrade()">Delete</button>
+      <button class="modal-btn modal-btn-cancel" id="deleteCancelBtn" onclick="closeDeleteModal()">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" id="deleteConfirmBtn" onclick="deleteTrade()">Delete</button>
     </div>
   </div>
 </div>
@@ -1295,9 +1313,12 @@ function loadProfileSidebar() {
 /* ── TRADE STORE (populated from Firestore by the module below) ── */
 let CURRENT_ACCOUNT_ID = null;
 
-/* Called by the Firestore module once the trade arrives */
+/* Called by the Firestore module once the trade arrives.
+   Mirrored onto window so the module and the page script cannot disagree
+   about which account is selected — see currentAccountId(). */
 window.__tvRenderTrade = function (accountId, trade) {
   CURRENT_ACCOUNT_ID = accountId;
+  window.CURRENT_ACCOUNT_ID = accountId;
   renderTradeDetail(trade);
 };
 
@@ -1413,17 +1434,75 @@ function confirmDelete() {
   document.getElementById('deleteModal').classList.add('open');
 }
 function closeDeleteModal() {
+  if (deleteInFlight) return;          // never dismiss mid-delete
   document.getElementById('deleteModal').classList.remove('open');
 }
+
+/* The account id arrives on `window` from the loader module, but the page
+   script's own binding is a top-level `let` — which lives in script scope and
+   is NOT a window property, so the module's assignment never reached it. Read
+   both, and prefer whichever is populated. */
+function currentAccountId() {
+  return CURRENT_ACCOUNT_ID || window.CURRENT_ACCOUNT_ID || null;
+}
+
+/* Wait for the loader module to finish rather than failing on the spot.
+   The module is deferred and pulls the Firebase SDK from gstatic, so on a
+   cold or slow connection it can still be running when the page looks ready.
+   The old code threw "Still loading" or — worse — silently redirected to
+   trades.html when the account id was not set yet, which looked exactly like
+   a dead button and is why the second and third click appeared to work. */
+function waitForDeleteReady(timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const ready = () => typeof window.__tvDeleteTrade === 'function' && currentAccountId();
+    if (ready()) return resolve();
+    const started = Date.now();
+    const t = setInterval(() => {
+      if (ready()) { clearInterval(t); resolve(); }
+      else if (Date.now() - started > timeoutMs) {
+        clearInterval(t);
+        reject(new Error("Still connecting — check your connection and try again."));
+      }
+    }, 60);
+  });
+}
+
+let deleteInFlight = false;
+
+function setDeleteBusy(busy) {
+  const confirmBtn = document.getElementById('deleteConfirmBtn');
+  const cancelBtn = document.getElementById('deleteCancelBtn');
+  if (confirmBtn) {
+    confirmBtn.disabled = busy;
+    confirmBtn.classList.toggle('is-busy', busy);
+    confirmBtn.textContent = busy ? 'Deleting…' : 'Delete';
+  }
+  if (cancelBtn) cancelBtn.disabled = busy;
+}
+
 async function deleteTrade() {
+  /* Re-entry guard. A delete awaits the summary hooks in tradeva-trades.js,
+     so two concurrent calls would decrement tradeCount, wins/losses and
+     netPnl twice against a doc that only existed once. verifySummary() would
+     eventually notice the drift and rebuild, but the dashboard is wrong until
+     it does — cheaper to never fire the second call. */
+  if (deleteInFlight) return;
+
   const id = getTradeId();
-  if (!id || !CURRENT_ACCOUNT_ID) { window.location.href = 'trades.html'; return; }
+  if (!id) { window.location.href = 'trades.html'; return; }
+
+  deleteInFlight = true;
+  setDeleteBusy(true);
   try {
-    if (typeof window.__tvDeleteTrade !== 'function') throw new Error('Still loading — try again in a moment.');
-    await window.__tvDeleteTrade(CURRENT_ACCOUNT_ID, id);
+    await waitForDeleteReady();
+    await window.__tvDeleteTrade(currentAccountId(), id);
+    /* Stay disabled through the navigation — the page is still interactive
+       for the moment it takes to unload. */
     window.location.href = 'trades.html';
   } catch (e) {
     console.error('Delete failed:', e);
+    deleteInFlight = false;
+    setDeleteBusy(false);
     alert(e.message || 'Could not delete this trade. Please try again.');
   }
 }
