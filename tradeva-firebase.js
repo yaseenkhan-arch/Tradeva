@@ -67,14 +67,15 @@ async function ensureUserDoc(user, extra = {}) {
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, {
-        uid: user.uid,
-        email: user.email || "",
-        displayName: user.displayName || extra.displayName || "",
-        photoURL: user.photoURL || "",
-        createdAt: serverTimestamp(),
-        ...extra
-      });
+     await setDoc(ref, {
+    uid: user.uid,
+    email: user.email || "",
+    displayName: user.displayName || extra.displayName || "",
+    photoURL: user.photoURL || "",
+    createdAt: serverTimestamp(),
+    welcomeEmailSent: false,
+    ...extra
+});
     } else {
       await setDoc(ref, {
         email: user.email || "",
