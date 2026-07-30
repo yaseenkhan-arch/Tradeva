@@ -18,9 +18,18 @@ export default async function handler(req, res) {
 
   try {
     const { email, type, ...data } = req.body;
+let verifyUrl = data.verifyUrl;
 
-    const { subject, html } = buildEmail(type, data);
-
+if (type === "verify") {
+  verifyUrl = await adminAuth.generateEmailVerificationLink(
+    email,
+    ACTION_CODE_SETTINGS
+  );
+}    
+    const { subject, html } = buildEmail(type, {
+  ...data,
+  verifyUrl,
+});
     const response = await resend.emails.send({
       from: "Tradeva <noreply@tradeva.app>",
       to: email,
