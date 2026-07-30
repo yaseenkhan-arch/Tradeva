@@ -1,4 +1,5 @@
  import { Resend } from "resend";
+import { adminAuth } from "../lib/firebase-admin.js";
 import buildEmail from "../emails/index.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
