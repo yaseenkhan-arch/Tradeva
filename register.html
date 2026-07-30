@@ -173,8 +173,21 @@ form.addEventListener("submit", async (e) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: fullname });
     await ensureUserDoc(cred.user, { displayName: fullname });
- 
-
+ try {
+  await fetch("/api/send-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      type: "verify",
+      email,
+      name: fullname,
+    }),
+  });
+} catch (err) {
+  console.error("Failed to send verification email:", err);
+}
     showMsg("Account created! Check your email to verify, then log in.", true);
     form.reset();
   } catch (error) {
