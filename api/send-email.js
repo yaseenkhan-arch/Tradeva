@@ -35,10 +35,12 @@ if (type === "reset-password") {
     ACTION_CODE_SETTINGS
   );
 }    
-    const { subject, html } = buildEmail(type, {
+
+const { subject, html } = buildEmail(type, {
   ...data,
   verifyUrl,
-});
+  resetUrl,
+});    
     const response = await resend.emails.send({
       from: "Tradeva <noreply@tradeva.app>",
       to: email,
