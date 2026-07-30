@@ -129,12 +129,10 @@ button:disabled { opacity:0.65; cursor:default; }
 <!-- Auth logic (module) -->
 <script type="module">
  import { auth, db, signInWithGoogle } from "./tradeva-firebase.js";
-  import {
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail
+ import {
+  signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-
-import {
+  import {
   doc,
   getDoc,
   updateDoc
