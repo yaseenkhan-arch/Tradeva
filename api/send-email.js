@@ -1,6 +1,11 @@
- import { Resend } from "resend";
+import { Resend } from "resend";
 import { adminAuth } from "../lib/firebase-admin.js";
 import buildEmail from "../emails/index.js";
+
+const ACTION_CODE_SETTINGS = {
+  url: "https://tradeva.app/login.html",
+  handleCodeInApp: false,
+};
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
