@@ -18,10 +18,19 @@ export default async function handler(req, res) {
 
   try {
     const { email, type, ...data } = req.body;
+
 let verifyUrl = data.verifyUrl;
+let resetUrl = data.resetUrl;
 
 if (type === "verify") {
   verifyUrl = await adminAuth.generateEmailVerificationLink(
+    email,
+    ACTION_CODE_SETTINGS
+  );
+}
+
+if (type === "reset-password") {
+  resetUrl = await adminAuth.generatePasswordResetLink(
     email,
     ACTION_CODE_SETTINGS
   );
