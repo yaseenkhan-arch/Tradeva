@@ -1,6 +1,5 @@
- 
-import { Resend } from "resend";
-import { welcomeEmail } from "../emails/welcome.js";
+ import { Resend } from "resend";
+import buildEmail from "../emails/index.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -12,24 +11,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { type, email, name } = req.body;
+    const { email, type, ...data } = req.body;
 
-    let subject = "";
-    let html = "";
-
-    switch (type) {
-      case "welcome":
-        subject = "Welcome to Tradeva!";
-        html = welcomeEmail({
-          name,
-        });
-        break;
-
-      default:
-        return res.status(400).json({
-          error: "Unknown email type",
-        });
-    }
+    const { subject, html } = buildEmail(type, data);
 
     const response = await resend.emails.send({
       from: "Tradeva <noreply@tradeva.app>",
