@@ -237,8 +237,26 @@ document.getElementById("forgotPassword").addEventListener("click", async (e) =>
   const email = document.getElementById("email").value.trim();
   if (!email) { showMsg("Enter your email first.", false); return; }
   try {
-    await sendPasswordResetEmail(auth, email);
-    showMsg("Password reset email sent.", true);
+   
+const response = await fetch("/api/send-email", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    type: "reset-password",
+    email,
+    name: email.split("@")[0]
+  })
+});
+
+const result = await response.json();
+
+if (!response.ok || !result.success) {
+  throw new Error(result.error || "Failed to send reset email.");
+}
+
+showMsg("Password reset email sent.", true);    
   } catch (error) {
     console.error("Reset error:", error);
     showMsg(friendly(error), false);
