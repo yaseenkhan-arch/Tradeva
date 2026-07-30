@@ -164,15 +164,50 @@ form.addEventListener("submit", async (e) => {
   loginBtn.disabled = true;
   loginBtn.innerText = "Logging in…";
   try {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    if (!cred.user.emailVerified) {
-      showMsg("Please verify your email before logging in.", false);
-      loginBtn.disabled = false;
-      loginBtn.innerText = "Login";
-      return;
+    
+const cred = await signInWithEmailAndPassword(auth, email, password);
+
+if (!cred.user.emailVerified) {
+  showMsg("Please verify your email before logging in.", false);
+  loginBtn.disabled = false;
+  loginBtn.innerText = "Login";
+  return;
+}
+
+// Check whether we've already sent the welcome email
+const userRef = doc(db, "users", cred.user.uid);
+const userSnap = await getDoc(userRef);
+
+if (userSnap.exists()) {
+  const data = userSnap.data();
+
+  if (!data.welcomeEmailSent) {
+    try {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: "welcome",
+          email: cred.user.email,
+          name: data.displayName || cred.user.displayName || ""
+        })
+      });
+
+      await updateDoc(userRef, {
+        welcomeEmailSent: true
+      });
+    } catch (e) {
+      console.error("Welcome email failed:", e);
     }
-    showMsg("Login successful…", true);
-    setTimeout(() => { window.location.href = "dashboard.html"; }, 700);
+  }
+}
+
+showMsg("Login successful…", true);
+setTimeout(() => {
+  window.location.href = "dashboard.html";
+}, 700);    
   } catch (error) {
     console.error("Login error:", error);
     showMsg(friendly(error), false);
