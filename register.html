@@ -173,7 +173,7 @@ form.addEventListener("submit", async (e) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: fullname });
     await ensureUserDoc(cred.user, { displayName: fullname });
-    await sendEmailVerification(cred.user);
+ 
 
     showMsg("Account created! Check your email to verify, then log in.", true);
     form.reset();
