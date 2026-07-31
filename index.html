@@ -5,27 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#F8FAFC">
 
-<title>Tradeva — The Most Advanced Free Trading Journal</title>
-<meta name="description" content="Tradeva is a free trading journal for serious traders. Log every trade, measure your edge with real analytics, track your psychology, and build consistency. No spreadsheets. No credit card.">
+<title>Tradeva — Turn Every Trade Into an Opportunity to Improve</title>
+<meta name="description" content="Tradeva is a trading journal that helps you review every trade, identify what works, eliminate costly mistakes, and improve through journaling, analytics and performance insights. Free forever.">
 <link rel="canonical" href="https://tradeva.app/">
 <link rel="icon" href="logo-transparent.png" type="image/png">
 
-<!-- Open Graph / social -->
+<!-- Social preview -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tradeva.app/">
-<meta property="og:title" content="Tradeva — The Most Advanced Free Trading Journal">
-<meta property="og:description" content="Journal every trade. Analyze your edge. Master your psychology. Completely free.">
-<meta property="og:image" content="https://tradeva.app/shot-dashboard-1600.webp">
+<meta property="og:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
+<meta property="og:description" content="Review every trade, identify what works, and eliminate costly mistakes. Free forever.">
+<meta property="og:image" content="https://tradeva.app/images/shot-dashboard-1600.webp">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tradeva — The Most Advanced Free Trading Journal">
-<meta name="twitter:description" content="Journal every trade. Analyze your edge. Master your psychology. Completely free.">
-<meta name="twitter:image" content="https://tradeva.app/shot-dashboard-1600.webp">
+<meta name="twitter:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
+<meta name="twitter:description" content="Review every trade, identify what works, and eliminate costly mistakes. Free forever.">
+<meta name="twitter:image" content="https://tradeva.app/images/shot-dashboard-1600.webp">
 
 <!--
-  Inter, loaded without blocking render.
-  The quotes inside onload MUST stay plain single quotes — a backslash-escaped
+  Inter, loaded without blocking the first paint.
+  The quotes inside onload MUST stay plain single quotes. A backslash-escaped
   \' is invalid inside an HTML attribute and throws "Invalid or unexpected
-  token", which is also what produces the "preloaded but not used" warning.
+  token" — which is also what produces the "preloaded but not used" warning.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,501 +36,30 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 </noscript>
 
-<style>
-/* ═══════════════════════════════════════════════════════════════════
-   1. TOKENS
-   8px spacing scale. Every value below is a multiple of it, so vertical
-   rhythm holds together without per-section fiddling.
-   ═══════════════════════════════════════════════════════════════════ */
-:root {
-  --blue: #2563EB;
-  --blue-dark: #1D4ED8;
-  --blue-tint: #EFF6FF;
-  --green: #10B981;
-  --red: #EF4444;
-
-  --bg: #F8FAFC;
-  --card: #FFFFFF;
-  --text: #111827;
-  --text-2: #6B7280;
-  --border: #E5E7EB;
-  --border-soft: #F1F5F9;
-
-  --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
-  --s5: 40px; --s6: 48px; --s8: 64px; --s10: 80px; --s12: 96px;
-
-  --r-sm: 10px; --r-md: 16px; --r-lg: 20px; --r-xl: 28px;
-
-  /* Shadows stay soft and layered — one tight contact shadow plus one wide
-     ambient. A single large blur reads as a drop shadow from 2013. */
-  --sh-sm: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
-  --sh-md: 0 2px 4px rgba(16,24,40,.03), 0 12px 24px -8px rgba(16,24,40,.08);
-  --sh-lg: 0 4px 8px rgba(16,24,40,.04), 0 32px 64px -16px rgba(16,24,40,.14);
-  --sh-blue: 0 2px 4px rgba(37,99,235,.16), 0 12px 28px -8px rgba(37,99,235,.32);
-
-  --ease: cubic-bezier(.4, 0, .2, 1);
-  --t: 200ms;
-  --maxw: 1200px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   2. BASE
-   ═══════════════════════════════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; }
-
-html { scroll-behavior: smooth; scroll-padding-top: 96px; -webkit-text-size-adjust: 100%; }
-
-body {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-h1, h2, h3, h4 { margin: 0; line-height: 1.15; letter-spacing: -0.022em; font-weight: 700; }
-p { margin: 0; }
-img { display: block; max-width: 100%; height: auto; }
-a { color: inherit; text-decoration: none; }
-ul { margin: 0; padding: 0; list-style: none; }
-
-.container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s3); }
-
-/* Visible focus for keyboard users only — never a ring on mouse click. */
-:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
-
-.skip-link {
-  position: absolute; left: var(--s2); top: -60px; z-index: 200;
-  background: var(--card); color: var(--text); padding: var(--s1) var(--s2);
-  border-radius: var(--r-sm); box-shadow: var(--sh-md); font-weight: 600;
-  transition: top var(--t) var(--ease);
-}
-.skip-link:focus { top: var(--s2); }
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   3. SCROLL PROGRESS
-   Driven by a transform on a fixed bar rather than a width change —
-   transforms are composited, width changes force layout on every frame.
-   ═══════════════════════════════════════════════════════════════════ */
-.progress {
-  position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 120;
-  background: var(--blue); transform: scaleX(0); transform-origin: 0 50%;
-  will-change: transform;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   4. NAVIGATION
-   ═══════════════════════════════════════════════════════════════════ */
-.nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(248,250,252,.72);
-  backdrop-filter: saturate(180%) blur(16px);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
-  border-bottom: 1px solid transparent;
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
-}
-/* .is-scrolled is toggled by JS once the page moves off the top. */
-.nav.is-scrolled {
-  background: rgba(255,255,255,.82);
-  border-bottom-color: var(--border);
-  box-shadow: 0 1px 2px rgba(16,24,40,.04);
-}
-
-.nav-inner {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--s3); height: 68px;
-  max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s3);
-}
-
-.brand { display: flex; align-items: center; gap: var(--s1); font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
-.brand img { width: 28px; height: 28px; }
-
-.nav-links { display: flex; align-items: center; gap: var(--s4); }
-.nav-links a {
-  font-size: 15px; font-weight: 500; color: var(--text-2);
-  transition: color var(--t) var(--ease);
-}
-.nav-links a:hover { color: var(--text); }
-
-.nav-actions { display: flex; align-items: center; gap: var(--s2); }
-
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--s1);
-  font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1;
-  padding: 12px 20px; border-radius: var(--r-sm); border: 1px solid transparent;
-  cursor: pointer; white-space: nowrap;
-  transition: transform var(--t) var(--ease), background var(--t) var(--ease),
-              box-shadow var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease);
-}
-.btn-primary { background: var(--blue); color: #fff; box-shadow: var(--sh-blue); }
-.btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-ghost { color: var(--text); background: transparent; }
-.btn-ghost:hover { color: var(--blue); }
-.btn-outline { background: var(--card); color: var(--text); border-color: var(--border); box-shadow: var(--sh-sm); }
-.btn-outline:hover { border-color: #CBD5E1; transform: translateY(-1px); }
-.btn-lg { font-size: 16px; padding: 16px 28px; border-radius: 12px; }
-
-/* Ripple: a span injected on click, removed when the animation ends. */
-.btn { position: relative; overflow: hidden; }
-.ripple {
-  position: absolute; border-radius: 50%; transform: scale(0);
-  background: rgba(255,255,255,.45); pointer-events: none;
-  animation: ripple 560ms var(--ease);
-}
-.btn-outline .ripple, .btn-ghost .ripple { background: rgba(37,99,235,.18); }
-@keyframes ripple { to { transform: scale(2.6); opacity: 0; } }
-
-.nav-toggle {
-  display: none; width: 40px; height: 40px; padding: 0;
-  align-items: center; justify-content: center;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-sm); cursor: pointer;
-}
-.nav-toggle span {
-  display: block; width: 16px; height: 1.5px; background: var(--text); position: relative;
-  transition: background 120ms var(--ease);
-}
-.nav-toggle span::before, .nav-toggle span::after {
-  content: ''; position: absolute; left: 0; width: 16px; height: 1.5px; background: var(--text);
-  transition: transform var(--t) var(--ease), top var(--t) var(--ease);
-}
-.nav-toggle span::before { top: -5px; }
-.nav-toggle span::after { top: 5px; }
-.nav-toggle[aria-expanded="true"] span { background: transparent; }
-.nav-toggle[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); }
-.nav-toggle[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); }
-
-.mobile-menu {
-  display: none; border-top: 1px solid var(--border); background: rgba(255,255,255,.96);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  padding: var(--s2) var(--s3) var(--s3);
-}
-.mobile-menu.open { display: block; }
-.mobile-menu a { display: block; padding: 12px 0; font-size: 16px; font-weight: 500; color: var(--text); }
-.mobile-menu .btn { width: 100%; margin-top: var(--s1); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   5. SECTION PRIMITIVES
-   ═══════════════════════════════════════════════════════════════════ */
-.section { padding: var(--s12) 0; }
-.section-head { max-width: 720px; margin: 0 auto var(--s8); text-align: center; }
-.section-head.left { margin-left: 0; text-align: left; }
-
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--blue); background: var(--blue-tint);
-  padding: 6px 12px; border-radius: 999px; margin-bottom: var(--s2);
-}
-.section-head h2 { font-size: clamp(30px, 4vw, 44px); margin-bottom: var(--s2); }
-.section-head p { color: var(--text-2); font-size: 17px; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   6. HERO
-   ═══════════════════════════════════════════════════════════════════ */
-.hero { position: relative; padding: var(--s12) 0 var(--s10); overflow: hidden; }
-
-/* Ambient wash behind the hero. Two soft radial gradients, no filter:blur —
-   blur on a full-width element is the single most expensive paint on a
-   landing page and it janks scroll on mid-range phones. */
-.hero::before {
-  content: ''; position: absolute; inset: -20% -10% auto -10%; height: 720px; z-index: 0;
-  background:
-    radial-gradient(48% 52% at 22% 8%, rgba(37,99,235,.10), transparent 70%),
-    radial-gradient(42% 46% at 82% 0%, rgba(16,185,129,.08), transparent 70%);
-  pointer-events: none;
-}
-
-.hero-grid {
-  position: relative; z-index: 1;
-  display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr);
-  gap: var(--s8); align-items: center;
-}
-
-.hero h1 {
-  font-size: clamp(32px, 6.2vw, 72px);
-  letter-spacing: -0.035em; line-height: 1.04; margin-bottom: var(--s3);
-}
-.hero-sub { font-size: clamp(16px, 1.3vw, 19px); color: var(--text-2); max-width: 44ch; margin-bottom: var(--s5); }
-.hero-sub strong { color: var(--text); font-weight: 600; }
-
-.hero-cta { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s5); }
-
-.badges { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
-.badges li { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--text-2); font-weight: 500; }
-.badges svg { flex-shrink: 0; color: var(--green); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   7. BROWSER FRAME
-   The real Chrome chrome is cropped out of every screenshot; this draws a
-   cleaner one in CSS. Fixed aspect-ratio + width/height on the img means
-   the frame reserves its space before the image loads — zero layout shift.
-   ═══════════════════════════════════════════════════════════════════ */
-.frame {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-lg); box-shadow: var(--sh-lg);
-  overflow: hidden;
-}
-.frame-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 11px 14px; border-bottom: 1px solid var(--border-soft); background: #FCFDFE;
-}
-.dot { width: 9px; height: 9px; border-radius: 50%; background: #E2E8F0; }
-.frame-url {
-  margin-left: 10px; font-size: 11.5px; color: #94A3B8; font-weight: 500;
-  background: var(--bg); border-radius: 6px; padding: 3px 10px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.frame img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; }
-
-/* Hero frame drifts very slightly. 18s and 6px of travel — enough to feel
-   alive, not enough to notice as motion. */
-.hero-frame { animation: float 18s var(--ease) infinite; }
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   8. STATS STRIP
-   ═══════════════════════════════════════════════════════════════════ */
-.stats { border-block: 1px solid var(--border); background: var(--card); }
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  max-width: var(--maxw); margin: 0 auto;
-}
-.stat { padding: var(--s6) var(--s3); text-align: center; border-left: 1px solid var(--border-soft); }
-.stat:first-child { border-left: 0; }
-.stat-num { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; color: var(--text); font-variant-numeric: tabular-nums; }
-.stat-label { font-size: 13.5px; color: var(--text-2); margin-top: 2px; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   9. SHOWCASE (the seven product sections)
-   ═══════════════════════════════════════════════════════════════════ */
-.showcase { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: var(--s8); align-items: center; }
-.showcase + .showcase { margin-top: var(--s12); }
-.showcase.flip .showcase-copy { order: 2; }
-
-.showcase h3 { font-size: clamp(24px, 2.6vw, 34px); margin-bottom: var(--s2); }
-.showcase p.lede { color: var(--text-2); font-size: 16.5px; margin-bottom: var(--s3); }
-
-.pills { display: flex; flex-wrap: wrap; gap: var(--s1); }
-.pills li {
-  font-size: 13.5px; font-weight: 500; color: var(--text);
-  background: var(--card); border: 1px solid var(--border);
-  padding: 7px 13px; border-radius: 999px;
-  transition: border-color var(--t) var(--ease), transform var(--t) var(--ease);
-}
-.pills li:hover { border-color: #BFDBFE; transform: translateY(-1px); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   10. FEATURE CARDS
-   ═══════════════════════════════════════════════════════════════════ */
-.feature-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: var(--s3);
-}
-.f-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: var(--s4); box-shadow: var(--sh-sm);
-  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
-}
-.f-card:hover { transform: translateY(-4px); box-shadow: var(--sh-md); border-color: #DBEAFE; }
-.f-ico {
-  width: 44px; height: 44px; display: grid; place-items: center;
-  background: var(--blue-tint); color: var(--blue); border-radius: 12px; margin-bottom: var(--s3);
-}
-.f-card h3 { font-size: 17px; margin-bottom: 6px; }
-.f-card p { font-size: 14.5px; color: var(--text-2); }
-.f-soon {
-  display: inline-block; margin-left: var(--s1); vertical-align: middle;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--text-2); background: var(--bg); border: 1px solid var(--border);
-  padding: 2px 7px; border-radius: 999px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   11. WHY TRADEVA — a two-column contrast, not a bullet list
-   ═══════════════════════════════════════════════════════════════════ */
-.compare { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--s3); }
-.col {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: var(--s5);
-}
-.col.bad { background: transparent; border-style: dashed; }
-.col h3 { font-size: 18px; margin-bottom: var(--s3); display: flex; align-items: center; gap: var(--s1); }
-.col li { display: flex; gap: 11px; align-items: flex-start; padding: 9px 0; font-size: 15px; }
-.col li svg { flex-shrink: 0; margin-top: 3px; }
-.col.bad li { color: var(--text-2); }
-.col.bad li svg { color: var(--red); }
-.col.good li svg { color: var(--green); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   12. HOW IT WORKS
-   The connecting line is a pseudo-element on the list, so steps can be
-   added or removed without touching it.
-   ═══════════════════════════════════════════════════════════════════ */
-.steps { position: relative; max-width: 760px; margin: 0 auto; }
-.steps::before {
-  content: ''; position: absolute; left: 23px; top: 24px; bottom: 24px; width: 2px;
-  background: linear-gradient(180deg, var(--border), var(--blue) 22%, var(--blue) 78%, var(--border));
-  opacity: .35;
-}
-.step { display: flex; gap: var(--s3); padding: var(--s3) 0; position: relative; }
-.step-num {
-  flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
-  display: grid; place-items: center; font-weight: 700; font-size: 16px;
-  background: var(--card); color: var(--blue);
-  border: 1px solid var(--border); box-shadow: var(--sh-sm); position: relative; z-index: 1;
-}
-.step:last-child .step-num { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: var(--sh-blue); }
-.step h3 { font-size: 18px; margin-bottom: 4px; }
-.step p { color: var(--text-2); font-size: 15px; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   13. FAQ — native <details>, so it works with JS disabled and is
-   keyboard-navigable for free.
-   ═══════════════════════════════════════════════════════════════════ */
-.faq { max-width: 820px; margin: 0 auto; display: grid; gap: 10px; }
-.faq details {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md);
-  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
-}
-.faq details[open] { border-color: #DBEAFE; box-shadow: var(--sh-sm); }
-.faq summary {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
-  padding: var(--s3); font-weight: 600; font-size: 16px; cursor: pointer; list-style: none;
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary::after {
-  content: ''; flex-shrink: 0; width: 10px; height: 10px;
-  border-right: 2px solid var(--text-2); border-bottom: 2px solid var(--text-2);
-  transform: rotate(45deg) translateY(-2px); transition: transform var(--t) var(--ease);
-}
-.faq details[open] summary::after { transform: rotate(-135deg) translateY(-2px); }
-.faq .answer { padding: 0 var(--s3) var(--s3); color: var(--text-2); font-size: 15.5px; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   14. FINAL CTA
-   ═══════════════════════════════════════════════════════════════════ */
-.cta-card {
-  position: relative; overflow: hidden; text-align: center;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-xl); padding: var(--s12) var(--s5); box-shadow: var(--sh-md);
-}
-.cta-card::before {
-  content: ''; position: absolute; inset: -60% 0 auto 0; height: 340px;
-  background: radial-gradient(52% 60% at 50% 100%, rgba(37,99,235,.13), transparent 72%);
-  pointer-events: none;
-}
-.cta-card > * { position: relative; }
-.cta-card h2 { font-size: clamp(28px, 3.6vw, 42px); margin-bottom: var(--s2); }
-.cta-card p { color: var(--text-2); font-size: 17px; max-width: 52ch; margin: 0 auto var(--s5); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   15. FOOTER
-   ═══════════════════════════════════════════════════════════════════ */
-.footer { background: var(--card); border-top: 1px solid var(--border); padding: var(--s10) 0 var(--s5); }
-.footer-grid { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); gap: var(--s6) var(--s4); }
-.footer-about p { color: var(--text-2); font-size: 14.5px; margin: var(--s2) 0 var(--s3); max-width: 30ch; }
-.footer h4 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); margin-bottom: var(--s2); font-weight: 600; }
-.footer nav a { display: block; padding: 5px 0; font-size: 14.5px; color: var(--text-2); transition: color var(--t) var(--ease); }
-.footer nav a:hover { color: var(--blue); }
-
-.socials { display: flex; gap: 10px; }
-.socials a {
-  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
-  border: 1px solid var(--border); color: var(--text-2); background: var(--card);
-  transition: color var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease);
-}
-.socials a:hover { color: var(--blue); border-color: #BFDBFE; transform: translateY(-2px); }
-
-.footer-base {
-  margin-top: var(--s8); padding-top: var(--s3); border-top: 1px solid var(--border);
-  display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: space-between;
-  font-size: 13.5px; color: var(--text-2);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   16. SCROLL REVEAL
-   Opacity + translate only — both composited. `will-change` is removed
-   once the element has settled so we don't hold GPU layers for the
-   whole page.
-   ═══════════════════════════════════════════════════════════════════ */
-.reveal { opacity: 0; transform: translateY(20px); }
-.reveal.in {
-  opacity: 1; transform: none;
-  transition: opacity 620ms var(--ease), transform 620ms var(--ease);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   17. RESPONSIVE
-   ═══════════════════════════════════════════════════════════════════ */
-@media (max-width: 1080px) {
-  .hero-grid { grid-template-columns: 1fr; gap: var(--s6); text-align: center; }
-  .hero-sub { margin-left: auto; margin-right: auto; }
-  .hero-cta, .badges { justify-content: center; }
-  .showcase { grid-template-columns: 1fr; gap: var(--s5); }
-  .showcase.flip .showcase-copy { order: 0; }   /* image always follows the copy when stacked */
-  .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
-  .footer-about { grid-column: 1 / -1; }
-}
-
-@media (max-width: 860px) {
-  .nav-links, .nav-actions .btn-ghost { display: none; }
-  .nav-toggle { display: inline-flex; }
-  .section { padding: var(--s10) 0; }
-  .showcase + .showcase { margin-top: var(--s10); }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .stat { border-left: 0; border-top: 1px solid var(--border-soft); }
-  .stat:nth-child(-n+2) { border-top: 0; }
-  .compare { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 600px) {
-  .container { padding: 0 var(--s2); }
-  .section { padding: var(--s8) 0; }
-  .section-head { margin-bottom: var(--s6); }
-  .hero { padding: var(--s8) 0 var(--s6); }
-  .hero-cta .btn { width: 100%; }
-  .badges { gap: var(--s1) var(--s2); }
-  .badges li { font-size: 13px; }
-  .col, .cta-card { padding: var(--s4) var(--s3); }
-  .cta-card { padding-block: var(--s8); }
-  .frame-url { display: none; }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
-  .footer-base { justify-content: center; text-align: center; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   18. REDUCED MOTION
-   Everything above is decorative. Honour the OS setting completely —
-   including the smooth scroll, which is the one that actually makes
-   motion-sensitive people ill.
-   ═══════════════════════════════════════════════════════════════════ */
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important; scroll-behavior: auto !important;
-  }
-  .reveal { opacity: 1; transform: none; }
-}
-</style>
+<!--
+  STYLESHEET ORDER MATTERS — do not rearrange these five lines.
+    style.css       tokens + reset + shared components   (everything needs it)
+    hero.css        navigation + hero
+    sections.css    everything below the hero
+    animations.css  all motion
+    responsive.css  breakpoints — MUST be last, because these rules win by
+                    cascade order rather than by specificity
+-->
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/sections.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/responsive.css">
 
 <noscript>
-  <!-- Scroll reveal is applied by JS. Without it, .reveal would leave the entire
-       page at opacity 0 — so no-JS visitors get the finished state directly. -->
+  <!-- Reveal classes are switched on by JavaScript. Without it, every
+       .reveal element would sit at opacity 0 and the page would look
+       empty. This restores the finished state for no-JS visitors. -->
   <style>
-    .reveal { opacity: 1 !important; transform: none !important; }
-    .hero-frame { animation: none; }
+    .reveal, .reveal-left, .reveal-right, .reveal-blur {
+      opacity: 1 !important; transform: none !important; filter: none !important;
+    }
+    .hero-stage, .float-card { animation: none !important; }
   </style>
 </noscript>
 </head>
@@ -539,7 +68,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="progress" id="progress" aria-hidden="true"></div>
 
-<!-- ═══════════════ NAVIGATION ═══════════════ -->
+<!-- ══════════════════════════════════════════════════════════════
+     NAVIGATION
+     ══════════════════════════════════════════════════════════════ -->
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a class="brand" href="/" aria-label="Tradeva home">
@@ -548,25 +79,26 @@ ul { margin: 0; padding: 0; list-style: none; }
     </a>
 
     <nav class="nav-links" aria-label="Primary">
+      <a href="#showcase">Product</a>
       <a href="#features">Features</a>
-      <a href="#product">Product</a>
       <a href="#faq">FAQ</a>
-      <a href="#" rel="noopener">Blog</a>
-      <a href="#" rel="noopener">Discord</a>
+      <a href="#">Blog</a>
+      <a href="#">Discord</a>
     </nav>
 
     <div class="nav-actions">
       <a class="btn btn-ghost" href="login.html">Login</a>
       <a class="btn btn-primary" href="register.html">Start Free</a>
-      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+      <button class="nav-toggle" id="navToggle"
+              aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
         <span></span>
       </button>
     </div>
   </div>
 
   <div class="mobile-menu" id="mobileMenu">
+    <a href="#showcase">Product</a>
     <a href="#features">Features</a>
-    <a href="#product">Product</a>
     <a href="#faq">FAQ</a>
     <a href="#">Blog</a>
     <a href="#">Discord</a>
@@ -577,634 +109,131 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 <main id="main">
 
-<!-- ═══════════════ HERO ═══════════════ -->
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 1 — HERO
+     ══════════════════════════════════════════════════════════════ -->
 <section class="hero">
   <div class="container hero-grid">
+
     <div class="hero-copy">
-      <span class="eyebrow">Free forever · No credit card</span>
-      <h1>The Most Advanced Free Trading Journal.</h1>
-      <p class="hero-sub">
-        Journal every trade. Analyze your edge. Master your psychology.
-        Everything you need to become a more consistent trader &mdash;
-        <strong>completely free</strong>.
+      <span class="hero-badge reveal">
+        &#10024; Free Forever <span class="dot-sep">&bull;</span> No Credit Card Required
+      </span>
+
+      <h1 class="reveal-blur">Turn Every Trade Into an Opportunity to Improve.</h1>
+
+      <p class="hero-sub reveal">
+        Tradeva helps you review every trade, identify what works, eliminate costly
+        mistakes, and continuously improve through journaling, analytics and
+        performance insights.
       </p>
 
-      <div class="hero-cta">
+      <div class="hero-cta reveal">
         <a class="btn btn-primary btn-lg" href="register.html">Start Free</a>
-        <a class="btn btn-outline btn-lg" href="#product">
-          Live Demo
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <a class="btn btn-outline btn-lg" href="#showcase">
+          Watch Demo
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle><path d="M10 8.5l6 3.5-6 3.5z"></path>
+          </svg>
         </a>
       </div>
 
-      <ul class="badges">
-        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Free Forever</li>
-        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>No Credit Card Required</li>
-        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Cloud Sync</li>
-        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Mobile Friendly</li>
+      <ul class="hero-trust reveal">
+        <li>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+          Free Forever
+        </li>
+        <li>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+          No Credit Card
+        </li>
+        <li>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+          Cloud Sync
+        </li>
+        <li>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+          Mobile Friendly
+        </li>
       </ul>
     </div>
 
-    <!-- Hero image is the ONLY one that is not lazy-loaded: it is the LCP
-         element, so it gets fetchpriority=high and eager decoding. -->
-    <div class="frame hero-frame">
-      <div class="frame-bar" aria-hidden="true">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="frame-url">tradeva.app/dashboard</span>
-      </div>
-      <img src="shot-dashboard-1600.webp"
-           srcset="shot-dashboard-800.webp 800w, shot-dashboard-1600.webp 1600w"
-           sizes="(min-width: 1080px) 620px, 92vw"
-           width="1600" height="1000" fetchpriority="high" decoding="async"
-           alt="The Tradeva dashboard showing total trades, win rate, profit factor, net P&L, an account growth curve and a drawdown curve.">
-    </div>
-  </div>
-</section>
+    <!-- Hero visual. This image is the LCP element — the largest thing on
+         first paint — so it is NOT lazy-loaded and gets fetchpriority=high.
+         Every other image on the page will be lazy. -->
+    <div class="hero-visual reveal-right">
+      <div class="hero-stage">
 
-<!-- ═══════════════ STATS ═══════════════
-     Product facts, counted up on first view. Deliberately not "traders
-     using Tradeva" — an unverifiable number on a landing page is the
-     fastest way to lose a sceptical trader's trust. -->
-<section class="stats" aria-label="Tradeva at a glance">
-  <div class="stats-grid">
-    <div class="stat"><div class="stat-num" data-count="10">0</div><div class="stat-label">Modules in one journal</div></div>
-    <div class="stat"><div class="stat-num" data-count="13">0</div><div class="stat-label">Dashboard metrics</div></div>
-    <div class="stat"><div class="stat-num" data-count="54">0</div><div class="stat-label">Achievements to unlock</div></div>
-    <div class="stat"><div class="stat-num" data-count="0" data-suffix="$">0</div><div class="stat-label">Cost, forever</div></div>
-  </div>
-</section>
-
-<!-- ═══════════════ PRODUCT SHOWCASE ═══════════════ -->
-<section class="section" id="product">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">The product</span>
-      <h2>Every part of your trading, in one place</h2>
-      <p>Not a spreadsheet with a coat of paint. Ten connected modules that turn what you did into what you should do next.</p>
-    </div>
-
-    <!-- 1 · ANALYTICS -->
-    <article class="showcase reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Analytics</span>
-        <h3>Find your edge, then prove it</h3>
-        <p class="lede">Win rate on its own tells you almost nothing. Tradeva computes the full picture from your trades automatically &mdash; and flags the days, pairs and sessions quietly costing you money.</p>
-        <ul class="pills">
-          <li>Win Rate</li><li>Profit Factor</li><li>Edge Score</li><li>Expectancy</li>
-          <li>Drawdown</li><li>Equity Curve</li><li>Recovery Factor</li><li>Session &amp; pair breakdown</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/analytics</span>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true">
+            <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+            <span class="frame-url">tradeva.app/dashboard</span>
+          </div>
+          <img src="images/shot-dashboard-1600.webp"
+               srcset="images/shot-dashboard-800.webp 800w, images/shot-dashboard-1600.webp 1600w"
+               sizes="(min-width: 1080px) 640px, 92vw"
+               width="1600" height="1000" fetchpriority="high" decoding="async"
+               alt="The Tradeva dashboard: total trades, win rate, profit factor, net P&L, an account growth curve and a drawdown curve.">
         </div>
-        <img src="shot-analytics-800.webp"
-             srcset="shot-analytics-800.webp 800w, shot-analytics-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva analytics showing total P&L, win rate, profit factor, expectancy, average win and loss, recovery factor and an edge score of 60 out of 100.">
-      </div>
-    </article>
 
-    <!-- 2 · PROFIT CALENDAR -->
-    <article class="showcase flip reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Profit Calendar</span>
-        <h3>See your consistency at a glance</h3>
-        <p class="lede">A month of trading on one screen. Green days, red days, and the weekly totals beside them &mdash; so the pattern shows up before the P&amp;L does.</p>
-        <ul class="pills">
-          <li>Daily performance</li><li>Winning days</li><li>Losing days</li>
-          <li>Weekly summaries</li><li>Monthly consistency</li><li>PNG &amp; report export</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/profit-calendar</span>
+        <!-- Floating cards. Decorative, so aria-hidden — a screen reader
+             already has all of this from the image alt text above. -->
+        <div class="float-card float-card--a" aria-hidden="true">
+          <span class="fc-label">Win rate</span>
+          <div class="fc-value up">55.6%</div>
+          <div class="fc-note">15 wins &middot; 12 losses</div>
         </div>
-        <img src="shot-profit-calendar-800.webp"
-             srcset="shot-profit-calendar-800.webp 800w, shot-profit-calendar-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva profit calendar for July, with green and red day cells showing daily P&L, R multiple, win rate and trade count, plus weekly total cards.">
-      </div>
-    </article>
 
-    <!-- 3 · WEEKLY PLANNER -->
-    <article class="showcase reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Weekly Planner</span>
-        <h3>Decide before the market opens</h3>
-        <p class="lede">Set the week's bias, focus pairs and risk limits while you're calm. The plan is there to be checked against on Thursday afternoon, when you aren't.</p>
-        <ul class="pills">
-          <li>Weekly goals</li><li>Market bias</li><li>Focus pairs</li>
-          <li>Target RR &amp; %</li><li>Max drawdown</li><li>Trade limits</li><li>Expected trading days</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/weekly-planner</span>
+        <div class="float-card float-card--b" aria-hidden="true">
+          <span class="fc-label">Profit factor</span>
+          <div class="fc-value">2.49</div>
+          <svg class="fc-spark" width="120" height="26" viewBox="0 0 120 26" fill="none" aria-hidden="true">
+            <path d="M2 21 L18 18 L34 20 L50 12 L66 15 L82 8 L98 10 L118 3"
+                  stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <img src="shot-weekly-planner-800.webp"
-             srcset="shot-weekly-planner-800.webp 800w, shot-weekly-planner-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva weekly planner with week overview, market bias, selectable focus markets and weekly targets for RR, percentage and maximum drawdown.">
-      </div>
-    </article>
 
-    <!-- 4 · MOOD TRACKER -->
-    <article class="showcase flip reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Mood Tracker</span>
-        <h3>The variable most journals ignore</h3>
-        <p class="lede">Log mood, energy and stress before and after the session. Over a few weeks the correlation between your mental state and your results stops being a theory.</p>
-        <ul class="pills">
-          <li>Trading psychology</li><li>Mood check-ins</li><li>Energy</li>
-          <li>Stress</li><li>Emotional balance</li><li>Mental performance trend</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/mood-tracker</span>
+        <div class="float-card float-card--c" aria-hidden="true">
+          <span class="fc-label">Edge score</span>
+          <div class="fc-value">60<span style="font-size:13px;color:var(--text-3);font-weight:600;">/100</span></div>
+          <div class="fc-note">Composite edge rating</div>
         </div>
-        <img src="shot-mood-tracker-800.webp"
-             srcset="shot-mood-tracker-800.webp 800w, shot-mood-tracker-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva mood tracker with average mood and energy, an emotional balance ring at 87 percent, and mood, energy and stress selectors for today.">
-      </div>
-    </article>
 
-    <!-- 5 · DISCIPLINE TRACKER -->
-    <article class="showcase reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Discipline Tracker</span>
-        <h3>Score the process, not the payout</h3>
-        <p class="lede">Your own rules, checked off daily, scored automatically. A disciplined losing day still scores well &mdash; which is the entire point.</p>
-        <ul class="pills">
-          <li>Personal rules</li><li>Pre-trade checklist</li><li>Daily discipline score</li>
-          <li>Violations</li><li>Streaks</li><li>Best score</li>
-        </ul>
       </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/discipline-tracker</span>
-        </div>
-        <img src="shot-discipline-tracker-800.webp"
-             srcset="shot-discipline-tracker-800.webp 800w, shot-discipline-tracker-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva discipline tracker showing a discipline score of 85 percent, a breakdown of completed checklist items and rules followed, and a personal trading rules list.">
-      </div>
-    </article>
+    </div>
 
-    <!-- 6 · REVIEWS -->
-    <article class="showcase flip reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Reviews</span>
-        <h3>Your week, graded honestly</h3>
-        <p class="lede">Every module folds into one review &mdash; daily, weekly, monthly or yearly &mdash; with a grade across performance, discipline, planning and consistency, and the actions that follow from it.</p>
-        <ul class="pills">
-          <li>Daily reviews</li><li>Weekly reviews</li><li>Monthly reviews</li>
-          <li>Performance grading</li><li>Best &amp; worst sessions</li><li>Action plans</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/reviews</span>
-        </div>
-        <img src="shot-reviews-800.webp"
-             srcset="shot-reviews-800.webp 800w, shot-reviews-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva weekly review with net RR, win rate and profit factor, an overall grade of A at 87 out of 100, and sub-scores for performance, discipline, planner and consistency.">
-      </div>
-    </article>
-
-    <!-- 7 · MILESTONES -->
-    <article class="showcase reveal">
-      <div class="showcase-copy">
-        <span class="eyebrow">Milestones</span>
-        <h3>Progress you can actually feel</h3>
-        <p class="lede">Levels, XP and 54 achievements earned by journaling, reviewing and staying disciplined &mdash; the habits that compound, rather than the size of any single win.</p>
-        <ul class="pills">
-          <li>Levels &amp; XP</li><li>54 achievements</li><li>Lifetime journey</li>
-          <li>Consistency</li><li>Next milestones</li><li>Trading timeline</li>
-        </ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="frame-url">tradeva.app/milestones</span>
-        </div>
-        <img src="shot-milestones-800.webp"
-             srcset="shot-milestones-800.webp 800w, shot-milestones-1600.webp 1600w"
-             sizes="(min-width: 1080px) 660px, 92vw"
-             width="1600" height="1000" loading="lazy" decoding="async"
-             alt="Tradeva milestones page showing a Developing Trader level 3 card with XP progress, lifetime trading journey statistics and upcoming achievements.">
-      </div>
-    </article>
   </div>
 </section>
 
-<!-- ═══════════════ FEATURES ═══════════════ -->
-<section class="section" id="features">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Features</span>
-      <h2>Built for traders who are serious about improving</h2>
-      <p>Every feature exists because a trader needed it to answer a question about their own performance.</p>
-    </div>
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 2 — TRUST METRICS          (next up)
+     SECTION 3 — INTERACTIVE SHOWCASE   <section id="showcase">
+     SECTION 4 — FEATURE ROWS           <section id="features">
+     SECTION 5 — TRADING IMPROVEMENT
+     SECTION 6 — TESTIMONIALS
+     SECTION 7 — FAQ                    <section id="faq">
+     SECTION 8 — FINAL CTA
+     SECTION 9 — FOOTER
 
-    <div class="feature-grid">
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3-4 3 3 4-6"/></svg></div>
-        <h3>Trade Journal</h3>
-        <p>Entry, exit, stop, target, session, R multiple, notes and screenshots &mdash; every trade fully documented.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10M12 20V4M18 20v-6"/></svg></div>
-        <h3>Performance Analytics</h3>
-        <p>Profit factor, expectancy, edge score and drawdown, recalculated the moment a trade is saved.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div>
-        <h3>Profit Calendar</h3>
-        <p>Daily and weekly results laid out as a month, with export to PNG or a branded monthly report.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></div>
-        <h3>Trading Psychology</h3>
-        <p>Mood, energy and stress tracked alongside results, so you can see which state you actually trade well in.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
-        <h3>Weekly Planner</h3>
-        <p>Bias, watchlist, targets and risk limits set in advance &mdash; then measured against what you actually did.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
-        <h3>Discipline Tracking</h3>
-        <p>Your rules, your checklist, scored daily. Rewards process, not luck.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 8h7M8 12h7"/></svg></div>
-        <h3>Reviews</h3>
-        <p>Daily, weekly, monthly and yearly reviews with an automatic grade and a written verdict.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6L12 16.8 6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
-        <h3>Milestones</h3>
-        <p>Seven levels and 54 achievements that reward consistency instead of one lucky trade.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 5.5v15"/></svg></div>
-        <h3>Knowledge Base</h3>
-        <p>Strategies, notes, books, videos and PDFs kept beside the trades they belong to.</p>
-      </div>
-
-      <div class="f-card reveal">
-        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.5 1.7A3.75 3.75 0 0 1 17.2 18z"/><path d="M12 12v6M9.5 15.5L12 18l2.5-2.5"/></svg></div>
-        <h3>Cloud Sync</h3>
-        <p>Log on your phone at the desk, review on your laptop later. Same account, same data.</p>
-      </div>
-    </div>
-
-    <p style="text-align:center; margin-top:var(--s6); color:var(--text-2); font-size:14.5px;" class="reveal">
-      On the roadmap:
-      <span class="f-soon">AI Trade Review</span>
-      <span class="f-soon">Backtesting</span>
-      <span class="f-soon">Auto Sync</span>
-    </p>
-  </div>
-</section>
-
-<!-- ═══════════════ WHY TRADEVA ═══════════════ -->
-<section class="section">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Why Tradeva</span>
-      <h2>Stop maintaining a spreadsheet. Start reviewing your trading.</h2>
-      <p>The tool should do the arithmetic. You should be doing the thinking.</p>
-    </div>
-
-    <div class="compare">
-      <div class="col bad reveal">
-        <h3>The usual setup</h3>
-        <ul>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Excel spreadsheets that break when you add a column</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Notion templates with no real analytics</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Manual profit factor and drawdown calculations</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Screenshots scattered across three folders</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Nowhere to record how you felt</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>A file that only exists on one laptop</li>
-        </ul>
-      </div>
-
-      <div class="col good reveal">
-        <h3>Tradeva</h3>
-        <ul>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Automatic analytics the moment a trade is saved</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Professional monthly reports, exportable</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Psychology and discipline tracked as first-class data</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Entry and exit screenshots attached to the trade</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cloud sync across every device you own</li>
-          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Multiple accounts, cleanly separated</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ HOW IT WORKS ═══════════════ -->
-<section class="section">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">How it works</span>
-      <h2>Four steps to a real trading process</h2>
-    </div>
-
-    <ol class="steps">
-      <li class="step reveal">
-        <div class="step-num">1</div>
-        <div><h3>Create your account</h3><p>Email or Google. About twenty seconds, no card.</p></div>
-      </li>
-      <li class="step reveal">
-        <div class="step-num">2</div>
-        <div><h3>Add your trades</h3><p>Log entries, exits, risk and screenshots as you go &mdash; or catch up on the weekend.</p></div>
-      </li>
-      <li class="step reveal">
-        <div class="step-num">3</div>
-        <div><h3>Analyze performance</h3><p>Your stats, calendar and edge score build themselves from what you logged.</p></div>
-      </li>
-      <li class="step reveal">
-        <div class="step-num">4</div>
-        <div><h3>Become more consistent</h3><p>Review weekly, hold your rules, and watch the discipline score move before the P&amp;L does.</p></div>
-      </li>
-    </ol>
-  </div>
-</section>
-
-<!-- ═══════════════ FAQ ═══════════════ -->
-<section class="section" id="faq">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">FAQ</span>
-      <h2>Questions, answered</h2>
-    </div>
-
-    <div class="faq">
-      <details class="reveal"><summary>Is Tradeva really free?</summary><div class="answer">Yes. Every feature on this page is free to use, with no trial period and no card required at sign-up.</div></details>
-      <details class="reveal"><summary>Can I track multiple trading accounts?</summary><div class="answer">Yes. Create as many accounts as you need &mdash; personal, prop firm, demo &mdash; each with its own balance, trades and statistics. Switching accounts changes every page instantly.</div></details>
-      <details class="reveal"><summary>Does it work on mobile?</summary><div class="answer">Tradeva is fully responsive and built mobile-first for logging. Add a trade from your phone at the desk, then review it properly on a laptop later.</div></details>
-      <details class="reveal"><summary>Can I upload screenshots of my trades?</summary><div class="answer">Yes &mdash; an entry and an exit image per trade. They're compressed in your browser before upload, so charts stay readable without eating your data.</div></details>
-      <details class="reveal"><summary>Can I export my reports?</summary><div class="answer">The Profit Calendar exports as a PNG or a branded monthly report, ready to share or file with your own records.</div></details>
-      <details class="reveal"><summary>Is my data secure?</summary><div class="answer">Your trades live in your own account and are only readable by you. Sign-in supports email with verification or Google, and logging out clears the cached data from that device.</div></details>
-      <details class="reveal"><summary>Can I really track trading psychology?</summary><div class="answer">Yes, and it's a core part of the product rather than a text box. Mood, energy and stress are logged as structured data, so they can be compared against your results over time.</div></details>
-      <details class="reveal"><summary>Does it support Forex?</summary><div class="answer">Yes. Pairs, sessions, pips and R multiples are all first-class fields, and the planner ships with the major FX pairs built in.</div></details>
-      <details class="reveal"><summary>Does it support Crypto and indices?</summary><div class="answer">Yes. Tradeva is instrument-agnostic &mdash; if you can record an entry, an exit and a risk, you can journal it. Crypto and index symbols are included in the planner's market list.</div></details>
-      <details class="reveal"><summary>Can I use it for a prop firm account?</summary><div class="answer">Yes, and it's a common use. Set the account's starting balance, then use the weekly planner's max drawdown and trade limits to stay inside your firm's rules.</div></details>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ FINAL CTA ═══════════════ -->
-<section class="section">
-  <div class="container">
-    <div class="cta-card reveal">
-      <h2>Ready to become a better trader?</h2>
-      <p>Start journaling today. Build the consistency, discipline and performance that separates traders who improve from traders who just keep trading.</p>
-      <a class="btn btn-primary btn-lg" href="register.html">Start Free</a>
-      <p style="margin-top:var(--s3); font-size:14px;">Free forever &middot; No credit card required</p>
-    </div>
-  </div>
-</section>
+     Each will be appended here, with its styles in css/sections.css and
+     any behaviour in its own js/ module.
+     ══════════════════════════════════════════════════════════════ -->
 
 </main>
 
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-about">
-        <a class="brand" href="/"><img src="logo-transparent.png" alt="" width="28" height="28" loading="lazy">Tradeva</a>
-        <p>The most advanced free trading journal for serious traders.</p>
-        <!-- Placeholder URLs — replace the href on each before launch. -->
-        <div class="socials">
-          <a href="#" aria-label="Tradeva on Facebook"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3V6h-3c-2.2 0-4 1.8-4 4v2H8v3h2v7h3v-7h3l1-3h-4v-2c0-.6.4-1 1-1z"/></svg></a>
-          <a href="#" aria-label="Tradeva on Instagram"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></a>
-          <a href="#" aria-label="Tradeva on X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.2 2H21l-6.4 7.3L22 22h-6l-4.7-6.2L5.9 22H3l6.9-7.9L2.3 2h6.2l4.2 5.6zm-1 18h1.6L7.9 3.7H6.1z"/></svg></a>
-          <a href="#" aria-label="Tradeva on Discord"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.3 5.4A16 16 0 0 0 15.4 4l-.3.5a12 12 0 0 1 3.4 1.7 11.6 11.6 0 0 0-9-1 11 11 0 0 0-1.9.6l.2-.1A12.5 12.5 0 0 1 8.9 4.5L8.6 4a16 16 0 0 0-3.9 1.4C2.3 9 1.6 12.5 2 15.9a16 16 0 0 0 4.8 2.4l.9-1.4a10 10 0 0 1-1.6-.8l.4-.3a11.4 11.4 0 0 0 9.8 0l.4.3a10 10 0 0 1-1.6.8l.9 1.4a16 16 0 0 0 4.8-2.4c.5-4-.6-7.4-1.5-10.5zM9.2 14.2c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.8 1.7 1.9-.8 1.9-1.7 1.9zm5.6 0c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.8 1.7 1.9-.7 1.9-1.7 1.9z"/></svg></a>
-          <a href="#" aria-label="Tradeva on YouTube"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.7-1.8C18.3 5 12 5 12 5s-6.3 0-7.9.5a2.5 2.5 0 0 0-1.7 1.8C2 8.8 2 12 2 12s0 3.2.4 4.7c.2.9.9 1.6 1.7 1.8 1.6.5 7.9.5 7.9.5s6.3 0 7.9-.5a2.5 2.5 0 0 0 1.7-1.8C22 15.2 22 12 22 12zM10 15.2V8.8l5.2 3.2z"/></svg></a>
-        </div>
-      </div>
+<!--
+  SCRIPT ORDER MATTERS — main.js must be LAST.
+  It calls initNavbar(), initScroll() and initAnimations(), so those
+  functions have to be defined before it runs.
 
-      <div>
-        <h4>Product</h4>
-        <nav aria-label="Product">
-          <a href="#features">Features</a>
-          <a href="#product">Analytics</a>
-          <a href="#product">Journal</a>
-          <a href="#product">Reviews</a>
-          <a href="#">Pricing</a>
-        </nav>
-      </div>
-
-      <div>
-        <h4>Resources</h4>
-        <nav aria-label="Resources">
-          <a href="#">Blog</a>
-          <a href="knowledge-base.html">Knowledge Base</a>
-          <a href="#">Discord</a>
-          <a href="#">Roadmap</a>
-        </nav>
-      </div>
-
-      <div>
-        <h4>Company</h4>
-        <nav aria-label="Company">
-          <a href="#">About</a>
-          <a href="mailto:support@tradeva.app">Contact</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </nav>
-      </div>
-
-      <div>
-        <h4>Account</h4>
-        <nav aria-label="Account">
-          <a href="login.html">Login</a>
-          <a href="register.html">Register</a>
-        </nav>
-      </div>
-    </div>
-
-    <div class="footer-base">
-      <span>&copy; 2026 Tradeva. All rights reserved.</span>
-      <span>Trade Smarter. Track Every Trade.</span>
-    </div>
-  </div>
-</footer>
-
-<!-- ═══════════════ STRUCTURED DATA ═══════════════ -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Tradeva",
-  "applicationCategory": "FinanceApplication",
-  "operatingSystem": "Web",
-  "url": "https://tradeva.app/",
-  "description": "A free trading journal for serious traders: trade logging, performance analytics, profit calendar, trading psychology, discipline tracking and reviews.",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-}
-</script>
-
-<script>
-/* ═══════════════════════════════════════════════════════════════════
-   BEHAVIOUR
-   Vanilla, no dependencies, guarded so a missing element can never
-   throw and take the rest of the page's interactivity down with it.
-   ═══════════════════════════════════════════════════════════════════ */
-(function () {
-  'use strict';
-
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ── Scroll progress + nav state ───────────────────────────────────
-     One scroll listener for both, throttled to the frame with rAF.
-     Two separate listeners doing their own layout reads is how a
-     landing page ends up janky on a mid-range Android. */
-  var bar = document.getElementById('progress');
-  var nav = document.getElementById('nav');
-  var ticking = false;
-
-  function onScroll() {
-    var y = window.scrollY || document.documentElement.scrollTop;
-    var max = document.documentElement.scrollHeight - window.innerHeight;
-    if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? y / max : 0) + ')';
-    if (nav) nav.classList.toggle('is-scrolled', y > 8);
-    ticking = false;
-  }
-  window.addEventListener('scroll', function () {
-    if (!ticking) { ticking = true; window.requestAnimationFrame(onScroll); }
-  }, { passive: true });
-  onScroll();
-
-  /* ── Mobile menu ─────────────────────────────────────────────────── */
-  var toggle = document.getElementById('navToggle');
-  var menu = document.getElementById('mobileMenu');
-  if (toggle && menu) {
-    toggle.addEventListener('click', function () {
-      var open = menu.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    });
-    // Close after a jump link, or the menu covers the section you asked for.
-    menu.addEventListener('click', function (e) {
-      if (e.target.tagName === 'A') {
-        menu.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Open menu');
-      }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && menu.classList.contains('open')) { toggle.click(); toggle.focus(); }
-    });
-  }
-
-  /* ── Scroll reveal ────────────────────────────────────────────────
-     Unobserved once shown: an element that has appeared never needs
-     watching again, and leaving 80 observers running costs real
-     battery on a long page. */
-  var revealables = document.querySelectorAll('.reveal');
-  if (reduced || !('IntersectionObserver' in window)) {
-    Array.prototype.forEach.call(revealables, function (el) { el.classList.add('in'); });
-  } else {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('in');
-        io.unobserve(entry.target);
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-
-    Array.prototype.forEach.call(revealables, function (el) {
-      // Stagger by position among its siblings, so cards in a grid cascade
-      // while a standalone heading animates immediately.
-      var sibs = el.parentNode ? el.parentNode.children : [el];
-      var idx = Array.prototype.indexOf.call(sibs, el);
-      el.style.transitionDelay = (idx > 0 ? Math.min(idx, 4) * 70 : 0) + 'ms';
-      io.observe(el);
-    });
-  }
-
-  /* ── Animated counters ────────────────────────────────────────────
-     Eased over ~1.1s, and the final frame writes the exact target so
-     rounding can never leave "53" on screen for a value of 54. */
-  var counters = document.querySelectorAll('[data-count]');
-  function runCount(el) {
-    var target = parseInt(el.getAttribute('data-count'), 10) || 0;
-    var suffix = el.getAttribute('data-suffix') || '';
-    if (reduced) { el.textContent = suffix + target; return; }
-    var start = performance.now(), dur = 1100;
-    (function frame(now) {
-      var p = Math.min((now - start) / dur, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = suffix + Math.round(target * eased);
-      if (p < 1) requestAnimationFrame(frame);
-      else el.textContent = suffix + target;
-    })(start);
-  }
-  if (counters.length) {
-    if (!('IntersectionObserver' in window)) {
-      Array.prototype.forEach.call(counters, runCount);
-    } else {
-      var co = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          runCount(entry.target);
-          co.unobserve(entry.target);
-        });
-      }, { threshold: 0.5 });
-      Array.prototype.forEach.call(counters, function (el) { co.observe(el); });
-    }
-  }
-
-  /* ── Button ripple ────────────────────────────────────────────────
-     Positioned from the click point, removed on animationend so the
-     DOM does not accumulate spans over a long session. */
-  if (!reduced) {
-    document.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('.btn') : null;
-      if (!btn) return;
-      var rect = btn.getBoundingClientRect();
-      var size = Math.max(rect.width, rect.height);
-      var span = document.createElement('span');
-      span.className = 'ripple';
-      span.style.width = span.style.height = size + 'px';
-      span.style.left = (e.clientX - rect.left - size / 2) + 'px';
-      span.style.top = (e.clientY - rect.top - size / 2) + 'px';
-      btn.appendChild(span);
-      span.addEventListener('animationend', function () { span.remove(); });
-    });
-  }
-})();
-</script>
+  `defer` means: download in parallel, execute in order, after the HTML is
+  parsed. That is why none of these files need a DOMContentLoaded wrapper.
+-->
+<script src="js/navbar.js" defer></script>
+<script src="js/scroll.js" defer></script>
+<script src="js/animations.js" defer></script>
+<script src="js/main.js" defer></script>
 
 </body>
 </html>
