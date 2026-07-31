@@ -1,8 +1,22 @@
-/* ==========================================
+ /* ==========================================
    TRADEVA ANIMATIONS
-========================================== */
+   ========================================== */
 
-/* Floating Browser */
+/* Smooth transitions */
+
+*{
+    transition:
+        color .3s ease,
+        background-color .3s ease,
+        border-color .3s ease,
+        transform .3s ease,
+        box-shadow .3s ease,
+        opacity .3s ease;
+}
+
+/* ==========================================
+   FLOATING HERO
+   ========================================== */
 
 @keyframes floatBrowser{
 
@@ -11,7 +25,7 @@
     }
 
     50%{
-        transform:translateY(-15px);
+        transform:translateY(-16px);
     }
 
     100%{
@@ -20,7 +34,15 @@
 
 }
 
-/* Floating Cards */
+.browser-window{
+
+    animation:floatBrowser 6s ease-in-out infinite;
+
+}
+
+/* ==========================================
+   FLOATING CARDS
+   ========================================== */
 
 @keyframes floatCard{
 
@@ -35,80 +57,6 @@
     100%{
         transform:translateY(0px);
     }
-
-}
-
-/* Scroll Indicator */
-
-@keyframes scrollDown{
-
-    0%{
-        transform:translateY(0);
-        opacity:1;
-    }
-
-    100%{
-        transform:translateY(14px);
-        opacity:0;
-    }
-
-}
-
-/* Background Blob */
-
-@keyframes blob{
-
-    0%{
-        transform:translate(0,0) scale(1);
-    }
-
-    100%{
-        transform:translate(80px,-60px) scale(1.2);
-    }
-
-}
-
-/* Fade Up */
-
-@keyframes fadeUp{
-
-    from{
-
-        opacity:0;
-        transform:translateY(40px);
-
-    }
-
-    to{
-
-        opacity:1;
-        transform:translateY(0);
-
-    }
-
-}
-
-/* Fade In */
-
-@keyframes fadeIn{
-
-    from{
-        opacity:0;
-    }
-
-    to{
-        opacity:1;
-    }
-
-}
-
-/* ==========================================
-   Animation Classes
-========================================== */
-
-.browser-window{
-
-    animation:floatBrowser 6s ease-in-out infinite;
 
 }
 
@@ -136,18 +84,138 @@
 
 }
 
-/* Reveal Classes */
+/* ==========================================
+   FADE UP
+   ========================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+        transform:translateY(40px);
+
+    }
+
+    to{
+
+        opacity:1;
+        transform:translateY(0);
+
+    }
+
+}
 
 .reveal{
 
     opacity:0;
 
+}
+
+.reveal.active{
+
     animation:fadeUp .8s ease forwards;
+
+}
+
+/* ==========================================
+   SCALE IN
+   ========================================== */
+
+@keyframes scaleIn{
+
+    from{
+
+        opacity:0;
+        transform:scale(.95);
+
+    }
+
+    to{
+
+        opacity:1;
+        transform:scale(1);
+
+    }
+
+}
+
+.scale-in{
+
+    opacity:0;
+
+}
+
+.scale-in.active{
+
+    animation:scaleIn .8s ease forwards;
+
+}
+
+/* ==========================================
+   FADE IN
+   ========================================== */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
 
 }
 
 .fade-in{
 
+    opacity:0;
+
+}
+
+.fade-in.active{
+
     animation:fadeIn .8s ease forwards;
+
+}
+
+/* ==========================================
+   BUTTON HOVER
+   ========================================== */
+
+.primary-btn:hover{
+
+    transform:translateY(-3px);
+
+}
+
+.secondary-btn:hover{
+
+    transform:translateY(-3px);
+
+}
+
+/* ==========================================
+   CARD HOVER
+   ========================================== */
+
+.floating-card:hover{
+
+    transform:translateY(-8px);
+
+}
+
+.browser-window:hover{
+
+    transform:
+        perspective(1400px)
+        rotateX(2deg)
+        rotateY(-2deg)
+        translateY(-10px);
 
 }
