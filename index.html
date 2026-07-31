@@ -236,12 +236,6 @@ button{font-family:inherit}
 
 .showcase-stage{position:relative;max-width:1060px;margin:0 auto}
 .showcase-stage .frame{position:relative}
-.tab-imgs{position:relative;aspect-ratio:16/10}
-.tab-imgs img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left;
-  opacity:0;transition:opacity 420ms var(--ease);
-}
-.tab-imgs img.is-active{opacity:1}
 
 .tab-caption{max-width:640px;margin:var(--s5) auto 0;text-align:center}
 .tab-caption h3{font-size:22px;margin-bottom:6px}
@@ -278,19 +272,17 @@ button{font-family:inherit}
 .f-soon{display:inline-block;margin-left:var(--s1);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:999px}
 
 /* ═══════════════════════════════════════════════════════════════════════
-   12. IMPROVEMENT CARDS
+   12. BENEFIT CARDS — same treatment as .f-card, one size up
    ═══════════════════════════════════════════════════════════════════════ */
-.improve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s3)}
-.i-card{
-  position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:var(--s5);box-shadow:var(--sh-sm);
+.benefit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s3)}
+.b-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:var(--s5) var(--s4);box-shadow:var(--sh-sm);
   transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease),border-color var(--t) var(--ease);
 }
-.i-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:#DBEAFE}
-.i-card::after{content:'';position:absolute;inset:auto -30% -60% auto;width:220px;height:220px;background:radial-gradient(circle,rgba(37,99,235,.07),transparent 70%);pointer-events:none}
-.i-num{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--blue);margin-bottom:var(--s2)}
-.i-card h3{font-size:19px;margin-bottom:8px}
-.i-card p{color:var(--text-2);font-size:15px}
+.b-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:#DBEAFE}
+.b-card h3{font-size:19px;margin-bottom:8px}
+.b-card p{color:var(--text-2);font-size:15px}
 
 /* ═══════════════════════════════════════════════════════════════════════
    13. COMPARISON
@@ -415,8 +407,7 @@ button{font-family:inherit}
        blank page. -->
   <style>.reveal{opacity:1!important;transform:none!important}
   .float-card,.hero-stage{animation:none!important}
-  .tab-imgs img{opacity:1!important;position:relative;height:auto}
-  .tab-imgs img:not(:first-child){display:none}</style>
+</style>
 </noscript>
 </head>
 
@@ -449,7 +440,6 @@ button{font-family:inherit}
     <a href="#">Blog</a>
     <a href="#">Discord</a>
     <a href="login.html">Login</a>
-    <a class="btn btn-primary" href="register.html">Start Free</a>
   </div>
 </header>
 
@@ -553,104 +543,57 @@ button{font-family:inherit}
           <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
           <span class="frame-url" id="tabUrl">tradeva.app/dashboard</span>
         </div>
-        <div class="tab-imgs" id="tabImgs">
-          <img class="is-active" data-tab="dashboard" src="tv-dashboard.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva dashboard with total trades, win rate, profit factor, net P&amp;L and equity curves.">
-          <img data-tab="analytics" src="tv-analytics.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva analytics with profit factor, expectancy, recovery factor and an edge score.">
-          <img data-tab="profit-calendar" src="tv-profit-calendar.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva profit calendar showing green and red trading days with weekly totals.">
-          <img data-tab="weekly-planner" src="tv-weekly-planner.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva weekly planner with market bias, focus pairs and weekly risk targets.">
-          <img data-tab="mood-tracker" src="tv-mood-tracker.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva mood tracker with mood, energy and stress check-ins and an emotional balance ring.">
-          <img data-tab="discipline-tracker" src="tv-discipline-tracker.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva discipline tracker with a daily discipline score and personal trading rules.">
-          <img data-tab="reviews" src="tv-reviews.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva weekly review with an overall grade and sub-scores for performance and discipline.">
-          <img data-tab="milestones" src="tv-milestones.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva milestones with trader level, XP progress and lifetime journey statistics.">
-        </div>
+        <!-- ONE image for every tab. The tabs are feature selectors now,
+             not screenshot selectors — the dashboard stays on screen and only
+             the heading, description and URL change. -->
+        <img src="tv-dashboard.webp" width="1920" height="1200"
+             fetchpriority="high" decoding="async"
+             alt="The Tradeva dashboard: total trades, win rate, profit factor, net P&amp;L, an account growth curve and a drawdown curve.">
       </div>
 
       <div class="tab-caption" id="tabCaption" aria-live="polite">
-        <h3>Everything, in one document read</h3>
-        <p>Thirteen metrics, an equity curve and a drawdown curve — precomputed, so the dashboard opens instantly no matter how many trades you have logged.</p>
+        <h3>Dashboard</h3>
+        <p>Monitor every important trading metric from one place — updated the moment a trade is saved.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════ 4 · DEEP DIVES ══════════════ -->
-<section class="section">
-  <div class="container">
-
-    <article class="deep reveal">
-      <div class="deep-copy">
-        <span class="eyebrow">Analytics</span>
-        <h3>Find your edge, then prove it</h3>
-        <p class="lede">Win rate on its own tells you almost nothing. Tradeva computes the full picture automatically — and flags the days, pairs and sessions quietly costing you money.</p>
-        <ul class="pills"><li>Profit Factor</li><li>Expectancy</li><li>Edge Score</li><li>Recovery Factor</li><li>Drawdown</li><li>Session breakdown</li></ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/analytics</span></div>
-        <img src="tv-analytics.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva analytics: total P&amp;L, win rate, profit factor, expectancy and edge score.">
-      </div>
-    </article>
-
-    <article class="deep flip reveal">
-      <div class="deep-copy">
-        <span class="eyebrow">Psychology</span>
-        <h3>The variable most journals ignore</h3>
-        <p class="lede">Log mood, energy and stress before and after the session. Over a few weeks the link between your mental state and your results stops being a theory and starts being data.</p>
-        <ul class="pills"><li>Mood check-ins</li><li>Energy</li><li>Stress</li><li>Emotional balance</li><li>Trend over time</li></ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/mood-tracker</span></div>
-        <img src="tv-mood-tracker.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva mood tracker with an emotional balance ring at 87 percent.">
-      </div>
-    </article>
-
-    <article class="deep reveal">
-      <div class="deep-copy">
-        <span class="eyebrow">Consistency</span>
-        <h3>See your month at a glance</h3>
-        <p class="lede">Green days, red days and weekly totals side by side — so the pattern shows up long before the P&amp;L does. Export any month as an image or a branded report.</p>
-        <ul class="pills"><li>Daily P&amp;L</li><li>R multiple</li><li>Win rate</li><li>Weekly summaries</li><li>PNG export</li><li>Monthly report</li></ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/profit-calendar</span></div>
-        <img src="tv-profit-calendar.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva profit calendar with green and red day cells and weekly total cards.">
-      </div>
-    </article>
-
-    <article class="deep flip reveal">
-      <div class="deep-copy">
-        <span class="eyebrow">Reviews</span>
-        <h3>Your week, graded honestly</h3>
-        <p class="lede">Every module folds into one review — daily, weekly, monthly or yearly — with a grade across performance, discipline, planning and consistency, and the actions that follow from it.</p>
-        <ul class="pills"><li>Auto-grading</li><li>Best &amp; worst days</li><li>Session analysis</li><li>Action plans</li></ul>
-      </div>
-      <div class="frame">
-        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/reviews</span></div>
-        <img src="tv-reviews.webp" width="1920" height="1200" loading="lazy" decoding="async" alt="Tradeva weekly review with an overall grade of A and four sub-scores.">
-      </div>
-    </article>
-
-  </div>
-</section>
-
-<!-- ══════════════ 5 · IMPROVEMENT ══════════════ -->
+<!-- ══════════════ 4 · WHY TRADEVA WORKS ══════════════ -->
 <section class="section">
   <div class="container">
     <div class="section-head reveal">
-      <span class="eyebrow">How Tradeva helps</span>
+      <span class="eyebrow">Why Tradeva works</span>
       <h2>Journaling is the habit. Improving is the point.</h2>
-      <p>Five things a journal has to do before it changes how you trade.</p>
+      <p>Four outcomes a journal has to deliver before it changes how you trade.</p>
     </div>
-    <div class="improve-grid">
-      <div class="i-card reveal"><div class="i-num">01</div><h3>Find your mistakes</h3><p>The same error repeated eleven times looks like bad luck until it is counted. Analytics surfaces the pair, session and weekday that keep taking your money.</p></div>
-      <div class="i-card reveal"><div class="i-num">02</div><h3>Improve discipline</h3><p>Your own rules, checked off daily and scored automatically. A disciplined losing day still scores well — which is exactly the point.</p></div>
-      <div class="i-card reveal"><div class="i-num">03</div><h3>Build consistency</h3><p>The calendar makes an inconsistent month impossible to rationalise. Green days, red days, and the gaps in between.</p></div>
-      <div class="i-card reveal"><div class="i-num">04</div><h3>Increase confidence</h3><p>Confidence from a measured edge survives a losing streak. Confidence from a good week does not.</p></div>
-      <div class="i-card reveal"><div class="i-num">05</div><h3>Review your setups</h3><p>Entry and exit screenshots attached to every trade, so reviewing a setup means looking at the chart again — not remembering it.</p></div>
+
+    <div class="benefit-grid">
+      <div class="b-card reveal">
+        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3-4 3 3 4-6"/></svg></div>
+        <h3>Measure</h3>
+        <p>Track every trade with metrics that actually mean something — profit factor, expectancy, drawdown and R multiple, not just a running total.</p>
+      </div>
+      <div class="b-card reveal">
+        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></div>
+        <h3>Learn</h3>
+        <p>Understand exactly why you win and lose. Your best pair, your worst session, and the mental state you trade well in.</p>
+      </div>
+      <div class="b-card reveal">
+        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+        <h3>Improve</h3>
+        <p>Find the recurring mistake and eliminate it. The same error eleven times looks like bad luck until something counts it for you.</p>
+      </div>
+      <div class="b-card reveal">
+        <div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Stay Consistent</h3>
+        <p>Build discipline through structured planning and reviews, so a good month is something you repeated rather than something that happened.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════ 6 · FEATURES ══════════════ -->
+<!-- ══════════════ 5 · FEATURES ══════════════ -->
 <section class="section" id="features">
   <div class="container">
     <div class="section-head reveal">
@@ -676,7 +619,7 @@ button{font-family:inherit}
   </div>
 </section>
 
-<!-- ══════════════ 7 · WHY TRADEVA ══════════════ -->
+<!-- ══════════════ 6 · TRADEVA VS SPREADSHEET ══════════════ -->
 <section class="section">
   <div class="container">
     <div class="section-head reveal">
@@ -711,7 +654,7 @@ button{font-family:inherit}
   </div>
 </section>
 
-<!-- ══════════════ 8 · HOW IT WORKS ══════════════ -->
+<!-- ══════════════ 7 · HOW IT WORKS ══════════════ -->
 <section class="section">
   <div class="container">
     <div class="section-head reveal">
@@ -727,7 +670,7 @@ button{font-family:inherit}
   </div>
 </section>
 
-<!-- ══════════════ 9 · FAQ ══════════════ -->
+<!-- ══════════════ 8 · FAQ ══════════════ -->
 <section class="section" id="faq">
   <div class="container">
     <div class="section-head reveal"><span class="eyebrow">FAQ</span><h2>Questions, answered</h2></div>
@@ -746,7 +689,7 @@ button{font-family:inherit}
   </div>
 </section>
 
-<!-- ══════════════ 10 · FINAL CTA ══════════════ -->
+<!-- ══════════════ 9 · FINAL CTA ══════════════ -->
 <section class="section">
   <div class="container">
     <div class="cta-card reveal">
@@ -887,24 +830,22 @@ button{font-family:inherit}
      file decodes. Arrow keys move between tabs, per the WAI-ARIA tab
      pattern, so the control is usable without a mouse. */
   var CAPTIONS = {
-    'dashboard':          ['Everything, in one document read', 'Thirteen metrics, an equity curve and a drawdown curve — precomputed, so the dashboard opens instantly no matter how many trades you have logged.'],
-    'analytics':          ['Find the edge you actually have', 'Profit factor, expectancy, recovery factor and a composite edge score, plus the pair, session and weekday quietly costing you money.'],
-    'profit-calendar':    ['A month of trading on one screen', 'Green days, red days and weekly totals side by side. Export any month as an image or a branded report.'],
-    'weekly-planner':     ['Decide before the market opens', 'Set bias, focus pairs, target RR and maximum drawdown while you are calm — then measure the week against it.'],
-    'mood-tracker':       ['The variable most journals ignore', 'Mood, energy and stress logged as structured data, so the link between your mental state and your results becomes visible.'],
-    'discipline-tracker': ['Score the process, not the payout', 'Your own rules and checklist, scored daily. A disciplined losing day still scores well — which is the entire point.'],
-    'reviews':            ['Your week, graded honestly', 'One review across performance, discipline, planning and consistency, with the actions that follow from it.'],
-    'milestones':         ['Progress you can actually feel', 'Seven levels and 54 achievements earned by journaling, reviewing and staying disciplined.']
+    'dashboard':          ['Dashboard',  'Monitor every important trading metric from one place — updated the moment a trade is saved.'],
+    'analytics':          ['Analytics',  'Discover your edge with profit factor, expectancy, recovery factor and advanced performance insights.'],
+    'profit-calendar':    ['Calendar',   'Review every trading day and see your consistency build up over the month.'],
+    'weekly-planner':     ['Planner',    'Plan your week before the market opens — bias, focus pairs, targets and risk limits.'],
+    'mood-tracker':       ['Psychology', 'Track mood, energy and stress, and see how your emotional patterns move your results.'],
+    'discipline-tracker': ['Discipline', 'Build consistency by following your own trading rules, scored automatically every day.'],
+    'reviews':            ['Reviews',    'Automatic daily, weekly and monthly performance reviews, each with a grade and a verdict.'],
+    'milestones':         ['Milestones', 'Level up as your trading improves — XP and achievements earned through consistency.']
   };
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
-  var imgs = document.querySelectorAll('#tabImgs img');
   var urlEl = document.getElementById('tabUrl');
   var capEl = document.getElementById('tabCaption');
 
   function select(name) {
     tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.tab === name)); });
-    Array.prototype.forEach.call(imgs, function (img) { img.classList.toggle('is-active', img.dataset.tab === name); });
     if (urlEl) urlEl.textContent = 'tradeva.app/' + name;
     if (capEl && CAPTIONS[name]) {
       capEl.querySelector('h3').textContent = CAPTIONS[name][0];
