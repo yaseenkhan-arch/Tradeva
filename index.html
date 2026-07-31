@@ -6,61 +6,423 @@
 <meta name="theme-color" content="#F8FAFC">
 
 <title>Tradeva — Turn Every Trade Into an Opportunity to Improve</title>
-<meta name="description" content="Tradeva is a trading journal that helps you review every trade, identify what works, eliminate costly mistakes, and improve through journaling, analytics and performance insights. Free forever.">
+<meta name="description" content="Tradeva is a free trading journal for serious traders. Review every trade, identify what works, eliminate costly mistakes, and improve through journaling, analytics and performance insights.">
 <link rel="canonical" href="https://tradeva.app/">
 <link rel="icon" href="logo-transparent.png" type="image/png">
 
-<!-- Social preview -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tradeva.app/">
 <meta property="og:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
-<meta property="og:description" content="Review every trade, identify what works, and eliminate costly mistakes. Free forever.">
-<meta property="og:image" content="https://tradeva.app/images/shot-dashboard-1600.webp">
+<meta property="og:description" content="Review every trade, identify what works, eliminate costly mistakes. Free forever.">
+<meta property="og:image" content="https://tradeva.app/shot-dashboard-1600.webp">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
-<meta name="twitter:description" content="Review every trade, identify what works, and eliminate costly mistakes. Free forever.">
-<meta name="twitter:image" content="https://tradeva.app/images/shot-dashboard-1600.webp">
+<meta name="twitter:description" content="Review every trade, identify what works, eliminate costly mistakes. Free forever.">
+<meta name="twitter:image" content="https://tradeva.app/shot-dashboard-1600.webp">
 
 <!--
-  Inter, loaded without blocking the first paint.
-  The quotes inside onload MUST stay plain single quotes. A backslash-escaped
-  \' is invalid inside an HTML attribute and throws "Invalid or unexpected
-  token" — which is also what produces the "preloaded but not used" warning.
+  Inter, loaded without blocking first paint.
+  The quotes inside onload MUST stay plain single quotes — a backslash-escaped
+  \' is invalid in an HTML attribute and throws "Invalid or unexpected token".
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       onload="this.onload=null;this.rel='stylesheet'">
-<noscript>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-</noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 
-<!--
-  STYLESHEET ORDER MATTERS — do not rearrange these five lines.
-    style.css       tokens + reset + shared components   (everything needs it)
-    hero.css        navigation + hero
-    sections.css    everything below the hero
-    animations.css  all motion
-    responsive.css  breakpoints — MUST be last, because these rules win by
-                    cascade order rather than by specificity
--->
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/hero.css">
-<link rel="stylesheet" href="css/sections.css">
-<link rel="stylesheet" href="css/animations.css">
-<link rel="stylesheet" href="css/responsive.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   1. TOKENS — 8px spacing scale, every colour a variable
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{
+  --blue:#2563EB; --blue-dark:#1D4ED8; --blue-tint:#EFF6FF;
+  --green:#10B981; --red:#EF4444;
+  --bg:#F8FAFC; --surface:#FFFFFF; --surface-2:#F1F5F9;
+  --text:#111827; --text-2:#6B7280; --text-3:#9CA3AF;
+  --border:#E5E7EB; --border-soft:#F1F5F9;
+
+  --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+  --s5:40px; --s6:48px; --s8:64px; --s10:80px; --s12:96px; --s16:128px;
+
+  --r-sm:10px; --r-md:16px; --r-lg:20px; --r-xl:28px;
+
+  /* Two-layer shadows: tight contact + wide ambient. One big blur reads cheap. */
+  --sh-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --sh-md:0 2px 4px rgba(16,24,40,.03),0 12px 24px -8px rgba(16,24,40,.08);
+  --sh-lg:0 4px 8px rgba(16,24,40,.04),0 32px 64px -16px rgba(16,24,40,.14);
+  --sh-xl:0 8px 16px rgba(16,24,40,.04),0 48px 96px -24px rgba(16,24,40,.18);
+  --sh-blue:0 2px 4px rgba(37,99,235,.16),0 12px 28px -8px rgba(37,99,235,.32);
+
+  --ease:cubic-bezier(.4,0,.2,1); --t:200ms;
+  --maxw:1200px; --nav-h:68px;
+}
+
+/* Dark-ready: flip data-theme="dark" on <html> and nothing else changes. */
+[data-theme="dark"]{
+  --bg:#080C14; --surface:#0F1623; --surface-2:#151E2E;
+  --text:#F1F5F9; --text-2:#94A3B8; --text-3:#64748B;
+  --border:#1E293B; --border-soft:#16202F; --blue-tint:#0F1E38;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. BASE
+   ═══════════════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + var(--s3));-webkit-text-size-adjust:100%}
+body{
+  margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+h1,h2,h3,h4{margin:0;line-height:1.14;letter-spacing:-.024em;font-weight:700}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%;height:auto}
+button{font-family:inherit}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 var(--s3)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:var(--s2);top:-60px;z-index:200;background:var(--surface);padding:var(--s1) var(--s2);border-radius:var(--r-sm);box-shadow:var(--sh-md);font-weight:600;transition:top var(--t) var(--ease)}
+.skip-link:focus{top:var(--s2)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. SCROLL PROGRESS
+   transform:scaleX, never width — width would force layout every frame.
+   ═══════════════════════════════════════════════════════════════════════ */
+.progress{position:fixed;inset:0 0 auto 0;height:2px;z-index:120;background:var(--blue);transform:scaleX(0);transform-origin:0 50%;will-change:transform}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. NAV
+   ═══════════════════════════════════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(248,250,252,.72);
+  backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);
+  border-bottom:1px solid transparent;
+  transition:background var(--t) var(--ease),border-color var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+.nav.is-scrolled{background:rgba(255,255,255,.84);border-bottom-color:var(--border);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);height:var(--nav-h);max-width:var(--maxw);margin:0 auto;padding:0 var(--s3)}
+.brand{display:flex;align-items:center;gap:var(--s1);font-weight:800;font-size:19px;letter-spacing:-.02em;flex-shrink:0}
+.brand img{width:28px;height:28px}
+.nav-links{display:flex;align-items:center;gap:var(--s4)}
+.nav-links a{position:relative;font-size:15px;font-weight:500;color:var(--text-2);transition:color var(--t) var(--ease)}
+.nav-links a:hover{color:var(--text)}
+.nav-links a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--blue);transform:scaleX(0);transition:transform var(--t) var(--ease)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-actions{display:flex;align-items:center;gap:var(--s2);flex-shrink:0}
+
+.btn{
+  position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:var(--s1);
+  font-size:15px;font-weight:600;line-height:1;padding:12px 20px;border-radius:var(--r-sm);
+  border:1px solid transparent;cursor:pointer;white-space:nowrap;
+  transition:transform var(--t) var(--ease),background var(--t) var(--ease),box-shadow var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease);
+}
+.btn-lg{font-size:16px;padding:16px 28px;border-radius:12px}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:var(--sh-blue)}
+.btn-primary:hover{background:var(--blue-dark);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:var(--sh-sm)}
+.btn-outline:hover{border-color:#CBD5E1;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text)}
+.btn-ghost:hover{color:var(--blue)}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,.45);pointer-events:none;animation:ripple 560ms var(--ease)}
+.btn-outline .ripple,.btn-ghost .ripple{background:rgba(37,99,235,.18)}
+@keyframes ripple{to{transform:scale(2.6);opacity:0}}
+
+.nav-toggle{display:none;width:40px;height:40px;padding:0;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer}
+.nav-toggle span{display:block;width:16px;height:1.5px;background:var(--text);position:relative;transition:background 120ms var(--ease)}
+.nav-toggle span::before,.nav-toggle span::after{content:'';position:absolute;left:0;width:16px;height:1.5px;background:var(--text);transition:transform var(--t) var(--ease),top var(--t) var(--ease)}
+.nav-toggle span::before{top:-5px}
+.nav-toggle span::after{top:5px}
+.nav-toggle[aria-expanded="true"] span{background:transparent}
+.nav-toggle[aria-expanded="true"] span::before{top:0;transform:rotate(45deg)}
+.nav-toggle[aria-expanded="true"] span::after{top:0;transform:rotate(-45deg)}
+.mobile-menu{display:none;border-top:1px solid var(--border);background:rgba(255,255,255,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:var(--s2) var(--s3) var(--s3)}
+.mobile-menu.open{display:block}
+.mobile-menu a{display:block;padding:12px 0;font-size:16px;font-weight:500}
+.mobile-menu .btn{width:100%;margin-top:var(--s1)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. SECTION PRIMITIVES
+   ═══════════════════════════════════════════════════════════════════════ */
+.section{padding:var(--s16) 0}
+.section-head{max-width:740px;margin:0 auto var(--s10);text-align:center}
+.section-head h2{font-size:clamp(30px,4.2vw,48px);margin-bottom:var(--s2);letter-spacing:-.03em}
+.section-head p{color:var(--text-2);font-size:17.5px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--blue);background:var(--blue-tint);
+  padding:6px 13px;border-radius:999px;margin-bottom:var(--s2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. HERO
+   ═══════════════════════════════════════════════════════════════════════ */
+.hero{position:relative;padding:var(--s12) 0 var(--s10);overflow:hidden}
+/* Radial gradients, NOT filter:blur() — a blurred full-width element is the
+   most expensive paint on a landing page and it stutters scroll on phones. */
+.hero::before{
+  content:'';position:absolute;inset:-20% -10% auto -10%;height:780px;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(46% 52% at 18% 4%,rgba(37,99,235,.12),transparent 70%),
+    radial-gradient(40% 44% at 86% 0%,rgba(16,185,129,.09),transparent 70%);
+}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:var(--s8);align-items:center}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+  font-size:13px;font-weight:600;color:var(--blue);background:var(--blue-tint);
+  border:1px solid rgba(37,99,235,.16);padding:7px 14px;border-radius:999px;margin-bottom:var(--s3);
+}
+.hero-badge .sep{color:var(--text-3);font-weight:400}
+.hero h1{font-size:clamp(34px,5.6vw,68px);letter-spacing:-.038em;line-height:1.03;margin-bottom:var(--s3)}
+.hero-sub{font-size:clamp(16px,1.25vw,19px);color:var(--text-2);max-width:46ch;margin-bottom:var(--s5)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:var(--s2);margin-bottom:var(--s5)}
+.hero-trust{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3)}
+.hero-trust li{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--text-2)}
+.hero-trust svg{flex-shrink:0;color:var(--green)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. BROWSER FRAME + FLOATING CARDS
+   ═══════════════════════════════════════════════════════════════════════ */
+.hero-visual{position:relative}
+.hero-stage{position:relative;will-change:transform}
+.frame{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xl);overflow:hidden}
+.frame-bar{display:flex;align-items:center;gap:6px;padding:11px 14px;border-bottom:1px solid var(--border-soft);background:#FCFDFE}
+.frame-dot{width:9px;height:9px;border-radius:50%;background:#E2E8F0}
+.frame-url{margin-left:10px;font-size:11.5px;font-weight:500;color:#94A3B8;background:var(--bg);border-radius:6px;padding:3px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* aspect-ratio + width/height reserve the space before load — zero layout shift. */
+.frame img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top left}
+
+.float-card{
+  position:absolute;z-index:2;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;box-shadow:var(--sh-md);padding:12px 14px;min-width:150px;
+}
+.fc-label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);margin-bottom:3px}
+.fc-value{font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.fc-value.up{color:var(--green)}
+.fc-note{font-size:11.5px;color:var(--text-2);margin-top:2px}
+.fc-sub{font-size:13px;color:var(--text-3);font-weight:600}
+.float-card--a{top:11%;left:-7%}
+.float-card--b{bottom:15%;right:-6%}
+.float-card--c{bottom:-5%;left:9%}
+
+@keyframes float-slow{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes float-mid{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+.float-card--a{animation:float-mid 13s var(--ease) infinite}
+.float-card--b{animation:float-mid 16s var(--ease) infinite 1.5s}
+.float-card--c{animation:float-slow 15s var(--ease) infinite .8s}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. STATS STRIP
+   ═══════════════════════════════════════════════════════════════════════ */
+.stats{border-block:1px solid var(--border);background:var(--surface)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);max-width:var(--maxw);margin:0 auto}
+.stat{padding:var(--s8) var(--s3);text-align:center;border-left:1px solid var(--border-soft)}
+.stat:first-child{border-left:0}
+.stat-num{font-size:42px;font-weight:800;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1}
+.stat-label{font-size:13.5px;color:var(--text-2);margin-top:6px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. INTERACTIVE SHOWCASE (tabs)
+   All eight screenshots are stacked in one frame and crossfaded with
+   opacity. Swapping the src instead would show a white flash on every
+   click while the new file decodes.
+   ═══════════════════════════════════════════════════════════════════════ */
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:var(--s6)}
+.tab{
+  font-size:14px;font-weight:600;color:var(--text-2);background:var(--surface);
+  border:1px solid var(--border);padding:9px 16px;border-radius:999px;cursor:pointer;
+  transition:color var(--t) var(--ease),border-color var(--t) var(--ease),background var(--t) var(--ease),transform var(--t) var(--ease);
+}
+.tab:hover{color:var(--text);border-color:#CBD5E1}
+.tab[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:var(--sh-blue)}
+
+.showcase-stage{position:relative;max-width:1060px;margin:0 auto}
+.showcase-stage .frame{position:relative}
+.tab-imgs{position:relative;aspect-ratio:16/10}
+.tab-imgs img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left;
+  opacity:0;transition:opacity 420ms var(--ease);
+}
+.tab-imgs img.is-active{opacity:1}
+
+.tab-caption{max-width:640px;margin:var(--s5) auto 0;text-align:center}
+.tab-caption h3{font-size:22px;margin-bottom:6px}
+.tab-caption p{color:var(--text-2);font-size:15.5px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. DEEP-DIVE ROWS
+   ═══════════════════════════════════════════════════════════════════════ */
+.deep{display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:var(--s8);align-items:center}
+.deep + .deep{margin-top:var(--s16)}
+.deep.flip .deep-copy{order:2}
+.deep h3{font-size:clamp(24px,2.7vw,36px);margin-bottom:var(--s2);letter-spacing:-.03em}
+.deep .lede{color:var(--text-2);font-size:16.5px;margin-bottom:var(--s3)}
+.pills{display:flex;flex-wrap:wrap;gap:var(--s1)}
+.pills li{
+  font-size:13.5px;font-weight:500;background:var(--surface);border:1px solid var(--border);
+  padding:7px 13px;border-radius:999px;transition:border-color var(--t) var(--ease),transform var(--t) var(--ease);
+}
+.pills li:hover{border-color:#BFDBFE;transform:translateY(-1px)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. FEATURE CARDS
+   ═══════════════════════════════════════════════════════════════════════ */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:var(--s3)}
+.f-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:var(--s4);box-shadow:var(--sh-sm);
+  transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease),border-color var(--t) var(--ease);
+}
+.f-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:#DBEAFE}
+.f-ico{width:44px;height:44px;display:grid;place-items:center;background:var(--blue-tint);color:var(--blue);border-radius:12px;margin-bottom:var(--s3)}
+.f-card h3{font-size:17px;margin-bottom:6px}
+.f-card p{font-size:14.5px;color:var(--text-2)}
+.f-soon{display:inline-block;margin-left:var(--s1);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:999px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. IMPROVEMENT CARDS
+   ═══════════════════════════════════════════════════════════════════════ */
+.improve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s3)}
+.i-card{
+  position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:var(--s5);box-shadow:var(--sh-sm);
+  transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease),border-color var(--t) var(--ease);
+}
+.i-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:#DBEAFE}
+.i-card::after{content:'';position:absolute;inset:auto -30% -60% auto;width:220px;height:220px;background:radial-gradient(circle,rgba(37,99,235,.07),transparent 70%);pointer-events:none}
+.i-num{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--blue);margin-bottom:var(--s2)}
+.i-card h3{font-size:19px;margin-bottom:8px}
+.i-card p{color:var(--text-2);font-size:15px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. COMPARISON
+   ═══════════════════════════════════════════════════════════════════════ */
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5)}
+.col.bad{background:transparent;border-style:dashed}
+.col h3{font-size:18px;margin-bottom:var(--s3)}
+.col li{display:flex;gap:11px;align-items:flex-start;padding:9px 0;font-size:15px}
+.col li svg{flex-shrink:0;margin-top:3px}
+.col.bad li{color:var(--text-2)}
+.col.bad li svg{color:var(--red)}
+.col.good li svg{color:var(--green)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   14. STEPS
+   ═══════════════════════════════════════════════════════════════════════ */
+.steps{position:relative;max-width:760px;margin:0 auto}
+.steps::before{content:'';position:absolute;left:23px;top:28px;bottom:28px;width:2px;background:linear-gradient(180deg,var(--border),var(--blue) 22%,var(--blue) 78%,var(--border));opacity:.35}
+.step{display:flex;gap:var(--s3);padding:var(--s3) 0;position:relative}
+.step-num{flex-shrink:0;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:16px;background:var(--surface);color:var(--blue);border:1px solid var(--border);box-shadow:var(--sh-sm);position:relative;z-index:1}
+.step:last-child .step-num{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:var(--sh-blue)}
+.step h3{font-size:18px;margin-bottom:4px}
+.step p{color:var(--text-2);font-size:15px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   15. FAQ — native <details>, works with JS off and is keyboard-navigable
+   ═══════════════════════════════════════════════════════════════════════ */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:10px}
+.faq details{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease)}
+.faq details[open]{border-color:#DBEAFE;box-shadow:var(--sh-sm)}
+.faq summary{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);padding:var(--s3);font-weight:600;font-size:16px;cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'';flex-shrink:0;width:10px;height:10px;border-right:2px solid var(--text-2);border-bottom:2px solid var(--text-2);transform:rotate(45deg) translateY(-2px);transition:transform var(--t) var(--ease)}
+.faq details[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
+.faq .answer{padding:0 var(--s3) var(--s3);color:var(--text-2);font-size:15.5px}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   16. FINAL CTA
+   ═══════════════════════════════════════════════════════════════════════ */
+.cta-card{position:relative;overflow:hidden;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s16) var(--s5);box-shadow:var(--sh-md)}
+.cta-card::before{content:'';position:absolute;inset:-60% 0 auto 0;height:360px;background:radial-gradient(52% 60% at 50% 100%,rgba(37,99,235,.14),transparent 72%);pointer-events:none}
+.cta-card>*{position:relative}
+.cta-card h2{font-size:clamp(30px,4vw,46px);margin-bottom:var(--s2);letter-spacing:-.03em}
+.cta-card p{color:var(--text-2);font-size:17.5px;max-width:54ch;margin:0 auto var(--s5)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   17. FOOTER
+   ═══════════════════════════════════════════════════════════════════════ */
+.footer{background:var(--surface);border-top:1px solid var(--border);padding:var(--s10) 0 var(--s5)}
+.footer-grid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:var(--s6) var(--s4)}
+.footer-about p{color:var(--text-2);font-size:14.5px;margin:var(--s2) 0 var(--s3);max-width:30ch}
+.footer h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);margin-bottom:var(--s2);font-weight:600}
+.footer nav a{display:block;padding:5px 0;font-size:14.5px;color:var(--text-2);transition:color var(--t) var(--ease)}
+.footer nav a:hover{color:var(--blue)}
+.socials{display:flex;gap:10px}
+.socials a{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--border);color:var(--text-2);transition:color var(--t) var(--ease),border-color var(--t) var(--ease),transform var(--t) var(--ease)}
+.socials a:hover{color:var(--blue);border-color:#BFDBFE;transform:translateY(-2px)}
+.footer-base{margin-top:var(--s8);padding-top:var(--s3);border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:var(--s2);justify-content:space-between;font-size:13.5px;color:var(--text-2)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   18. REVEAL
+   ═══════════════════════════════════════════════════════════════════════ */
+.reveal{opacity:0;transform:translateY(22px)}
+.reveal.in{opacity:1;transform:none;transition:opacity 640ms var(--ease),transform 640ms var(--ease)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   19. RESPONSIVE — last block wins by cascade order, keep it here
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width:1080px){
+  .hero-grid{grid-template-columns:1fr;gap:var(--s6);text-align:center}
+  .hero-sub{margin-left:auto;margin-right:auto}
+  .hero-cta,.hero-trust{justify-content:center}
+  .float-card{display:none}          /* no room beside a full-width frame */
+  .deep{grid-template-columns:1fr;gap:var(--s5)}
+  .deep.flip .deep-copy{order:0}     /* image always follows copy when stacked */
+  .deep + .deep{margin-top:var(--s12)}
+  .footer-grid{grid-template-columns:1fr 1fr 1fr}
+  .footer-about{grid-column:1/-1}
+  .section{padding:var(--s12) 0}
+}
+@media (max-width:860px){
+  .nav-links,.nav-actions .btn-ghost{display:none}
+  .nav-toggle{display:inline-flex}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat{border-left:0;border-top:1px solid var(--border-soft)}
+  .stat:nth-child(-n+2){border-top:0}
+  .compare{grid-template-columns:1fr}
+  .section-head{margin-bottom:var(--s8)}
+}
+@media (max-width:600px){
+  .container{padding:0 var(--s2)}
+  .section{padding:var(--s10) 0}
+  .hero{padding:var(--s8) 0 var(--s6)}
+  .hero-badge{white-space:normal;font-size:12.5px}
+  .hero-cta .btn{width:100%}
+  .hero-trust{gap:var(--s1) var(--s2)}
+  .hero-trust li{font-size:13px}
+  .stat{padding:var(--s5) var(--s2)}
+  .stat-num{font-size:32px}
+  .tabs{gap:6px}
+  .tab{font-size:13px;padding:8px 13px}
+  .col,.cta-card{padding:var(--s4) var(--s3)}
+  .cta-card{padding-block:var(--s10)}
+  .frame-url{display:none}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .footer-base{justify-content:center;text-align:center}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   20. REDUCED MOTION — all of the above is decorative
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
 
 <noscript>
-  <!-- Reveal classes are switched on by JavaScript. Without it, every
-       .reveal element would sit at opacity 0 and the page would look
-       empty. This restores the finished state for no-JS visitors. -->
-  <style>
-    .reveal, .reveal-left, .reveal-right, .reveal-blur {
-      opacity: 1 !important; transform: none !important; filter: none !important;
-    }
-    .hero-stage, .float-card { animation: none !important; }
-  </style>
+  <!-- .reveal is switched on by JS. Without this, a no-JS visitor sees a
+       blank page. -->
+  <style>.reveal{opacity:1!important;transform:none!important}
+  .float-card,.hero-stage{animation:none!important}
+  .tab-imgs img{opacity:1!important;position:relative;height:auto}
+  .tab-imgs img:not(:first-child){display:none}</style>
 </noscript>
 </head>
 
@@ -68,36 +430,27 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="progress" id="progress" aria-hidden="true"></div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     NAVIGATION
-     ══════════════════════════════════════════════════════════════ -->
+<!-- ══════════════ NAV ══════════════ -->
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a class="brand" href="/" aria-label="Tradeva home">
-      <img src="logo-transparent.png" alt="" width="28" height="28">
-      Tradeva
+      <img src="logo-transparent.png" alt="" width="28" height="28">Tradeva
     </a>
-
     <nav class="nav-links" aria-label="Primary">
-      <a href="#showcase">Product</a>
+      <a href="#product">Product</a>
       <a href="#features">Features</a>
       <a href="#faq">FAQ</a>
       <a href="#">Blog</a>
       <a href="#">Discord</a>
     </nav>
-
     <div class="nav-actions">
       <a class="btn btn-ghost" href="login.html">Login</a>
       <a class="btn btn-primary" href="register.html">Start Free</a>
-      <button class="nav-toggle" id="navToggle"
-              aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
-        <span></span>
-      </button>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><span></span></button>
     </div>
   </div>
-
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#showcase">Product</a>
+    <a href="#product">Product</a>
     <a href="#features">Features</a>
     <a href="#faq">FAQ</a>
     <a href="#">Blog</a>
@@ -109,131 +462,519 @@
 
 <main id="main">
 
-<!-- ══════════════════════════════════════════════════════════════
-     SECTION 1 — HERO
-     ══════════════════════════════════════════════════════════════ -->
+<!-- ══════════════ 1 · HERO ══════════════ -->
 <section class="hero">
   <div class="container hero-grid">
-
     <div class="hero-copy">
-      <span class="hero-badge reveal">
-        &#10024; Free Forever <span class="dot-sep">&bull;</span> No Credit Card Required
-      </span>
-
-      <h1 class="reveal-blur">Turn Every Trade Into an Opportunity to Improve.</h1>
-
+      <span class="hero-badge reveal">&#10024; Free Forever <span class="sep">&bull;</span> No Credit Card Required</span>
+      <h1 class="reveal">Turn Every Trade Into an Opportunity to Improve.</h1>
       <p class="hero-sub reveal">
         Tradeva helps you review every trade, identify what works, eliminate costly
         mistakes, and continuously improve through journaling, analytics and
         performance insights.
       </p>
-
       <div class="hero-cta reveal">
         <a class="btn btn-primary btn-lg" href="register.html">Start Free</a>
-        <a class="btn btn-outline btn-lg" href="#showcase">
-          Watch Demo
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"></circle><path d="M10 8.5l6 3.5-6 3.5z"></path>
-          </svg>
+        <a class="btn btn-outline btn-lg" href="#product">
+          See It In Action
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
       </div>
-
       <ul class="hero-trust reveal">
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
-          Free Forever
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
-          No Credit Card
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
-          Cloud Sync
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
-          Mobile Friendly
-        </li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Free Forever</li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>No Credit Card</li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Cloud Sync</li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Mobile Friendly</li>
       </ul>
     </div>
 
-    <!-- Hero visual. This image is the LCP element — the largest thing on
-         first paint — so it is NOT lazy-loaded and gets fetchpriority=high.
-         Every other image on the page will be lazy. -->
-    <div class="hero-visual reveal-right">
-      <div class="hero-stage">
-
+    <!-- LCP element: eager, high priority. Everything else on the page is lazy. -->
+    <div class="hero-visual reveal">
+      <div class="hero-stage" id="heroStage">
         <div class="frame">
           <div class="frame-bar" aria-hidden="true">
             <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
             <span class="frame-url">tradeva.app/dashboard</span>
           </div>
-          <img src="images/shot-dashboard-1600.webp"
-               srcset="images/shot-dashboard-800.webp 800w, images/shot-dashboard-1600.webp 1600w"
-               sizes="(min-width: 1080px) 640px, 92vw"
+          <img src="shot-dashboard-1600.webp"
+               srcset="shot-dashboard-800.webp 800w, shot-dashboard-1600.webp 1600w"
+               sizes="(min-width:1080px) 620px, 92vw"
                width="1600" height="1000" fetchpriority="high" decoding="async"
-               alt="The Tradeva dashboard: total trades, win rate, profit factor, net P&L, an account growth curve and a drawdown curve.">
+               alt="The Tradeva dashboard: total trades, win rate, profit factor, net P&amp;L, an account growth curve and a drawdown curve.">
         </div>
-
-        <!-- Floating cards. Decorative, so aria-hidden — a screen reader
-             already has all of this from the image alt text above. -->
         <div class="float-card float-card--a" aria-hidden="true">
           <span class="fc-label">Win rate</span>
           <div class="fc-value up">55.6%</div>
           <div class="fc-note">15 wins &middot; 12 losses</div>
         </div>
-
         <div class="float-card float-card--b" aria-hidden="true">
           <span class="fc-label">Profit factor</span>
           <div class="fc-value">2.49</div>
-          <svg class="fc-spark" width="120" height="26" viewBox="0 0 120 26" fill="none" aria-hidden="true">
-            <path d="M2 21 L18 18 L34 20 L50 12 L66 15 L82 8 L98 10 L118 3"
-                  stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="120" height="26" viewBox="0 0 120 26" fill="none" style="margin-top:6px">
+            <path d="M2 21 L18 18 L34 20 L50 12 L66 15 L82 8 L98 10 L118 3" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-
         <div class="float-card float-card--c" aria-hidden="true">
           <span class="fc-label">Edge score</span>
-          <div class="fc-value">60<span style="font-size:13px;color:var(--text-3);font-weight:600;">/100</span></div>
+          <div class="fc-value">60<span class="fc-sub">/100</span></div>
           <div class="fc-note">Composite edge rating</div>
         </div>
-
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ══════════════ 2 · STATS ══════════════
+     Product facts, not user counts. An unverifiable "50,000 traders" is the
+     fastest way to lose the sceptical trader this page is written for. -->
+<section class="stats" aria-label="Tradeva at a glance">
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-num" data-count="10">0</div><div class="stat-label">Modules in one journal</div></div>
+    <div class="stat"><div class="stat-num" data-count="13">0</div><div class="stat-label">Dashboard metrics</div></div>
+    <div class="stat"><div class="stat-num" data-count="54">0</div><div class="stat-label">Achievements to unlock</div></div>
+    <div class="stat"><div class="stat-num" data-prefix="$" data-count="0">$0</div><div class="stat-label">Cost, forever</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ 3 · INTERACTIVE SHOWCASE ══════════════ -->
+<section class="section" id="product">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">The product</span>
+      <h2>Eight tools. One trading journal.</h2>
+      <p>Every module feeds the next. Log a trade and your analytics, calendar, reviews and milestones all update themselves.</p>
+    </div>
+
+    <div class="tabs reveal" role="tablist" aria-label="Product screens">
+      <button class="tab" role="tab" aria-selected="true"  data-tab="dashboard">Dashboard</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="analytics">Analytics</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="profit-calendar">Calendar</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="weekly-planner">Planner</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="mood-tracker">Psychology</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="discipline-tracker">Discipline</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="reviews">Reviews</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="milestones">Milestones</button>
+    </div>
+
+    <div class="showcase-stage reveal">
+      <div class="frame">
+        <div class="frame-bar" aria-hidden="true">
+          <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+          <span class="frame-url" id="tabUrl">tradeva.app/dashboard</span>
+        </div>
+        <div class="tab-imgs" id="tabImgs">
+          <img class="is-active" data-tab="dashboard" src="shot-dashboard-800.webp" srcset="shot-dashboard-800.webp 800w, shot-dashboard-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva dashboard with total trades, win rate, profit factor, net P&amp;L and equity curves.">
+          <img data-tab="analytics" src="shot-analytics-800.webp" srcset="shot-analytics-800.webp 800w, shot-analytics-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva analytics with profit factor, expectancy, recovery factor and an edge score.">
+          <img data-tab="profit-calendar" src="shot-profit-calendar-800.webp" srcset="shot-profit-calendar-800.webp 800w, shot-profit-calendar-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva profit calendar showing green and red trading days with weekly totals.">
+          <img data-tab="weekly-planner" src="shot-weekly-planner-800.webp" srcset="shot-weekly-planner-800.webp 800w, shot-weekly-planner-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva weekly planner with market bias, focus pairs and weekly risk targets.">
+          <img data-tab="mood-tracker" src="shot-mood-tracker-800.webp" srcset="shot-mood-tracker-800.webp 800w, shot-mood-tracker-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva mood tracker with mood, energy and stress check-ins and an emotional balance ring.">
+          <img data-tab="discipline-tracker" src="shot-discipline-tracker-800.webp" srcset="shot-discipline-tracker-800.webp 800w, shot-discipline-tracker-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva discipline tracker with a daily discipline score and personal trading rules.">
+          <img data-tab="reviews" src="shot-reviews-800.webp" srcset="shot-reviews-800.webp 800w, shot-reviews-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva weekly review with an overall grade and sub-scores for performance and discipline.">
+          <img data-tab="milestones" src="shot-milestones-800.webp" srcset="shot-milestones-800.webp 800w, shot-milestones-1600.webp 1600w" sizes="(min-width:1100px) 1060px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva milestones with trader level, XP progress and lifetime journey statistics.">
+        </div>
+      </div>
+
+      <div class="tab-caption" id="tabCaption" aria-live="polite">
+        <h3>Everything, in one document read</h3>
+        <p>Thirteen metrics, an equity curve and a drawdown curve — precomputed, so the dashboard opens instantly no matter how many trades you have logged.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 4 · DEEP DIVES ══════════════ -->
+<section class="section">
+  <div class="container">
+
+    <article class="deep reveal">
+      <div class="deep-copy">
+        <span class="eyebrow">Analytics</span>
+        <h3>Find your edge, then prove it</h3>
+        <p class="lede">Win rate on its own tells you almost nothing. Tradeva computes the full picture automatically — and flags the days, pairs and sessions quietly costing you money.</p>
+        <ul class="pills"><li>Profit Factor</li><li>Expectancy</li><li>Edge Score</li><li>Recovery Factor</li><li>Drawdown</li><li>Session breakdown</li></ul>
+      </div>
+      <div class="frame">
+        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/analytics</span></div>
+        <img src="shot-analytics-800.webp" srcset="shot-analytics-800.webp 800w, shot-analytics-1600.webp 1600w" sizes="(min-width:1080px) 660px, 92vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva analytics: total P&amp;L, win rate, profit factor, expectancy and edge score.">
+      </div>
+    </article>
+
+    <article class="deep flip reveal">
+      <div class="deep-copy">
+        <span class="eyebrow">Psychology</span>
+        <h3>The variable most journals ignore</h3>
+        <p class="lede">Log mood, energy and stress before and after the session. Over a few weeks the link between your mental state and your results stops being a theory and starts being data.</p>
+        <ul class="pills"><li>Mood check-ins</li><li>Energy</li><li>Stress</li><li>Emotional balance</li><li>Trend over time</li></ul>
+      </div>
+      <div class="frame">
+        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/mood-tracker</span></div>
+        <img src="shot-mood-tracker-800.webp" srcset="shot-mood-tracker-800.webp 800w, shot-mood-tracker-1600.webp 1600w" sizes="(min-width:1080px) 660px, 92vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva mood tracker with an emotional balance ring at 87 percent.">
+      </div>
+    </article>
+
+    <article class="deep reveal">
+      <div class="deep-copy">
+        <span class="eyebrow">Consistency</span>
+        <h3>See your month at a glance</h3>
+        <p class="lede">Green days, red days and weekly totals side by side — so the pattern shows up long before the P&amp;L does. Export any month as an image or a branded report.</p>
+        <ul class="pills"><li>Daily P&amp;L</li><li>R multiple</li><li>Win rate</li><li>Weekly summaries</li><li>PNG export</li><li>Monthly report</li></ul>
+      </div>
+      <div class="frame">
+        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/profit-calendar</span></div>
+        <img src="shot-profit-calendar-800.webp" srcset="shot-profit-calendar-800.webp 800w, shot-profit-calendar-1600.webp 1600w" sizes="(min-width:1080px) 660px, 92vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva profit calendar with green and red day cells and weekly total cards.">
+      </div>
+    </article>
+
+    <article class="deep flip reveal">
+      <div class="deep-copy">
+        <span class="eyebrow">Reviews</span>
+        <h3>Your week, graded honestly</h3>
+        <p class="lede">Every module folds into one review — daily, weekly, monthly or yearly — with a grade across performance, discipline, planning and consistency, and the actions that follow from it.</p>
+        <ul class="pills"><li>Auto-grading</li><li>Best &amp; worst days</li><li>Session analysis</li><li>Action plans</li></ul>
+      </div>
+      <div class="frame">
+        <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-url">tradeva.app/reviews</span></div>
+        <img src="shot-reviews-800.webp" srcset="shot-reviews-800.webp 800w, shot-reviews-1600.webp 1600w" sizes="(min-width:1080px) 660px, 92vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tradeva weekly review with an overall grade of A and four sub-scores.">
+      </div>
+    </article>
 
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════════════
-     SECTION 2 — TRUST METRICS          (next up)
-     SECTION 3 — INTERACTIVE SHOWCASE   <section id="showcase">
-     SECTION 4 — FEATURE ROWS           <section id="features">
-     SECTION 5 — TRADING IMPROVEMENT
-     SECTION 6 — TESTIMONIALS
-     SECTION 7 — FAQ                    <section id="faq">
-     SECTION 8 — FINAL CTA
-     SECTION 9 — FOOTER
+<!-- ══════════════ 5 · IMPROVEMENT ══════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">How Tradeva helps</span>
+      <h2>Journaling is the habit. Improving is the point.</h2>
+      <p>Five things a journal has to do before it changes how you trade.</p>
+    </div>
+    <div class="improve-grid">
+      <div class="i-card reveal"><div class="i-num">01</div><h3>Find your mistakes</h3><p>The same error repeated eleven times looks like bad luck until it is counted. Analytics surfaces the pair, session and weekday that keep taking your money.</p></div>
+      <div class="i-card reveal"><div class="i-num">02</div><h3>Improve discipline</h3><p>Your own rules, checked off daily and scored automatically. A disciplined losing day still scores well — which is exactly the point.</p></div>
+      <div class="i-card reveal"><div class="i-num">03</div><h3>Build consistency</h3><p>The calendar makes an inconsistent month impossible to rationalise. Green days, red days, and the gaps in between.</p></div>
+      <div class="i-card reveal"><div class="i-num">04</div><h3>Increase confidence</h3><p>Confidence from a measured edge survives a losing streak. Confidence from a good week does not.</p></div>
+      <div class="i-card reveal"><div class="i-num">05</div><h3>Review your setups</h3><p>Entry and exit screenshots attached to every trade, so reviewing a setup means looking at the chart again — not remembering it.</p></div>
+    </div>
+  </div>
+</section>
 
-     Each will be appended here, with its styles in css/sections.css and
-     any behaviour in its own js/ module.
-     ══════════════════════════════════════════════════════════════ -->
+<!-- ══════════════ 6 · FEATURES ══════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Features</span>
+      <h2>Everything in one place</h2>
+      <p>Each feature exists because a trader needed it to answer a question about their own performance.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3-4 3 3 4-6"/></svg></div><h3>Trade Journal</h3><p>Entry, exit, stop, target, session, R multiple, notes and screenshots on every trade.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10M12 20V4M18 20v-6"/></svg></div><h3>Performance Analytics</h3><p>Profit factor, expectancy, edge score and drawdown, recalculated the moment you save.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><h3>Profit Calendar</h3><p>A month of results on one screen, with PNG and branded report export.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></div><h3>Trading Psychology</h3><p>Mood, energy and stress tracked beside results, so you learn which state you trade well in.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div><h3>Weekly Planner</h3><p>Bias, watchlist, targets and risk limits set in advance, then measured against reality.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Discipline Tracking</h3><p>Your rules, your checklist, scored daily. Rewards process rather than luck.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 8h7M8 12h7"/></svg></div><h3>Reviews</h3><p>Daily, weekly, monthly and yearly reviews with an automatic grade and written verdict.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6L12 16.8 6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div><h3>Milestones</h3><p>Seven levels and 54 achievements that reward consistency, not one lucky trade.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 5.5v15"/></svg></div><h3>Knowledge Base</h3><p>Strategies, notes, books, videos and PDFs kept beside the trades they belong to.</p></div>
+      <div class="f-card reveal"><div class="f-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.5 1.7A3.75 3.75 0 0 1 17.2 18z"/><path d="M12 12v6M9.5 15.5L12 18l2.5-2.5"/></svg></div><h3>Cloud Sync</h3><p>Log on your phone at the desk, review on your laptop later. Same account, same data.</p></div>
+    </div>
+    <p style="text-align:center;margin-top:var(--s6);color:var(--text-2);font-size:14.5px" class="reveal">
+      On the roadmap: <span class="f-soon">AI Trade Review</span> <span class="f-soon">Backtesting</span> <span class="f-soon">Auto Sync</span>
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════ 7 · WHY TRADEVA ══════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Why Tradeva</span>
+      <h2>Stop maintaining a spreadsheet. Start reviewing your trading.</h2>
+      <p>The tool should do the arithmetic. You should be doing the thinking.</p>
+    </div>
+    <div class="compare">
+      <div class="col bad reveal">
+        <h3>The usual setup</h3>
+        <ul>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Spreadsheets that break when you add a column</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Notion templates with no real analytics</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Manual profit factor and drawdown maths</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Screenshots scattered across three folders</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Nowhere to record how you felt</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>A file that lives on one laptop</li>
+        </ul>
+      </div>
+      <div class="col good reveal">
+        <h3>Tradeva</h3>
+        <ul>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Analytics the moment a trade is saved</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Professional monthly reports, exportable</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Psychology and discipline as first-class data</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Entry and exit screenshots on the trade</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cloud sync across every device</li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Multiple accounts, cleanly separated</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 8 · HOW IT WORKS ══════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Four steps to a real trading process</h2>
+    </div>
+    <ol class="steps">
+      <li class="step reveal"><div class="step-num">1</div><div><h3>Create your account</h3><p>Email or Google. About twenty seconds, no card.</p></div></li>
+      <li class="step reveal"><div class="step-num">2</div><div><h3>Add your trades</h3><p>Log entries, exits, risk and screenshots as you go — or catch up on the weekend.</p></div></li>
+      <li class="step reveal"><div class="step-num">3</div><div><h3>Analyze performance</h3><p>Your stats, calendar and edge score build themselves from what you logged.</p></div></li>
+      <li class="step reveal"><div class="step-num">4</div><div><h3>Become more consistent</h3><p>Review weekly, hold your rules, and watch the discipline score move before the P&amp;L does.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ══════════════ 9 · FAQ ══════════════ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head reveal"><span class="eyebrow">FAQ</span><h2>Questions, answered</h2></div>
+    <div class="faq">
+      <details class="reveal"><summary>Is Tradeva really free?</summary><div class="answer">Yes. Every feature on this page is free to use, with no trial period and no card required at sign-up.</div></details>
+      <details class="reveal"><summary>Can I track multiple trading accounts?</summary><div class="answer">Yes — personal, prop firm, demo — each with its own balance, trades and statistics. Switching accounts updates every page instantly.</div></details>
+      <details class="reveal"><summary>Does it work on mobile?</summary><div class="answer">Tradeva is fully responsive and built mobile-first for logging. Add a trade from your phone at the desk, then review it properly on a laptop later.</div></details>
+      <details class="reveal"><summary>Can I upload screenshots of my trades?</summary><div class="answer">Yes — an entry and an exit image per trade. They're compressed in your browser before upload, so charts stay readable without eating your data.</div></details>
+      <details class="reveal"><summary>Can I export my reports?</summary><div class="answer">The Profit Calendar exports as a PNG or a branded monthly report, ready to share or file with your own records.</div></details>
+      <details class="reveal"><summary>Is my data secure?</summary><div class="answer">Your trades live in your own account and are only readable by you. Sign-in supports email with verification or Google, and logging out clears cached data from that device.</div></details>
+      <details class="reveal"><summary>Can I really track trading psychology?</summary><div class="answer">Yes, and it's a core part of the product rather than a text box. Mood, energy and stress are logged as structured data, so they can be compared against results over time.</div></details>
+      <details class="reveal"><summary>Does it support Forex?</summary><div class="answer">Yes. Pairs, sessions, pips and R multiples are first-class fields, and the planner ships with the major FX pairs built in.</div></details>
+      <details class="reveal"><summary>Does it support Crypto and indices?</summary><div class="answer">Yes. Tradeva is instrument-agnostic — if you can record an entry, an exit and a risk, you can journal it.</div></details>
+      <details class="reveal"><summary>Can I use it for a prop firm account?</summary><div class="answer">Yes, and it's a common use. Set the account's starting balance, then use the planner's max drawdown and trade limits to stay inside your firm's rules.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 10 · FINAL CTA ══════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="cta-card reveal">
+      <h2>Ready to become a better trader?</h2>
+      <p>Start journaling today. Build the consistency, discipline and performance that separates traders who improve from traders who just keep trading.</p>
+      <a class="btn btn-primary btn-lg" href="register.html">Start Free</a>
+      <p style="margin-top:var(--s3);font-size:14px">Free forever &middot; No credit card required</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS go here once you have real ones. Deliberately left out
+     rather than filled with invented quotes and stock photos. -->
 
 </main>
 
-<!--
-  SCRIPT ORDER MATTERS — main.js must be LAST.
-  It calls initNavbar(), initScroll() and initAnimations(), so those
-  functions have to be defined before it runs.
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <a class="brand" href="/"><img src="logo-transparent.png" alt="" width="28" height="28" loading="lazy">Tradeva</a>
+        <p>The most advanced free trading journal for serious traders.</p>
+        <!-- Placeholder URLs — replace each href before launch. -->
+        <div class="socials">
+          <a href="#" aria-label="Tradeva on Facebook"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3V6h-3c-2.2 0-4 1.8-4 4v2H8v3h2v7h3v-7h3l1-3h-4v-2c0-.6.4-1 1-1z"/></svg></a>
+          <a href="#" aria-label="Tradeva on Instagram"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="#" aria-label="Tradeva on X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.2 2H21l-6.4 7.3L22 22h-6l-4.7-6.2L5.9 22H3l6.9-7.9L2.3 2h6.2l4.2 5.6zm-1 18h1.6L7.9 3.7H6.1z"/></svg></a>
+          <a href="#" aria-label="Tradeva on Discord"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.3 5.4A16 16 0 0 0 15.4 4l-.3.5a12 12 0 0 1 3.4 1.7 11.6 11.6 0 0 0-9-1 11 11 0 0 0-1.9.6l.2-.1A12.5 12.5 0 0 1 8.9 4.5L8.6 4a16 16 0 0 0-3.9 1.4C2.3 9 1.6 12.5 2 15.9a16 16 0 0 0 4.8 2.4l.9-1.4a10 10 0 0 1-1.6-.8l.4-.3a11.4 11.4 0 0 0 9.8 0l.4.3a10 10 0 0 1-1.6.8l.9 1.4a16 16 0 0 0 4.8-2.4c.5-4-.6-7.4-1.5-10.5zM9.2 14.2c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.8 1.7 1.9-.8 1.9-1.7 1.9zm5.6 0c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.8 1.7 1.9-.7 1.9-1.7 1.9z"/></svg></a>
+          <a href="#" aria-label="Tradeva on YouTube"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.7-1.8C18.3 5 12 5 12 5s-6.3 0-7.9.5a2.5 2.5 0 0 0-1.7 1.8C2 8.8 2 12 2 12s0 3.2.4 4.7c.2.9.9 1.6 1.7 1.8 1.6.5 7.9.5 7.9.5s6.3 0 7.9-.5a2.5 2.5 0 0 0 1.7-1.8C22 15.2 22 12 22 12zM10 15.2V8.8l5.2 3.2z"/></svg></a>
+        </div>
+      </div>
+      <div><h4>Product</h4><nav aria-label="Product"><a href="#product">Overview</a><a href="#features">Features</a><a href="#product">Analytics</a><a href="#product">Journal</a><a href="#">Pricing</a></nav></div>
+      <div><h4>Resources</h4><nav aria-label="Resources"><a href="#">Blog</a><a href="knowledge-base.html">Knowledge Base</a><a href="#">Discord</a><a href="#">Roadmap</a></nav></div>
+      <div><h4>Company</h4><nav aria-label="Company"><a href="#">About</a><a href="mailto:support@tradeva.app">Contact</a><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></nav></div>
+      <div><h4>Account</h4><nav aria-label="Account"><a href="login.html">Login</a><a href="register.html">Register</a></nav></div>
+    </div>
+    <div class="footer-base">
+      <span>&copy; 2026 Tradeva. All rights reserved.</span>
+      <span>Trade Smarter. Track Every Trade.</span>
+    </div>
+  </div>
+</footer>
 
-  `defer` means: download in parallel, execute in order, after the HTML is
-  parsed. That is why none of these files need a DOMContentLoaded wrapper.
--->
-<script src="js/navbar.js" defer></script>
-<script src="js/scroll.js" defer></script>
-<script src="js/animations.js" defer></script>
-<script src="js/main.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Tradeva","applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://tradeva.app/","description":"A free trading journal for serious traders: trade logging, performance analytics, profit calendar, trading psychology, discipline tracking and reviews.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   BEHAVIOUR — vanilla, no dependencies, every lookup guarded so one
+   missing element can never take the rest of the page down.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Scroll progress + nav state ──────────────────────────────────
+     ONE listener for both, throttled to the frame with rAF. Two separate
+     listeners each doing their own layout read is what makes a landing
+     page stutter on a mid-range Android. */
+  var bar = document.getElementById('progress'), nav = document.getElementById('nav'), ticking = false;
+  function onScroll() {
+    var y = window.scrollY || document.documentElement.scrollTop;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? y / max : 0) + ')';
+    if (nav) nav.classList.toggle('is-scrolled', y > 8);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+  }, { passive: true });
+  onScroll();
+
+  /* ── Mobile menu ─────────────────────────────────────────────────── */
+  var toggle = document.getElementById('navToggle'), menu = document.getElementById('mobileMenu');
+  if (toggle && menu) {
+    function setMenu(open) {
+      menu.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    }
+    toggle.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
+    menu.addEventListener('click', function (e) { if (e.target.tagName === 'A') setMenu(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); toggle.focus(); }
+    });
+  }
+
+  /* ── Scroll reveal ────────────────────────────────────────────────
+     Unobserved once shown — an element that has appeared never needs
+     watching again, and dozens of live observers cost real battery. */
+  var items = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(items, function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+    Array.prototype.forEach.call(items, function (el) {
+      var sibs = el.parentNode ? el.parentNode.children : [el];
+      var idx = Array.prototype.indexOf.call(sibs, el);
+      el.style.transitionDelay = (idx > 0 ? Math.min(idx, 4) * 70 : 0) + 'ms';
+      io.observe(el);
+    });
+  }
+
+  /* ── Counters ─────────────────────────────────────────────────────
+     The final frame writes the exact target, so rounding can never leave
+     "53" on screen for a value of 54. */
+  var counters = document.querySelectorAll('[data-count]');
+  function run(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10) || 0;
+    var prefix = el.getAttribute('data-prefix') || '';
+    if (reduced) { el.textContent = prefix + target; return; }
+    var start = performance.now(), dur = 1100;
+    requestAnimationFrame(function frame(now) {
+      var p = Math.min((now - start) / dur, 1);
+      el.textContent = prefix + Math.round(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(frame); else el.textContent = prefix + target;
+    });
+  }
+  if (counters.length) {
+    if (!('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(counters, run);
+    } else {
+      var co = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { run(en.target); co.unobserve(en.target); } });
+      }, { threshold: .5 });
+      Array.prototype.forEach.call(counters, function (el) { co.observe(el); });
+    }
+  }
+
+  /* ── Showcase tabs ────────────────────────────────────────────────
+     All eight images live in the DOM and are crossfaded with opacity.
+     Swapping a single src would flash white on every click while the new
+     file decodes. Arrow keys move between tabs, per the WAI-ARIA tab
+     pattern, so the control is usable without a mouse. */
+  var CAPTIONS = {
+    'dashboard':          ['Everything, in one document read', 'Thirteen metrics, an equity curve and a drawdown curve — precomputed, so the dashboard opens instantly no matter how many trades you have logged.'],
+    'analytics':          ['Find the edge you actually have', 'Profit factor, expectancy, recovery factor and a composite edge score, plus the pair, session and weekday quietly costing you money.'],
+    'profit-calendar':    ['A month of trading on one screen', 'Green days, red days and weekly totals side by side. Export any month as an image or a branded report.'],
+    'weekly-planner':     ['Decide before the market opens', 'Set bias, focus pairs, target RR and maximum drawdown while you are calm — then measure the week against it.'],
+    'mood-tracker':       ['The variable most journals ignore', 'Mood, energy and stress logged as structured data, so the link between your mental state and your results becomes visible.'],
+    'discipline-tracker': ['Score the process, not the payout', 'Your own rules and checklist, scored daily. A disciplined losing day still scores well — which is the entire point.'],
+    'reviews':            ['Your week, graded honestly', 'One review across performance, discipline, planning and consistency, with the actions that follow from it.'],
+    'milestones':         ['Progress you can actually feel', 'Seven levels and 54 achievements earned by journaling, reviewing and staying disciplined.']
+  };
+
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var imgs = document.querySelectorAll('#tabImgs img');
+  var urlEl = document.getElementById('tabUrl');
+  var capEl = document.getElementById('tabCaption');
+
+  function select(name) {
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.tab === name)); });
+    Array.prototype.forEach.call(imgs, function (img) { img.classList.toggle('is-active', img.dataset.tab === name); });
+    if (urlEl) urlEl.textContent = 'tradeva.app/' + name;
+    if (capEl && CAPTIONS[name]) {
+      capEl.querySelector('h3').textContent = CAPTIONS[name][0];
+      capEl.querySelector('p').textContent  = CAPTIONS[name][1];
+    }
+  }
+
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener('click', function () { select(tab.dataset.tab); });
+    tab.addEventListener('keydown', function (e) {
+      var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      var next = tabs[(i + dir + tabs.length) % tabs.length];
+      next.focus();
+      select(next.dataset.tab);
+    });
+  });
+
+  /* ── Hero mouse parallax ──────────────────────────────────────────
+     8px of travel across the whole viewport. Skipped on touch — there is
+     no cursor to follow and the listener would only cost battery.
+     Applied to an inner wrapper so it never fights the CSS float animation
+     on the cards. */
+  var stage = document.getElementById('heroStage');
+  if (stage && !reduced && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    var MAX = 8, pending = false, px = 0, py = 0;
+    window.addEventListener('pointermove', function (e) {
+      px = ((e.clientX / window.innerWidth) - .5) * 2 * MAX;
+      py = ((e.clientY / window.innerHeight) - .5) * 2 * MAX;
+      if (!pending) {
+        pending = true;
+        requestAnimationFrame(function () {
+          stage.style.transform = 'translate3d(' + (-px) + 'px,' + (-py) + 'px,0)';
+          pending = false;
+        });
+      }
+    }, { passive: true });
+  }
+
+  /* ── Button ripple ────────────────────────────────────────────────
+     Delegated, and each span removes itself on animationend so the DOM
+     doesn't accumulate elements over a long session. */
+  if (!reduced) {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.btn') : null;
+      if (!btn) return;
+      var r = btn.getBoundingClientRect(), size = Math.max(r.width, r.height);
+      var s = document.createElement('span');
+      s.className = 'ripple';
+      s.style.width = s.style.height = size + 'px';
+      s.style.left = (e.clientX - r.left - size / 2) + 'px';
+      s.style.top = (e.clientY - r.top - size / 2) + 'px';
+      btn.appendChild(s);
+      s.addEventListener('animationend', function () { s.remove(); });
+    });
+  }
+})();
+</script>
 </body>
 </html>
