@@ -233,6 +233,17 @@ body {
    could only ever line up by coincidence. Making the card the 8th cell of the
    same grid means CSS aligns each week card to its own calendar row exactly,
    with no JS measuring and no drift when a cell grows. */
+/* Month header.
+   Sized between .page-title (26px) and .month-label (14px) so it reads as
+   the calendar's own heading without competing with the page title. No
+   border, background or card — the surrounding .calendar-card already
+   provides the container. */
+.calendar-month {
+  font-size: 17px; font-weight: 700; color: var(--text-primary);
+  letter-spacing: -0.3px; margin-bottom: 16px; padding-left: 2px;
+  transition: color var(--t) var(--ease);
+}
+
 .weekday-row { display: grid; grid-template-columns: repeat(7, 1fr) 168px; gap: 8px; margin-bottom: 8px; }
 .weekday-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; padding-bottom: 4px; transition: color var(--t) var(--ease); }
 
@@ -578,6 +589,7 @@ body {
   .main { margin-right: 0; padding: 20px 16px 90px; overflow-x: hidden; }
 
   .calendar-card { padding: 14px 8px; border-radius: 16px; }
+  .calendar-month { font-size: 15px; margin-bottom: 12px; padding-left: 0; text-align: center; }
   .calendar-grid, .weekday-row { gap: 5px; }
   .weekday-row { margin-bottom: 10px; }
   .weekday-label { font-size: 10px; letter-spacing: 0.1em; font-weight: 700; }
@@ -606,6 +618,7 @@ body {
    simply get tighter rather than disappearing. */
 @media (max-width: 560px) {
   .calendar-card { padding: 12px 6px; }
+  .calendar-month { font-size: 14.5px; margin-bottom: 11px; }
   .calendar-grid, .weekday-row { gap: 4px; }
   .day-cell { padding: 7px 4px; }
   .day-primary { font-size: 12.5px; --dp-max: 12.5px; }
@@ -626,6 +639,7 @@ body {
 @media (max-width: 380px) {
   .main { padding-left: 12px; padding-right: 12px; }
   .calendar-card { padding: 10px 5px; }
+  .calendar-month { font-size: 14px; margin-bottom: 10px; }
   .calendar-grid, .weekday-row { gap: 3px; }
   .day-cell { padding: 6px 3px; border-radius: 11px; }
   .day-num { font-size: 10.5px; }
@@ -891,6 +905,9 @@ try {
   <!-- Calendar + Weekly Sidebar -->
   <div class="calendar-layout">
     <div class="calendar-card" id="calendarCard">
+      <!-- Month header. Inside the card on purpose, so it reads as part of
+           the calendar component and travels with the PNG export. -->
+      <div class="calendar-month" id="calendarMonth">June 2026</div>
       <div class="weekday-row">
         <div class="weekday-label">Mon</div>
         <div class="weekday-label">Tue</div>
@@ -1400,7 +1417,12 @@ function renderCalendar() {
   const trades = getMonthTrades();
   const dayMap = buildDayMap(trades);
 
-  document.getElementById('monthLabel').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+  const monthText = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+  document.getElementById('monthLabel').textContent = monthText;
+  /* Updated from the same place as the nav label, so the two can never
+     disagree about which month is on screen. */
+  const calMonthEl = document.getElementById('calendarMonth');
+  if (calMonthEl) calMonthEl.textContent = monthText;
 
   const firstOfMonth = new Date(viewYear, viewMonth, 1);
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
