@@ -14,15 +14,18 @@
  * of this file. The export itself stays for any other page importing it.
  *
  * ── CLASSIFICATION PARITY ────────────────────────────────────────────
- * dashboard.html classifies by pnl SIGN (`pnl > 0` = win) and computes
- * winRate as wins / totalTrades — breakevens sit in the denominator.
- * tradeva-trades.js classifies by the `outcome` FIELD and computes
- * winRate as wins / (wins + losses). Those two disagree today.
+ * Every surface now agrees: classify by the `outcome` FIELD, and compute
+ * winRate as wins / (wins + losses) — break-evens are counted and
+ * reported, but they are not losses and they are not in the denominator.
  *
- * The brief says keep the UI identical, so this module reproduces the
- * DASHBOARD's arithmetic exactly. Flip CLASSIFY_BY_OUTCOME to true if
- * you'd rather the outcome field win — but that visibly moves the
- * numbers on screen, so decide it deliberately.
+ * This module, analytics.js and profit-calendar.html all follow that rule.
+ * If you change it here, change it in all three or the pages will drift
+ * apart again. The pnl-sign path remains only as a fallback for legacy
+ * trades with no outcome field.
+ *
+ * NOTE: switching to decided-trade win rate moves the number on screen
+ * (55.6% -> 57.7% on a 15/11/1 account). That is the correction, not a
+ * regression.
  *
  * ── DECOMPOSABILITY ──────────────────────────────────────────────────
  * counters (count/wins/losses/pnl/gross/RR) → additive, safe deltas
@@ -60,8 +63,16 @@ const MAX_CURVE_DAYS = 400; // ~18 months of trading days, keeps the doc small
 const CACHE_PREFIX = "tradeva_summary_";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-/** false = match dashboard.html (pnl sign). true = match the `outcome` field. */
-const CLASSIFY_BY_OUTCOME = false;
+/** Classify by the `outcome` field rather than the sign of pnl.
+ *
+ *  Switched on deliberately. The Add Trade form now treats Outcome as the
+ *  single source of truth — it forces the sign of pnl, rr and pips to match
+ *  the button you picked — so the field is the most reliable signal there is,
+ *  and analytics.js and profit-calendar.html both classify the same way.
+ *
+ *  The pnl-sign path below is still the fallback for legacy trades saved
+ *  before the outcome field was set reliably. */
+const CLASSIFY_BY_OUTCOME = true;
 
 /* ── paths ────────────────────────────────────────────────────────── */
 
@@ -134,7 +145,16 @@ function recentRow(t) {
 export function deriveSummary(raw) {
   const s = { ...zeroSummary(), ...(raw || {}) };
 
-  s.winRate = s.tradeCount > 0 ? (s.wins / s.tradeCount) * 100 : 0;
+  /* Win rate is measured on DECIDED trades — wins + losses. A break-even
+     neither won nor lost, so leaving it in the denominator quietly drags the
+     percentage down (15/27 = 55.6% instead of 15/26 = 57.7%).
+
+     This also brings the dashboard in line with analytics.js and
+     profit-calendar.html, which both already divide by decided trades. Three
+     pages showing three different win rates for the same account is worse
+     than any one of them being slightly off. */
+  const decided = s.wins + s.losses;
+  s.winRate = decided > 0 ? (s.wins / decided) * 100 : 0;
   s.profitFactor =
     s.grossLoss > 0 ? s.grossWin / s.grossLoss : s.grossWin > 0 ? Infinity : 0;
   s.avgRR = s.rrCount > 0 ? s.sumRR / s.rrCount : 0;
