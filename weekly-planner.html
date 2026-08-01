@@ -186,6 +186,61 @@ textarea.lg { min-height: 120px; }
   transition: all var(--t) var(--ease); user-select: none;
 }
 .pill:hover { border-color: var(--text-faint); color: var(--text-primary); transform: translateY(-1px); }
+
+/* ── Focus Markets: categories + custom instruments ──
+   Everything below reuses the existing pill/border/accent tokens. The
+   category row is deliberately lighter than the chips so the hierarchy
+   reads at a glance: category first, instruments second. */
+.market-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.market-cat {
+  padding: 5px 11px; border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--text-muted);
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all var(--t) var(--ease);
+}
+.market-cat:hover { background: var(--bg-page); color: var(--text-primary); }
+.market-cat.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.market-cat-count {
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.market-cat.active .market-cat-count { background: var(--accent); }
+
+/* A chip selected in a different category, shown so a selection is never
+   hidden. Dashed border marks it as "not from this list". */
+.pill.is-stray { border-style: dashed; }
+
+.pill-x {
+  margin-left: 7px; font-size: 14px; line-height: 1; opacity: .5;
+  transition: opacity var(--t) var(--ease);
+}
+.pill-x:hover { opacity: 1; }
+
+.pill-add { border-style: dashed; color: var(--accent); border-color: var(--accent); }
+.pill-add:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+.custom-market-wrap { display: none; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+.custom-market-input {
+  flex: 1; min-width: 180px; padding: 8px 12px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg-page); color: var(--text-primary);
+  font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  text-transform: uppercase; transition: all var(--t) var(--ease);
+}
+.custom-market-input:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
+.custom-market-input::placeholder { text-transform: none; font-weight: 500; color: var(--text-faint); }
+
+.btn-mini, .btn-mini-primary {
+  padding: 8px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif; transition: all var(--t) var(--ease);
+}
+.btn-mini { border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-muted); }
+.btn-mini:hover { border-color: var(--text-faint); color: var(--text-primary); }
+.btn-mini-primary { border: 1.5px solid var(--accent); background: var(--accent); color: #fff; }
+.btn-mini-primary:hover { filter: brightness(1.06); }
+
+.custom-market-hint { display: none; font-size: 12px; color: var(--red); margin-top: 8px; }
 .pill.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
 .pill.selected-green { border-color: var(--green); background: var(--green-bg); color: var(--green); }
 
@@ -536,7 +591,16 @@ finally { document.body.classList.remove("tv-guarding"); document.body.classList
 
     <div class="form-group">
       <label class="form-label">Focus Markets <span class="optional">(select multiple)</span></label>
+      <div class="market-cats" id="marketCats"></div>
       <div class="pill-group" id="focusMarkets"></div>
+      <div class="custom-market-wrap" id="customMarketWrap">
+        <input type="text" id="customMarketInput" class="custom-market-input"
+               placeholder="Instrument symbol, e.g. BTCUSDT" maxlength="16"
+               autocomplete="off" spellcheck="false">
+        <button type="button" class="btn-mini-primary" id="customMarketSave">Add</button>
+        <button type="button" class="btn-mini" id="customMarketCancel">Cancel</button>
+      </div>
+      <div class="custom-market-hint" id="customMarketHint"></div>
     </div>
   </div>
 
@@ -765,7 +829,35 @@ function loadProfileSidebar() {
 /* ══════════════════════════════════════════════════════════
    OPTION SETS
 ══════════════════════════════════════════════════════════ */
-const MARKETS = ['EURUSD','GBPUSD','USDJPY','GBPJPY','AUDUSD','XAUUSD','NAS100','US30','BTCUSD','ETHUSD','DXY'];
+/* ══════════════════════════════════════════════════════════
+   FOCUS MARKETS
+   ══════════════════════════════════════════════════════════
+   Instruments are grouped by category so the chip list stays short —
+   showing 60 instruments at once would defeat the point of the chip UI.
+   The user's SELECTION is independent of which category is on screen, so
+   you can pick EURUSD, switch to Crypto, pick BTC, and keep both. */
+const MARKET_CATEGORIES = {
+  'Forex': [
+    'EURUSD','GBPUSD','AUDUSD','NZDUSD','USDJPY','USDCHF','USDCAD',
+    'EURJPY','GBPJPY','AUDJPY','EURGBP','EURAUD','GBPAUD','DXY'
+  ],
+  'Futures':     ['NQ','ES','YM','RTY','CL','GC','SI','MNQ','MES'],
+  'Crypto':      ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE','AVAX','LINK','SUI'],
+  'Indices':     ['US30','NAS100','SPX500','DAX40','FTSE100','Nikkei225'],
+  'Commodities': ['Gold','Silver','Oil (WTI)','Brent','Natural Gas','XAUUSD','XAGUSD'],
+  'Stocks':      ['AAPL','TSLA','NVDA','MSFT','AMZN','META','GOOGL','SPY','QQQ']
+};
+
+/* Every built-in instrument, flattened — used to stop a "custom" entry
+   duplicating something that already exists in a category. */
+const BUILTIN_MARKETS = Object.values(MARKET_CATEGORIES).flat();
+
+/* Kept for the trade-pair <select> further down, which wants one flat list. */
+const MARKETS = BUILTIN_MARKETS;
+
+const CUSTOM_KEY = 'tradeva_custom_markets';
+let customMarkets = [];          // the user's own instruments
+let activeCategory = 'Forex';
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 const EVENTS = ['FOMC','CPI','NFP','Interest Rate Decision','GDP','PMI','Other'];
 const SETUPS = ['Liquidity Sweep','Order Block','Fair Value Gap','Breaker','SMT','Mitigation','Pullback','Continuation','Reversal','Range'];
@@ -804,6 +896,154 @@ function renderPills(containerId, options, selectedSet, extraClass) {
       renderPills(containerId, options, selectedSet, extraClass);
     });
   });
+}
+
+/* ── Custom instrument persistence ──────────────────────────────────
+   Two layers, deliberately:
+
+   1. localStorage — instant, survives a reload, works before Firestore
+      answers. This is what makes a newly added chip feel immediate.
+   2. The plan document — every saved plan carries the custom list, so
+      loadPlans() can rebuild it from history on any device.
+
+   Layer 2 is why this needs no new Firestore collection, no security-rule
+   change and no new module export: it rides along on machinery that already
+   exists. A custom instrument added but never saved with a plan lives only
+   on that device until the next save folds it in. */
+function loadCustomMarkets() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]');
+    customMarkets = Array.isArray(raw) ? raw.filter(x => typeof x === 'string') : [];
+  } catch (e) { customMarkets = []; }
+}
+
+function saveCustomMarkets() {
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMarkets)); }
+  catch (e) { /* private mode or quota — the plan doc is still the durable copy */ }
+}
+
+/* Fold in anything recorded on previously saved plans. */
+function mergeCustomFromPlans(rows) {
+  let changed = false;
+  (rows || []).forEach(p => {
+    (p.customMarkets || []).forEach(m => {
+      if (typeof m === 'string' && m && !customMarkets.includes(m) && !BUILTIN_MARKETS.includes(m)) {
+        customMarkets.push(m); changed = true;
+      }
+    });
+  });
+  if (changed) { customMarkets.sort(); saveCustomMarkets(); }
+}
+
+function addCustomMarket(raw) {
+  const name = String(raw || '').trim().toUpperCase().slice(0, 16);
+  if (!name) return { ok: false, msg: '' };
+  if (BUILTIN_MARKETS.some(m => m.toUpperCase() === name))
+    return { ok: false, msg: name + ' is already available in one of the categories.' };
+  if (customMarkets.some(m => m.toUpperCase() === name))
+    return { ok: false, msg: name + ' is already in your custom list.' };
+
+  customMarkets.push(name);
+  customMarkets.sort();
+  saveCustomMarkets();
+  selMarkets.add(name);          // adding it implies you want it selected
+  return { ok: true, name };
+}
+
+function removeCustomMarket(name) {
+  customMarkets = customMarkets.filter(m => m !== name);
+  selMarkets.delete(name);
+  saveCustomMarkets();
+  renderMarkets();
+}
+
+/* Render the category row and the chip grid beneath it. */
+function renderMarkets() {
+  const catEl = document.getElementById('marketCats');
+  const el = document.getElementById('focusMarkets');
+  if (!el || !catEl) return;
+
+  const cats = Object.keys(MARKET_CATEGORIES).concat('Custom');
+  catEl.innerHTML = cats.map(c => {
+    /* A count on the tab is what makes a selection in a hidden category
+       discoverable — otherwise switching tabs looks like it lost your picks. */
+    const list = c === 'Custom' ? customMarkets : MARKET_CATEGORIES[c];
+    const n = list.filter(m => selMarkets.has(m)).length;
+    return `<button type="button" class="market-cat ${c === activeCategory ? 'active' : ''}" data-cat="${c}">` +
+           `${c}${n ? `<span class="market-cat-count">${n}</span>` : ''}</button>`;
+  }).join('');
+
+  catEl.querySelectorAll('.market-cat').forEach(btn => {
+    btn.addEventListener('click', () => { activeCategory = btn.dataset.cat; renderMarkets(); });
+  });
+
+  const inCat = activeCategory === 'Custom' ? customMarkets : MARKET_CATEGORIES[activeCategory];
+
+  /* Anything selected but not in this category is appended, so a chosen
+     instrument is never invisible no matter which tab you are on. */
+  const strays = Array.from(selMarkets).filter(m => !inCat.includes(m));
+
+  let html = inCat.map(m => {
+    const isCustom = activeCategory === 'Custom';
+    return `<button type="button" class="pill ${selMarkets.has(m) ? 'selected' : ''}" data-value="${m}">` +
+           `${m}${isCustom ? `<span class="pill-x" data-remove="${m}" title="Remove ${m}">&times;</span>` : ''}</button>`;
+  }).join('');
+
+  html += strays.map(m =>
+    `<button type="button" class="pill selected is-stray" data-value="${m}" title="Selected in another category">${m}</button>`
+  ).join('');
+
+  /* Add Custom lives at the end of the row — a button, not a separate
+     section, so the block stays one visual unit. */
+  html += `<button type="button" class="pill pill-add" id="addMarketBtn">+ Add Custom</button>`;
+
+  el.innerHTML = html;
+
+  el.querySelectorAll('.pill[data-value]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const rm = e.target.getAttribute && e.target.getAttribute('data-remove');
+      if (rm) { e.stopPropagation(); removeCustomMarket(rm); return; }
+      const v = btn.dataset.value;
+      if (selMarkets.has(v)) selMarkets.delete(v); else selMarkets.add(v);
+      renderMarkets();
+    });
+  });
+
+  const addBtn = document.getElementById('addMarketBtn');
+  if (addBtn) addBtn.addEventListener('click', openCustomInput);
+}
+
+/* Inline input rather than a modal: adding an instrument is a two-second
+   action and a dialog would be heavier than the task. */
+function openCustomInput() {
+  const wrap = document.getElementById('customMarketWrap');
+  const input = document.getElementById('customMarketInput');
+  if (!wrap || !input) return;
+  wrap.style.display = 'flex';
+  input.value = '';
+  input.focus();
+  setCustomHint('');
+}
+
+function closeCustomInput() {
+  const wrap = document.getElementById('customMarketWrap');
+  if (wrap) wrap.style.display = 'none';
+  setCustomHint('');
+}
+
+function setCustomHint(msg) {
+  const h = document.getElementById('customMarketHint');
+  if (h) { h.textContent = msg || ''; h.style.display = msg ? 'block' : 'none'; }
+}
+
+function commitCustomMarket() {
+  const input = document.getElementById('customMarketInput');
+  if (!input) return;
+  const res = addCustomMarket(input.value);
+  if (!res.ok) { setCustomHint(res.msg); if (res.msg) input.select(); return; }
+  activeCategory = 'Custom';     // show the user where it landed
+  closeCustomInput();
+  renderMarkets();
 }
 
 function renderSchedule() {
@@ -925,6 +1165,10 @@ function setPlans(plans) { PLANS = plans; }   // legacy mirror
 
 /* Called by the Firestore module once plans arrive */
 window.__tvSetPlans = function (rows, accountId) {
+  /* Recover custom instruments recorded on previous plans, so they follow
+     the user to a new device / browser rather than living only in
+     localStorage on the machine where they were created. */
+  try { mergeCustomFromPlans(rows); } catch (e) { console.warn('custom market merge failed', e); }
   PLANS = Array.isArray(rows) ? rows : [];
   ACCOUNT_ID = accountId || null;
   DATA_READY = true;
@@ -938,6 +1182,9 @@ function collectFormData() {
     account: document.getElementById('f-account').value,
     bias: document.getElementById('f-bias').value,
     focusMarkets: Array.from(selMarkets),
+    /* Ride along on the plan document so the custom list survives a device
+       change — see mergeCustomFromPlans(). */
+    customMarkets: customMarkets.slice(),
     targetRR: parseFloat(document.getElementById('f-target-rr').value) || 0,
     targetPct: parseFloat(document.getElementById('f-target-pct').value) || 0,
     maxDD: parseFloat(document.getElementById('f-max-dd').value) || 0,
@@ -1120,7 +1367,7 @@ function viewPlan(id, silent) {
   schedule = { ...(plan.schedule || {}) };
   checklistState = new Set(plan.checklist || []);
 
-  renderPills('focusMarkets', MARKETS, selMarkets);
+  renderMarkets();
   renderPills('tradingDays', DAYS, selDays, 'selected-green');
   renderPills('econEvents', EVENTS, selEvents);
   renderPills('setupChips', SETUPS, selSetups);
@@ -1181,7 +1428,24 @@ function showToast(msg, success) {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', () => {
   loadProfileSidebar();
-  renderPills('focusMarkets', MARKETS, selMarkets);
+
+  /* Custom instruments must be loaded BEFORE the first render, or the
+     Custom tab paints empty on a reload. */
+  loadCustomMarkets();
+
+  const cSave = document.getElementById('customMarketSave');
+  const cCancel = document.getElementById('customMarketCancel');
+  const cInput = document.getElementById('customMarketInput');
+  if (cSave)   cSave.addEventListener('click', commitCustomMarket);
+  if (cCancel) cCancel.addEventListener('click', closeCustomInput);
+  if (cInput)  cInput.addEventListener('keydown', (e) => {
+    /* Enter to add, Escape to back out — typing a symbol and reaching for
+       the mouse is the slow path. */
+    if (e.key === 'Enter')  { e.preventDefault(); commitCustomMarket(); }
+    if (e.key === 'Escape') { e.preventDefault(); closeCustomInput(); }
+  });
+
+  renderMarkets();
   renderPills('tradingDays', DAYS, selDays, 'selected-green');
   renderPills('econEvents', EVENTS, selEvents);
   renderPills('setupChips', SETUPS, selSetups);
