@@ -1050,7 +1050,14 @@ function closeSidebar() { document.querySelector('.sidebar').classList.remove('o
    CALENDAR_SAMPLE_TRADES below is the demo fallback shown
    only when no real trades exist yet.
 ══════════════════════════════════════════════════════════ */
-const ACCOUNT_BALANCE = 50000; // used for % mode — replace with real account equity when available
+/* Account balance used by % mode and the drawer's Daily %.
+   Populated from the selected account's startingBalance as soon as the
+   loader resolves it; the constant here is only the pre-load placeholder
+   and the demo-data fallback.
+
+   This was hard-coded at 50000, so every percentage on a 100k account came
+   out exactly double: a $1,000 day (1% risk) displayed as 2.0%. */
+let ACCOUNT_BALANCE = 50000;
 
 const CALENDAR_SAMPLE_TRADES = [
   { id: 1,  rawDate: '2026-06-02', date: 'Jun 2, 2026',  pair: 'EURUSD', dir: 'Long',  rr: 2.0, pnl: 800,   outcome: 'Win',  session: 'London',   notes: 'Clean trend continuation off H4 demand.' },
@@ -1083,9 +1090,18 @@ function getAllTrades() {
 }
 
 /* Called by the Firestore module once trades arrive */
-window.__tvSetCalendarTrades = function (rows) {
+window.__tvSetCalendarTrades = function (rows, account) {
   TRADES = Array.isArray(rows) ? rows : [];
   DEMO_MODE = TRADES.length === 0;
+
+  /* Take the real balance when we have one. Number() rather than a truthy
+     check, because a legitimately-stored "0" and a missing field must be
+     told apart — the fmtPct guard handles the zero case. */
+  if (account && account.startingBalance !== undefined && account.startingBalance !== null) {
+    const bal = Number(account.startingBalance);
+    if (!isNaN(bal)) ACCOUNT_BALANCE = bal;
+  }
+
   DATA_READY = true;
   initViewDate();
   renderAll();
@@ -1304,7 +1320,12 @@ window.addEventListener('resize', () => {
 const fmtTrades = n => n + ' trade' + (n === 1 ? '' : 's');
 const fmtMoneyFull = v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtRR = v => (v >= 0 ? '+' : '') + v.toFixed(1) + 'R';
-const fmtPct = v => (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
+/* Percent of account. Guarded against a zero or missing balance so a new
+   account can never render "Infinity%" or "NaN%". */
+const fmtPct = v => {
+  if (!ACCOUNT_BALANCE) return '—';
+  return (v >= 0 ? '+' : '') + (v / ACCOUNT_BALANCE * 100).toFixed(1) + '%';
+};
 
 function primaryValue(pnl, rr) {
   if (displayMode === 'rr') return fmtRR(rr);
@@ -1864,7 +1885,7 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
     const acc = await resolveSelectedAccount();
     if (!acc) { window.__tvSetCalendarTrades([]); return; }
     const rows = await listTrades(acc.id);
-    window.__tvSetCalendarTrades(rows);
+    window.__tvSetCalendarTrades(rows, acc);
   } catch (e) {
     console.error("Calendar load failed:", e);
     window.__tvSetCalendarTrades([]);
