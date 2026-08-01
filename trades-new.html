@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -824,7 +824,12 @@ try {
 
     <div class="form-group" style="margin-bottom:0;">
       <label class="form-label">P&L ($)</label>
-      <input type="number" id="f-pnl" placeholder="e.g. 250.00 or -120.00 (auto-calculated if blank)">
+      <input type="number" id="f-pnl" step="0.01"
+             placeholder="e.g. 250.00 (auto-calculated if blank)"
+             oninput="syncPnlHintOnly()" onblur="syncPnlField()">
+      <div id="pnl-hint" style="font-size:12px;margin-top:6px;color:var(--text-faint);">
+        Pick an outcome above and the sign is applied automatically.
+      </div>
     </div>
   </div>
 
@@ -1024,13 +1029,87 @@ function setDir(dir) {
   document.getElementById('btn-short').className = 'dir-btn' + (dir === 'Short' ? ' short-active' : '');
 }
 
-/* ── OUTCOME ── */
+/* ── OUTCOME ──
+   The Outcome buttons are the single source of truth for the SIGN of the
+   P&L. The user types a magnitude; this decides whether it is stored as a
+   profit, a loss or zero. Nothing downstream — dashboard, calendar,
+   analytics, reviews — has to trust that the user remembered a minus sign. */
 let selectedOutcome = '';
+
+/* Apply the outcome's sign to any number.
+   Called from setOutcome() so the field updates as soon as you pick, and
+   again in saveTrade() so the value written to Firestore is correct even if
+   the field was edited afterwards or the outcome changed last. */
+function signForOutcome(value, outcome) {
+  const magnitude = Math.abs(Number(value) || 0);
+  if (outcome === 'B/E')  return 0;
+  /* The `|| 0` collapses negative zero. -Math.abs(0) is -0, which survives
+     into Firestore and can render as "-$0" wherever a formatter branches on
+     the sign rather than the value. */
+  if (outcome === 'Loss') return -magnitude || 0;
+  if (outcome === 'Win')  return  magnitude;
+  return Number(value) || 0;   // no outcome picked yet — leave it alone
+}
+
 function setOutcome(o) {
   selectedOutcome = o;
   document.getElementById('btn-win').className  = 'outcome-btn' + (o === 'Win'  ? ' win-active'  : '');
   document.getElementById('btn-loss').className = 'outcome-btn' + (o === 'Loss' ? ' loss-active' : '');
   document.getElementById('btn-be').className   = 'outcome-btn' + (o === 'B/E'  ? ' be-active'   : '');
+  syncPnlField();
+}
+
+/* Repaint the P&L field to match the chosen outcome.
+   Showing the corrected value immediately is the point: the user sees
+   "-250" the moment they click Loss, rather than discovering the sign
+   changed only after the trade is saved. */
+function syncPnlHintOnly() {
+  const hint = document.getElementById('pnl-hint');
+  if (!hint || !selectedOutcome) return;
+  const el = document.getElementById('f-pnl');
+  const preview = signForOutcome(el.value, selectedOutcome);
+  hint.textContent = el.value === ''
+    ? 'Pick an outcome above and the sign is applied automatically.'
+    : 'Will be saved as ' + (preview >= 0 ? '+$' : '-$') + Math.abs(preview).toLocaleString('en-US', {maximumFractionDigits: 2}) + '.';
+  hint.style.color = preview > 0 ? 'var(--green)' : preview < 0 ? 'var(--red)' : 'var(--text-faint)';
+}
+
+function syncPnlField() {
+  const el = document.getElementById('f-pnl');
+  const hint = document.getElementById('pnl-hint');
+  if (!el) return;
+
+  if (selectedOutcome === 'B/E') {
+    /* Break-even is always zero, so the field is filled and locked rather
+       than left editable with a value that would be ignored. readOnly, not
+       disabled: a disabled input is skipped by screen readers and loses its
+       value on some autofill paths. */
+    el.value = '0';
+    el.readOnly = true;
+    el.style.opacity = '0.6';
+    el.style.cursor = 'not-allowed';
+  } else {
+    el.readOnly = false;
+    el.style.opacity = '';
+    el.style.cursor = '';
+    if (el.value !== '') {
+      const fixed = signForOutcome(el.value, selectedOutcome);
+      /* Only rewrite when it actually differs, so the cursor doesn't jump
+         while someone is mid-type. */
+      if (String(fixed) !== el.value) el.value = fixed;
+    }
+  }
+
+  if (hint) {
+    hint.textContent =
+      selectedOutcome === 'Win'  ? 'Saved as a profit — just type the amount.' :
+      selectedOutcome === 'Loss' ? 'Saved as a loss — just type the amount, no minus sign needed.' :
+      selectedOutcome === 'B/E'  ? 'Break-even trades always save as 0.' :
+      'Pick an outcome above and the sign is applied automatically.';
+    hint.style.color = selectedOutcome === 'Loss' ? 'var(--red)'
+                     : selectedOutcome === 'Win'  ? 'var(--green)'
+                     : 'var(--text-faint)';
+  }
 }
 
 /* ── RULES FOLLOWED ── */
@@ -1147,18 +1226,39 @@ async function saveTrade() {
   saveBtn.textContent = 'Saving…';
 
   try {
-    const pnlInput = parseFloat(document.getElementById('f-pnl').value);
+    const rawPnl   = document.getElementById('f-pnl').value;
+    const pnlInput = parseFloat(rawPnl);
     const entry    = parseFloat(document.getElementById('f-entry').value) || 0;
     const exitVal  = parseFloat(document.getElementById('f-exit').value)  || 0;
     const sl       = parseFloat(document.getElementById('f-sl').value)    || 0;
 
-    // Auto-calculate PnL if blank (simplified pips-based)
-    let pnl = pnlInput || 0;
-    if (!pnlInput && entry && exitVal && sl) {
+    // Auto-calculate P&L if the field was left blank (simplified, risk-based)
+    let pnl = Number.isFinite(pnlInput) ? pnlInput : 0;
+    if (!Number.isFinite(pnlInput) && entry && exitVal && sl) {
       const risk = Math.abs(entry - sl);
       const reward = selectedDir === 'Long' ? (exitVal - entry) : (entry - exitVal);
       if (risk > 0) pnl = parseFloat((reward / risk * 100).toFixed(2));
     }
+
+    /* ── SIGN NORMALISATION — the last word on this value ──
+       Runs on every save, no matter where the number came from: typed by
+       hand, corrected on blur, or produced by the auto-calculation above.
+       Doing it here rather than only in the UI means a stale field, a
+       last-second outcome change, or a future code path that bypasses the
+       form can never write a Loss as a positive number.
+
+       This matters more than it looks. tradeva-summary.js decomposes P&L
+       into additive counters (netPnl, grossWin, grossLoss), and
+       verifySummary() only cross-checks tradeCount — a wrong-signed P&L
+       would pass every integrity check and quietly corrupt the dashboard,
+       calendar and analytics until the trade was found and edited. */
+    if (!selectedOutcome) {
+      /* No outcome picked. Rather than block the save, derive it from the
+         number so outcome and pnl can never disagree in Firestore. */
+      selectedOutcome = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'B/E';
+      setOutcome(selectedOutcome);
+    }
+    pnl = signForOutcome(pnl, selectedOutcome);
 
     const dateObj = new Date(date + 'T00:00:00');
     const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
