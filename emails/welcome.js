@@ -221,9 +221,9 @@ export function welcomeEmail({ name }) {
               Need help getting started?
             </p>
             <p style="margin:0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:14px; line-height:22px; color:#6B7280;">
-              Read our <a href="https://tradeva.app/knowledge-base.html" style="color:#2563EB; font-weight:500; text-decoration:none;">beginner guide</a> or reply to this email anytime.
-            </p>
-          </td>
+  Have a question or need assistance? Simply reply to this email—we're always happy to help.
+</p>
+</td>
         </tr>
 
       </table>
