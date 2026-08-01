@@ -108,8 +108,24 @@ function chronological(list) {
     return 0;
   });
 }
+/* Canonical outcome for a trade: always 'Win', 'Loss' or 'BE'.
+
+   This used to return t.outcome verbatim, which is what dropped break-even
+   trades from the donut legend: the Add Trade form stores the string 'B/E',
+   every comparison in this file tests against 'BE', and 'B/E' !== 'BE'. The
+   trade matched no branch and was counted nowhere.
+
+   Normalising here means the raw stored spelling can never leak into a
+   comparison again — every caller sees one of three exact values. */
 function outcomeOf(t) {
-  if (t.outcome) return t.outcome;
+  const raw = String(t.outcome || '').trim().toUpperCase();
+  if (raw === 'WIN')  return 'Win';
+  if (raw === 'LOSS') return 'Loss';
+  /* Accept every spelling that has been used for break-even. */
+  if (raw === 'B/E' || raw === 'BE' || raw === 'BREAKEVEN' || raw === 'BREAK EVEN') return 'BE';
+
+  /* Fallback for legacy trades saved before `outcome` was set reliably.
+     Note 0 is break-even, not a loss. */
   const p = num(t.pnl);
   return p > 0 ? 'Win' : p < 0 ? 'Loss' : 'BE';
 }
@@ -120,10 +136,12 @@ function groupBy(list, keyFn, opts = {}) {
   list.forEach(t => {
     const k = keyFn(t);
     if (!k) return;
-    if (!map[k]) map[k] = { pnl: 0, n: 0, wins: 0 };
+    if (!map[k]) map[k] = { pnl: 0, n: 0, wins: 0, losses: 0 };
     map[k].pnl += num(t.pnl);
     map[k].n++;
-    if (outcomeOf(t) === 'Win') map[k].wins++;
+    const o = outcomeOf(t);
+    if (o === 'Win')  map[k].wins++;
+    if (o === 'Loss') map[k].losses++;
   });
   let entries = Object.entries(map);
   if (opts.sortByValue) entries.sort((a, b) => b[1].pnl - a[1].pnl);
@@ -131,7 +149,13 @@ function groupBy(list, keyFn, opts = {}) {
   return {
     labels:   entries.map(e => e[0]),
     values:   entries.map(e => Math.round(e[1].pnl)),
-    winRates: entries.map(e => e[1].n ? Math.round(e[1].wins / e[1].n * 100) : 0),
+    /* Decided trades only (wins + losses). Counting a break-even in the
+       denominator drags the rate down for a trade that neither won nor lost.
+       `counts` below still reports every trade, break-evens included. */
+    winRates: entries.map(e => {
+      const decided = e[1].wins + e[1].losses;
+      return decided ? Math.round(e[1].wins / decided * 100) : 0;
+    }),
     counts:   entries.map(e => e[1].n)
   };
 }
@@ -223,13 +247,18 @@ function computeDatasets() {
   chron.forEach(t => {
     const d = tradeDate(t); if (!d) return;
     const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-    if (!mAgg[k]) { mAgg[k] = { pnl: 0, n: 0, wins: 0, label: MONTHS[d.getMonth()] }; mKeys.push(k); }
+    if (!mAgg[k]) { mAgg[k] = { pnl: 0, n: 0, wins: 0, losses: 0, label: MONTHS[d.getMonth()] }; mKeys.push(k); }
     mAgg[k].pnl += num(t.pnl); mAgg[k].n++;
-    if (outcomeOf(t) === 'Win') mAgg[k].wins++;
+    const mo = outcomeOf(t);
+    if (mo === 'Win')  mAgg[k].wins++;
+    if (mo === 'Loss') mAgg[k].losses++;
   });
   MONTHLY_LABELS = mKeys.map(k => mAgg[k].label);
   MONTHLY_PNL    = mKeys.map(k => Math.round(mAgg[k].pnl));
-  WINRATE_TREND  = mKeys.map(k => mAgg[k].n ? Math.round(mAgg[k].wins / mAgg[k].n * 100) : 0);
+  WINRATE_TREND  = mKeys.map(k => {
+    const decided = mAgg[k].wins + mAgg[k].losses;
+    return decided ? Math.round(mAgg[k].wins / decided * 100) : 0;
+  });
 
   /* A single month draws an invisible one-point line, so when there aren't
      at least two months we fall back to a cumulative win-rate curve across
@@ -333,7 +362,12 @@ function updateCounters() {
 
   setCount('winRate', winRate.toFixed(1));
   tone('winRate', winRate >= 50);
-  setText('winRateDesc', wins.length + ' wins out of ' + TRADES.length + ' trades');
+  /* Say what the percentage is actually measured on. "15 wins out of 27"
+     next to a rate computed from 26 decided trades reads like a rounding
+     error and costs trust in every other figure on the page. */
+  setText('winRateDesc',
+    wins.length + ' wins out of ' + decided + ' decided' +
+    (bes.length ? ' (' + bes.length + ' B/E)' : ''));
 
   setCount('profitFactor', pf === Infinity ? 99 : Number(pf.toFixed(2)));
   tone('profitFactor', pf >= 1);
