@@ -1167,14 +1167,44 @@ function buildDayMap(trades) {
     const d = parseTradeDate(t);
     if (!d) return;
     const day = d.getDate();
-    if (!map[day]) map[day] = { trades: [], pnl: 0, rr: 0, wins: 0 };
+    if (!map[day]) map[day] = { trades: [], pnl: 0, rr: 0, wins: 0, losses: 0 };
     map[day].trades.push(t);
     map[day].pnl += t.pnl || 0;
     map[day].rr += t.rr || 0;
-    if ((t.pnl || 0) > 0) map[day].wins++;
+    if (tradeIsWin(t))  map[day].wins++;
+    if (tradeIsLoss(t)) map[day].losses++;
   });
   return map;
 }
+
+/* ══════════════════════════════════════════════════════════
+   OUTCOME CLASSIFICATION
+   ══════════════════════════════════════════════════════════
+   The `outcome` field is the single source of truth — the same rule the
+   Add Trade form enforces when it signs P&L, R:R and Pips.
+
+   Classifying by `pnl > 0` instead is what put break-even trades in the
+   loss bucket: a B/E trade has pnl 0, and "not a win" was being treated as
+   "a loss". Wins + losses must equal the trade count only AFTER break-evens
+   are subtracted, never by absorbing them.
+
+   The pnl fallback exists for legacy trades saved before the outcome field
+   was reliably set. Note it treats 0 as break-even, not as a loss. */
+function tradeOutcome(t) {
+  const raw = String(t.outcome || '').trim().toUpperCase();
+  if (raw === 'WIN')  return 'win';
+  if (raw === 'LOSS') return 'loss';
+  /* Accept every spelling that has been used for break-even so a single
+     stored variant can't silently fall through to the pnl fallback. */
+  if (raw === 'B/E' || raw === 'BE' || raw === 'BREAKEVEN' || raw === 'BREAK EVEN') return 'be';
+
+  const pnl = Number(t.pnl) || 0;
+  return pnl > 0 ? 'win' : pnl < 0 ? 'loss' : 'be';
+}
+
+const tradeIsWin  = t => tradeOutcome(t) === 'win';
+const tradeIsLoss = t => tradeOutcome(t) === 'loss';
+const tradeIsBE   = t => tradeOutcome(t) === 'be';
 
 /* ══════════════════════════════════════════════════════════
    FORMATTERS
@@ -1292,8 +1322,14 @@ function renderSummary() {
 
   const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
-  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
-  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const wins   = trades.filter(tradeIsWin).length;
+  const losses = trades.filter(tradeIsLoss).length;
+  const bes    = trades.filter(tradeIsBE).length;
+  /* Win rate is measured on DECIDED trades. Including break-evens in the
+     denominator quietly drags the percentage down for a trade that neither
+     won nor lost. */
+  const decided = wins + losses;
+  const winRate = decided ? Math.round(wins / decided * 100) : 0;
   const winDays = days.filter(d => d.pnl > 0).length;
   const lossDays = days.filter(d => d.pnl < 0).length;
   const tradingDays = days.length;
@@ -1314,7 +1350,8 @@ function renderSummary() {
 
   document.getElementById('statNetRR').textContent = fmtRR(netRR);
   document.getElementById('statWinRate').textContent = winRate + '%';
-  document.getElementById('statWinRateSub').textContent = wins + ' wins · ' + (trades.length - wins) + ' losses';
+  document.getElementById('statWinRateSub').textContent =
+    wins + ' wins · ' + losses + ' losses' + (bes ? ' · ' + bes + ' B/E' : '');
   document.getElementById('statWinDays').textContent = winDays;
   document.getElementById('statLossDays').textContent = lossDays;
   document.getElementById('statTradingDays').textContent = tradingDays;
@@ -1372,7 +1409,10 @@ function renderCalendar() {
       const isLoss = data.pnl < 0;
       cls = 'day-cell ' + (isWin ? 'win-day' : isLoss ? 'loss-day' : 'flat-day');
       const n = data.trades.length;
-      const winRate = Math.round(data.wins / n * 100);
+      /* Decided trades only — a day with one win and one B/E is 100%, not
+         50%. The trade COUNT shown on the cell still includes the B/E. */
+      const decided = data.wins + data.losses;
+      const winRate = decided ? Math.round(data.wins / decided * 100) : 0;
       const primary = primaryValue(data.pnl, data.rr);
       inner = `
         <div class="day-top">
@@ -1427,12 +1467,16 @@ function buildWeekRows() {
 
   const dayMap = buildDayMap(trades);
   return weeks.map((days, i) => {
-    let pnl = 0, rr = 0, count = 0, wins = 0;
+    let pnl = 0, rr = 0, count = 0, wins = 0, losses = 0;
     (days || []).forEach(d => {
       const data = dayMap[d];
-      if (data) { pnl += data.pnl; rr += data.rr; count += data.trades.length; wins += data.wins; }
+      if (data) {
+        pnl += data.pnl; rr += data.rr; count += data.trades.length;
+        wins += data.wins; losses += data.losses;
+      }
     });
-    const winRate = count ? Math.round(wins / count * 100) : 0;
+    const decidedWeek = wins + losses;
+    const winRate = decidedWeek ? Math.round(wins / decidedWeek * 100) : 0;
     const activeDays = (days || []).filter(d => dayMap[d]).length;
     return { i, days: days || [], pnl, rr, count, wins, winRate, activeDays };
   });
@@ -1485,7 +1529,8 @@ function openDrawer(day) {
     badge.style.background = isWin ? 'var(--green-bg)' : 'var(--red-bg)';
     badge.style.color = isWin ? 'var(--green)' : 'var(--red)';
 
-    const winRate = Math.round(data.wins / data.trades.length * 100);
+    const decidedDay = data.wins + data.losses;
+    const winRate = decidedDay ? Math.round(data.wins / decidedDay * 100) : 0;
     const avgRR = data.rr / data.trades.length;
     const holdTimes = data.trades.map(t => t.timeInPos).filter(Boolean);
 
@@ -1719,8 +1764,10 @@ function openReportModal() {
 
   const netProfit = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const netRR = trades.reduce((s, t) => s + (t.rr || 0), 0);
-  const wins = trades.filter(t => (t.pnl || 0) > 0).length;
-  const winRate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  const wins   = trades.filter(tradeIsWin).length;
+  const losses = trades.filter(tradeIsLoss).length;
+  const decidedReport = wins + losses;
+  const winRate = decidedReport ? Math.round(wins / decidedReport * 100) : 0;
   const winDays = days.filter(([, d]) => d.pnl > 0).length;
   const lossDays = days.filter(([, d]) => d.pnl < 0).length;
 
