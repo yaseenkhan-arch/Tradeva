@@ -230,6 +230,8 @@ textarea.lg { min-height: 120px; }
 }
 .custom-market-input:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
 .custom-market-input::placeholder { text-transform: none; font-weight: 500; color: var(--text-faint); }
+/* Economic events are prose, not ticker symbols — no forced uppercase. */
+.custom-event-input { text-transform: none; }
 
 .btn-mini, .btn-mini-primary {
   padding: 8px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
@@ -668,6 +670,14 @@ finally { document.body.classList.remove("tv-guarding"); document.body.classList
     <div class="form-group">
       <label class="form-label">Economic Events</label>
       <div class="pill-group" id="econEvents"></div>
+      <div class="custom-market-wrap" id="customEventWrap">
+        <input type="text" id="customEventInput" class="custom-market-input custom-event-input"
+               placeholder="Event name, e.g. Retail Sales" maxlength="40"
+               autocomplete="off" spellcheck="false">
+        <button type="button" class="btn-mini-primary" id="customEventSave">Add</button>
+        <button type="button" class="btn-mini" id="customEventCancel">Cancel</button>
+      </div>
+      <div class="custom-market-hint" id="customEventHint"></div>
     </div>
   </div>
 
@@ -859,7 +869,13 @@ const CUSTOM_KEY = 'tradeva_custom_markets';
 let customMarkets = [];          // the user's own instruments
 let activeCategory = 'Forex';
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-const EVENTS = ['FOMC','CPI','NFP','Interest Rate Decision','GDP','PMI','Other'];
+/* Built-in economic events. "Other" was removed — it told you an event
+   mattered without recording which one, which is the opposite of what a
+   planner is for. Custom events replace it. */
+const EVENTS = ['FOMC','CPI','NFP','Interest Rate Decision','GDP','PMI'];
+
+const CUSTOM_EVENTS_KEY = 'tradeva_custom_events';
+let customEvents = [];
 const SETUPS = ['Liquidity Sweep','Order Block','Fair Value Gap','Breaker','SMT','Mitigation','Pullback','Continuation','Reversal','Range'];
 const SESSIONS = ['Asia','London','New York'];
 const CHECKLIST = [
@@ -925,14 +941,22 @@ function saveCustomMarkets() {
 /* Fold in anything recorded on previously saved plans. */
 function mergeCustomFromPlans(rows) {
   let changed = false;
+  let evChanged = false;
   (rows || []).forEach(p => {
     (p.customMarkets || []).forEach(m => {
       if (typeof m === 'string' && m && !customMarkets.includes(m) && !BUILTIN_MARKETS.includes(m)) {
         customMarkets.push(m); changed = true;
       }
     });
+    (p.customEvents || []).forEach(e => {
+      const lower = String(e).toLowerCase();
+      const known = EVENTS.some(x => x.toLowerCase() === lower) ||
+                    customEvents.some(x => x.toLowerCase() === lower);
+      if (typeof e === 'string' && e && !known) { customEvents.push(e); evChanged = true; }
+    });
   });
-  if (changed) { customMarkets.sort(); saveCustomMarkets(); }
+  if (changed)   { customMarkets.sort(); saveCustomMarkets(); }
+  if (evChanged) { customEvents.sort((a, b) => a.localeCompare(b)); saveCustomEvents(); }
 }
 
 function addCustomMarket(raw) {
@@ -955,6 +979,111 @@ function removeCustomMarket(name) {
   selMarkets.delete(name);
   saveCustomMarkets();
   renderMarkets();
+}
+
+/* ── Custom economic events ─────────────────────────────────────────
+   Same two-layer persistence as custom markets: localStorage for instant
+   feedback, plus a copy on every saved plan so the list rebuilds on a new
+   device. See mergeCustomFromPlans(). */
+function loadCustomEvents() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CUSTOM_EVENTS_KEY) || '[]');
+    customEvents = Array.isArray(raw) ? raw.filter(x => typeof x === 'string') : [];
+  } catch (e) { customEvents = []; }
+}
+
+function saveCustomEvents() {
+  try { localStorage.setItem(CUSTOM_EVENTS_KEY, JSON.stringify(customEvents)); }
+  catch (e) { /* private mode or quota — the plan doc is still the durable copy */ }
+}
+
+/* Event names are prose, not symbols, so they are NOT uppercased the way
+   instruments are — "Core CPI" and "ECB Press Conference" should keep their
+   capitalisation. Comparison is case-insensitive so "core cpi" still
+   collides with "Core CPI". */
+function addCustomEvent(raw) {
+  const name = String(raw || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  if (!name) return { ok: false, msg: '' };
+  const lower = name.toLowerCase();
+  if (EVENTS.some(e => e.toLowerCase() === lower))
+    return { ok: false, msg: name + ' is already one of the default events.' };
+  if (customEvents.some(e => e.toLowerCase() === lower))
+    return { ok: false, msg: name + ' is already in your list.' };
+
+  customEvents.push(name);
+  customEvents.sort((a, b) => a.localeCompare(b));
+  saveCustomEvents();
+  selEvents.add(name);          // adding it implies you want it selected
+  return { ok: true, name };
+}
+
+function removeCustomEvent(name) {
+  customEvents = customEvents.filter(e => e !== name);
+  selEvents.delete(name);
+  saveCustomEvents();
+  renderEvents();
+}
+
+/* Built-ins first, then customs, then the add button — customs are visually
+   identical to built-ins apart from the remove affordance. */
+function renderEvents() {
+  const el = document.getElementById('econEvents');
+  if (!el) return;
+
+  let html = EVENTS.map(e =>
+    `<button type="button" class="pill ${selEvents.has(e) ? 'selected' : ''}" data-value="${e}">${e}</button>`
+  ).join('');
+
+  html += customEvents.map(e =>
+    `<button type="button" class="pill ${selEvents.has(e) ? 'selected' : ''}" data-value="${e}">` +
+    `${e}<span class="pill-x" data-remove="${e}" title="Remove ${e}">&times;</span></button>`
+  ).join('');
+
+  html += `<button type="button" class="pill pill-add" id="addEventBtn">+ Add Custom</button>`;
+  el.innerHTML = html;
+
+  el.querySelectorAll('.pill[data-value]').forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      const rm = ev.target.getAttribute && ev.target.getAttribute('data-remove');
+      if (rm) { ev.stopPropagation(); removeCustomEvent(rm); return; }
+      const v = btn.dataset.value;
+      if (selEvents.has(v)) selEvents.delete(v); else selEvents.add(v);
+      renderEvents();
+    });
+  });
+
+  const addBtn = document.getElementById('addEventBtn');
+  if (addBtn) addBtn.addEventListener('click', openEventInput);
+}
+
+function openEventInput() {
+  const wrap = document.getElementById('customEventWrap');
+  const input = document.getElementById('customEventInput');
+  if (!wrap || !input) return;
+  wrap.style.display = 'flex';
+  input.value = '';
+  input.focus();
+  setEventHint('');
+}
+
+function closeEventInput() {
+  const wrap = document.getElementById('customEventWrap');
+  if (wrap) wrap.style.display = 'none';
+  setEventHint('');
+}
+
+function setEventHint(msg) {
+  const h = document.getElementById('customEventHint');
+  if (h) { h.textContent = msg || ''; h.style.display = msg ? 'block' : 'none'; }
+}
+
+function commitCustomEvent() {
+  const input = document.getElementById('customEventInput');
+  if (!input) return;
+  const res = addCustomEvent(input.value);
+  if (!res.ok) { setEventHint(res.msg); if (res.msg) input.select(); return; }
+  closeEventInput();
+  renderEvents();
 }
 
 /* Render the category row and the chip grid beneath it. */
@@ -1195,6 +1324,7 @@ function collectFormData() {
     narrative: document.getElementById('f-narrative').value.trim(),
     keyLevels: document.getElementById('f-key-levels').value.trim(),
     econEvents: Array.from(selEvents),
+    customEvents: customEvents.slice(),
     schedule: { ...schedule },
     startTime: document.getElementById('f-start-time').value,
     endTime: document.getElementById('f-end-time').value,
@@ -1369,7 +1499,7 @@ function viewPlan(id, silent) {
 
   renderMarkets();
   renderPills('tradingDays', DAYS, selDays, 'selected-green');
-  renderPills('econEvents', EVENTS, selEvents);
+  renderEvents();
   renderPills('setupChips', SETUPS, selSetups);
   renderSchedule();
   renderChecklist();
@@ -1432,6 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Custom instruments must be loaded BEFORE the first render, or the
      Custom tab paints empty on a reload. */
   loadCustomMarkets();
+  loadCustomEvents();
 
   const cSave = document.getElementById('customMarketSave');
   const cCancel = document.getElementById('customMarketCancel');
@@ -1445,9 +1576,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') { e.preventDefault(); closeCustomInput(); }
   });
 
+  const eSave = document.getElementById('customEventSave');
+  const eCancel = document.getElementById('customEventCancel');
+  const eInput = document.getElementById('customEventInput');
+  if (eSave)   eSave.addEventListener('click', commitCustomEvent);
+  if (eCancel) eCancel.addEventListener('click', closeEventInput);
+  if (eInput)  eInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter')  { e.preventDefault(); commitCustomEvent(); }
+    if (e.key === 'Escape') { e.preventDefault(); closeEventInput(); }
+  });
+
   renderMarkets();
   renderPills('tradingDays', DAYS, selDays, 'selected-green');
-  renderPills('econEvents', EVENTS, selEvents);
+  renderEvents();
   renderPills('setupChips', SETUPS, selSetups);
   renderSchedule();
   renderChecklist();
