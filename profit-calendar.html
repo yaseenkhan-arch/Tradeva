@@ -1329,7 +1329,10 @@ function renderSummary() {
      denominator quietly drags the percentage down for a trade that neither
      won nor lost. */
   const decided = wins + losses;
-  const winRate = decided ? Math.round(wins / decided * 100) : 0;
+  /* Kept at one decimal to match the dashboard and analytics cards exactly.
+     Rounding to a whole number here made 57.7% read as 58% and looked like
+     the pages disagreed when they were computing the same figure. */
+  const winRate = decided ? (wins / decided * 100) : 0;
   const winDays = days.filter(d => d.pnl > 0).length;
   const lossDays = days.filter(d => d.pnl < 0).length;
   const tradingDays = days.length;
@@ -1349,7 +1352,7 @@ function renderSummary() {
   }
 
   document.getElementById('statNetRR').textContent = fmtRR(netRR);
-  document.getElementById('statWinRate').textContent = winRate + '%';
+  document.getElementById('statWinRate').textContent = winRate.toFixed(1) + '%';
   document.getElementById('statWinRateSub').textContent =
     wins + ' wins · ' + losses + ' losses' + (bes ? ' · ' + bes + ' B/E' : '');
   document.getElementById('statWinDays').textContent = winDays;
