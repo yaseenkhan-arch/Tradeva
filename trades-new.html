@@ -800,11 +800,11 @@ try {
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">R:R</label>
-        <input type="number" id="f-rr" placeholder="e.g. 2.5" step="0.1">
+        <input type="number" id="f-rr" onblur="syncSignedFields()" placeholder="e.g. 2.5" step="0.1">
       </div>
       <div class="form-group">
         <label class="form-label">Pips</label>
-        <input type="number" id="f-pips" placeholder="e.g. 42">
+        <input type="number" id="f-pips" onblur="syncSignedFields()" placeholder="e.g. 42">
       </div>
     </div>
 
@@ -1067,49 +1067,57 @@ function syncPnlHintOnly() {
   const hint = document.getElementById('pnl-hint');
   if (!hint || !selectedOutcome) return;
   const el = document.getElementById('f-pnl');
+  if (!el || el.value === '') { updatePnlHint(); return; }
   const preview = signForOutcome(el.value, selectedOutcome);
-  hint.textContent = el.value === ''
-    ? 'Pick an outcome above and the sign is applied automatically.'
-    : 'Will be saved as ' + (preview >= 0 ? '+$' : '-$') + Math.abs(preview).toLocaleString('en-US', {maximumFractionDigits: 2}) + '.';
+  hint.textContent = 'Will be saved as ' + (preview >= 0 ? '+$' : '-$') +
+    Math.abs(preview).toLocaleString('en-US', { maximumFractionDigits: 2 }) + '.';
   hint.style.color = preview > 0 ? 'var(--green)' : preview < 0 ? 'var(--red)' : 'var(--text-faint)';
 }
 
-function syncPnlField() {
-  const el = document.getElementById('f-pnl');
-  const hint = document.getElementById('pnl-hint');
-  if (!el) return;
+function syncSignedFields() {
+  SIGNED_FIELDS.forEach(function (id) {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-  if (selectedOutcome === 'B/E') {
-    /* Break-even is always zero, so the field is filled and locked rather
-       than left editable with a value that would be ignored. readOnly, not
-       disabled: a disabled input is skipped by screen readers and loses its
-       value on some autofill paths. */
-    el.value = '0';
-    el.readOnly = true;
-    el.style.opacity = '0.6';
-    el.style.cursor = 'not-allowed';
-  } else {
-    el.readOnly = false;
-    el.style.opacity = '';
-    el.style.cursor = '';
-    if (el.value !== '') {
-      const fixed = signForOutcome(el.value, selectedOutcome);
-      /* Only rewrite when it actually differs, so the cursor doesn't jump
-         while someone is mid-type. */
-      if (String(fixed) !== el.value) el.value = fixed;
+    if (selectedOutcome === 'B/E') {
+      /* Break-even zeroes all three and locks them, rather than leaving an
+         editable value that would be overwritten at save time anyway.
+         readOnly, not disabled: a disabled input is skipped by screen
+         readers and drops its value on some autofill paths. */
+      el.value = '0';
+      el.readOnly = true;
+      el.style.opacity = '0.6';
+      el.style.cursor = 'not-allowed';
+    } else {
+      el.readOnly = false;
+      el.style.opacity = '';
+      el.style.cursor = '';
+      if (el.value !== '') {
+        const fixed = signForOutcome(el.value, selectedOutcome);
+        /* Only rewrite when it actually differs, so the cursor doesn't jump
+           while someone is mid-edit. */
+        if (String(fixed) !== el.value) el.value = fixed;
+      }
     }
-  }
+  });
 
-  if (hint) {
-    hint.textContent =
-      selectedOutcome === 'Win'  ? 'Saved as a profit — just type the amount.' :
-      selectedOutcome === 'Loss' ? 'Saved as a loss — just type the amount, no minus sign needed.' :
-      selectedOutcome === 'B/E'  ? 'Break-even trades always save as 0.' :
-      'Pick an outcome above and the sign is applied automatically.';
-    hint.style.color = selectedOutcome === 'Loss' ? 'var(--red)'
-                     : selectedOutcome === 'Win'  ? 'var(--green)'
-                     : 'var(--text-faint)';
-  }
+  updatePnlHint();
+}
+
+/* Kept as a name so the existing onblur wiring and setOutcome() keep working. */
+function syncPnlField() { syncSignedFields(); }
+
+function updatePnlHint() {
+  const hint = document.getElementById('pnl-hint');
+  if (!hint) return;
+  hint.textContent =
+    selectedOutcome === 'Win'  ? 'Saved as a profit — type the amounts, signs are applied for you.' :
+    selectedOutcome === 'Loss' ? 'Saved as a loss — P&L, R:R and Pips are all stored negative.' :
+    selectedOutcome === 'B/E'  ? 'Break-even trades save as 0 P&L, 0R and 0 pips.' :
+    'Pick an outcome above and the signs are applied automatically.';
+  hint.style.color = selectedOutcome === 'Loss' ? 'var(--red)'
+                   : selectedOutcome === 'Win'  ? 'var(--green)'
+                   : 'var(--text-faint)';
 }
 
 /* ── RULES FOLLOWED ── */
@@ -1260,6 +1268,12 @@ async function saveTrade() {
     }
     pnl = signForOutcome(pnl, selectedOutcome);
 
+    /* R:R and Pips get the same treatment. Read here rather than reusing the
+       values collected below, so the sign is applied to whatever is in the
+       field at save time. */
+    const rr   = signForOutcome(document.getElementById('f-rr').value,   selectedOutcome);
+    const pips = signForOutcome(document.getElementById('f-pips').value, selectedOutcome);
+
     const dateObj = new Date(date + 'T00:00:00');
     const displayDate = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
 
@@ -1276,8 +1290,8 @@ async function saveTrade() {
       session:   document.getElementById('f-session').value,
       tradeType: document.getElementById('f-type').value,
       htfBias:   document.getElementById('f-bias').value,
-      rr:        parseFloat(document.getElementById('f-rr').value)    || 0,
-      pips:      parseFloat(document.getElementById('f-pips').value)  || 0,
+      rr,
+      pips,
       timeInPos: document.getElementById('f-time').value,
       outcome:   selectedOutcome,
       pnl,
