@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,19 +6,49 @@
 <meta name="theme-color" content="#F8FAFC">
 
 <title>Tradeva — Turn Every Trade Into an Opportunity to Improve</title>
-<meta name="description" content="Tradeva is a free trading journal for serious traders. Review every trade, identify what works, eliminate costly mistakes, and improve through journaling, analytics and performance insights.">
+<!-- 155 chars. Google truncates around 150-160, so anything past that is
+     written for nobody. -->
+<meta name="description" content="A free trading journal for serious traders. Review every trade, uncover your edge, and improve with analytics, psychology tracking and weekly reviews.">
 <link rel="canonical" href="https://tradeva.app/">
-<link rel="icon" href="logo-transparent.png" type="image/png">
 
+<!-- ── Icons ──────────────────────────────────────────────────────────
+     logo-transparent.png is the source; these are the sizes browsers and
+     iOS actually ask for. Without apple-touch-icon, iOS screenshots the
+     page and uses that as the home-screen icon. -->
+<!-- Fallback first: logo-transparent.png already exists in the repo, so the
+     tab icon works even before the sized files below are generated. -->
+<link rel="icon" href="logo-transparent.png" type="image/png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<!-- ── Social preview ─────────────────────────────────────────────────
+     og-image.png, NOT the .webp hero. LinkedIn and WhatsApp cannot render
+     WebP at all and Facebook is unreliable with it — that is why every
+     preview read "Image failed to load". PNG at 1200x630 is the format and
+     size every platform accepts.
+
+     Absolute URLs are mandatory: scrapers do not resolve relative paths. -->
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Tradeva">
+<meta property="og:locale" content="en_US">
 <meta property="og:url" content="https://tradeva.app/">
 <meta property="og:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
 <meta property="og:description" content="Review every trade, identify what works, eliminate costly mistakes. Free forever.">
-<meta property="og:image" content="https://tradeva.app/tv-dashboard.webp">
+<meta property="og:image" content="https://tradeva.app/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tradeva — a free trading journal showing dashboard analytics including win rate, profit factor and an equity curve.">
+
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Tradevaapp">
+<meta name="twitter:creator" content="@Tradevaapp">
 <meta name="twitter:title" content="Tradeva — Turn Every Trade Into an Opportunity to Improve">
 <meta name="twitter:description" content="Review every trade, identify what works, eliminate costly mistakes. Free forever.">
-<meta name="twitter:image" content="https://tradeva.app/tv-dashboard.webp">
+<meta name="twitter:image" content="https://tradeva.app/og-image.png">
+<meta name="twitter:image:alt" content="Tradeva — a free trading journal showing dashboard analytics including win rate, profit factor and an equity curve.">
 
 <!--
   Inter, loaded without blocking first paint.
