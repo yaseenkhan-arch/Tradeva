@@ -2,61 +2,35 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
-      "//": "ALL JavaScript, not just tradeva-*.js. Two reasons this must stay at max-age=0. (1) The pages are max-age=0 and the modules were 3600, so a browser could pair a fresh page with an hour-old module — that mismatch is what produced the 'does not provide an export named X' errors that looked like broken code. (2) The previous pattern missed analytics.js, the one script not named tradeva-*, which then fell through to Vercel's default and could serve stale after a deploy. must-revalidate still allows a 304, so this costs a conditional request, not a re-download.",
       "source": "/(.*)\\.(js|mjs)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "//": "Images are content-addressed by hand: when one changes, bump the ?v= query in the markup rather than shortening this. A week of caching is what keeps repeat visits fast.",
       "source": "/(.*)\\.(png|jpg|jpeg|svg|webp|ico|avif|gif)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=604800, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=604800, must-revalidate" }
       ]
     },
     {
-      "//": "Every page is a standalone .html with inline CSS and JS, so the HTML IS the app. It must never be cached.",
       "source": "/(.*)\\.html",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "//": "tradeva.app/ serves index.html without the extension, so the rule above does not match it.",
       "source": "/",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "//": "Security headers. nosniff matters here specifically: it stops a browser from second-guessing the Content-Type on a .webp, which is one of the few remaining explanations for an image that loads on one device and not another.",
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        }
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
       ]
     }
   ]
