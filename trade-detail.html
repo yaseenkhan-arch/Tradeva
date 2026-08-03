@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -580,6 +580,14 @@ body {
    Glows are layered radial-gradients, never blurred elements: html2canvas
    cannot rasterise filter:blur(), so a blurred orb would look right in the
    preview and vanish from every download.
+
+   NEVER use the `transparent` keyword as a gradient end stop. CSS resolves
+   it to rgba(0,0,0,0) — transparent BLACK. Browsers interpolate gradients
+   in premultiplied-alpha space so the hue survives; html2canvas does not,
+   so every stop fades through grey and the whole surface darkens. This is
+   what turned Peach Sunset brown, Mint Ocean teal and Aqua Dream mauve in
+   the download while the preview stayed correct. Always end a stop with
+   the SAME colour at zero alpha: rgba(110,231,183,0), not transparent.
    ══════════════════════════════════════════════════════════════════════ */
 
 /* 1 — Minimal · pure white, fine grain, Apple-quiet */
@@ -607,10 +615,10 @@ body {
   --pill: #0B0D12; --pill-ink: #FFFFFF; --qr-bg: #FFFFFF;
   background-color: #F8FAFC;
   background-image:
-    radial-gradient(calc(var(--u) * 400px) circle at 10% 0%,    #FFD1DC 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 90% 0%,    #A5B4FC 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,    #99F6E0 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 100%, #FEF3C7 0%, transparent 70%);
+    radial-gradient(calc(var(--u) * 400px) circle at 10% 0%,    #FFD1DC 0%, rgba(255,209,220,0) 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 90% 0%,    #A5B4FC 0%, rgba(165,180,252,0) 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,    #99F6E0 0%, rgba(153,246,224,0) 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 100% 100%, #FEF3C7 0%, rgba(254,243,199,0) 70%);
 }
 
 /* 2 — Midnight · #0F1115, grid, red glow, texture */
@@ -639,10 +647,10 @@ body {
   --pill: #2B1810; --pill-ink: #FFFBEB; --qr-bg: #FFFFFF;
   background-color: #FFFBEB;
   background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,    #FF9A8B 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 20%, #FFDAB9 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 50% 100%, #FFE4B5 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 80% 80%,  #FFC8A2 0%, transparent 70%);
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,    #FF9A8B 0%, rgba(255,154,139,0) 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 100% 20%, #FFDAB9 0%, rgba(255,218,185,0) 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 50% 100%, #FFE4B5 0%, rgba(255,228,181,0) 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 80% 80%,  #FFC8A2 0%, rgba(255,200,162,0) 70%);
 }
 
 /* 4 — Champagne Gold · warm cream, gold mesh, never yellow */
@@ -684,10 +692,10 @@ body {
   --pill: #06231F; --pill-ink: #F0FDFD; --qr-bg: #FFFFFF;
   background-color: #F0FDFD;
   background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,   #6EE7B7 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 10%,#67E8F9 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,  #5EEAD4 0%, transparent 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 90%,#BAE6FD 0%, transparent 70%);
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,   #6EE7B7 0%, rgba(110,231,183,0) 70%),
+    radial-gradient(calc(var(--u) * 500px) circle at 100% 10%,#67E8F9 0%, rgba(103,232,249,0) 70%),
+    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,  #5EEAD4 0%, rgba(94,234,212,0) 70%),
+    radial-gradient(calc(var(--u) * 400px) circle at 100% 90%,#BAE6FD 0%, rgba(186,230,253,0) 70%);
 }
 
 .pnl-grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
@@ -730,12 +738,12 @@ body {
 .tpl-chip-label { font-size: 11px; font-weight: 600; color: var(--text-muted); transition: color var(--t) var(--ease); }
 .tpl-chip.active .tpl-chip-label { color: var(--accent); }
 .tpl-swatch-minimal   { background: linear-gradient(180deg, #FFFFFF, #F4F5F7); }
-.tpl-swatch-aqua      { background: radial-gradient(circle at 12% 4%, #FFD1DC, transparent 68%), radial-gradient(circle at 92% 4%, #A5B4FC, transparent 68%), radial-gradient(circle at 4% 92%, #99F6E0, transparent 68%), #F8FAFC; }
+.tpl-swatch-aqua      { background: radial-gradient(circle at 12% 4%, #FFD1DC, rgba(255,209,220,0) 68%), radial-gradient(circle at 92% 4%, #A5B4FC, rgba(165,180,252,0) 68%), radial-gradient(circle at 4% 92%, #99F6E0, rgba(153,246,224,0) 68%), #F8FAFC; }
 .tpl-swatch-champagne { background: radial-gradient(circle at 90% 4%, #C19B5C, #FDFAF1 64%), linear-gradient(160deg, #FDFAF1, #EFE2C9); }
 .tpl-swatch-liquid    { background: radial-gradient(circle at 86% 10%, #818CF8, #FFFFFF 62%); }
 .tpl-swatch-midnight  { background: radial-gradient(circle at 50% 100%, #F0325B, #0F1115 58%); }
-.tpl-swatch-peach     { background: radial-gradient(circle at 4% 4%, #FF9A8B, transparent 70%), radial-gradient(circle at 96% 22%, #FFDAB9, transparent 70%), radial-gradient(circle at 52% 96%, #FFE4B5, transparent 70%), #FFFBEB; }
-.tpl-swatch-mint      { background: radial-gradient(circle at 4% 4%, #6EE7B7, transparent 70%), radial-gradient(circle at 96% 10%, #67E8F9, transparent 70%), radial-gradient(circle at 4% 92%, #5EEAD4, transparent 70%), #F0FDFD; }
+.tpl-swatch-peach     { background: radial-gradient(circle at 4% 4%, #FF9A8B, rgba(255,154,139,0) 70%), radial-gradient(circle at 96% 22%, #FFDAB9, rgba(255,218,185,0) 70%), radial-gradient(circle at 52% 96%, #FFE4B5, rgba(255,228,181,0) 70%), #FFFBEB; }
+.tpl-swatch-mint      { background: radial-gradient(circle at 4% 4%, #6EE7B7, rgba(110,231,183,0) 70%), radial-gradient(circle at 96% 10%, #67E8F9, rgba(103,232,249,0) 70%), radial-gradient(circle at 4% 92%, #5EEAD4, rgba(94,234,212,0) 70%), #F0FDFD; }
 
 /* ── Size selector ── */
 .pnlsize-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
