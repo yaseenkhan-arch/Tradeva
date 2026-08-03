@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -604,10 +604,14 @@ body {
 }
 
 /* 2 — Aqua Dream · soft pink / indigo / mint / cream on near-white
-   Circle radii are calc(var(--u) * Npx) rather than fixed px: the source
-   values are sized for a 925-wide card, so at a 1080 export a fixed 400px
-   circle would cover a different fraction of the surface than in the
-   preview. Scaling them keeps the download identical to what you see. */
+   Radii are PERCENTAGES of the card box, not calc(var(--u) * Npx). The
+   calc form scaled correctly in CSS (44.5% of width at every card size),
+   but html2canvas could not resolve a calc(var(...)) gradient radius and
+   fell back to farthest-corner — the blob flooded the desktop download
+   while the preview and the narrower mobile export stayed correct.
+   Percentages need no resolution, which is why Champagne / Liquid /
+   Midnight / Minimal never had the bug. Values match the old square
+   output: 600px -> 44.5%, 500px -> 37.1%, 400px -> 29.7%. */
 .pnl-card[data-template="aqua"] {
   --ink: #0B0D12; --ink-2: #98A0AB;
   --tile: rgba(255,255,255,0.60); --chip: #FFFFFF;
@@ -615,10 +619,10 @@ body {
   --pill: #0B0D12; --pill-ink: #FFFFFF; --qr-bg: #FFFFFF;
   background-color: #F8FAFC;
   background-image:
-    radial-gradient(calc(var(--u) * 400px) circle at 10% 0%,    #FFD1DC 0%, rgba(255,209,220,0) 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 90% 0%,    #A5B4FC 0%, rgba(165,180,252,0) 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,    #99F6E0 0%, rgba(153,246,224,0) 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 100%, #FEF3C7 0%, rgba(254,243,199,0) 70%);
+    radial-gradient(29.7% 29.7% at 10% 0%,    #FFD1DC 0%, rgba(255,209,220,0) 70%),
+    radial-gradient(37.1% 37.1% at 90% 0%,    #A5B4FC 0%, rgba(165,180,252,0) 70%),
+    radial-gradient(44.5% 44.5% at 0% 90%,    #99F6E0 0%, rgba(153,246,224,0) 70%),
+    radial-gradient(29.7% 29.7% at 100% 100%, #FEF3C7 0%, rgba(254,243,199,0) 70%);
 }
 
 /* 2 — Midnight · #0F1115, grid, red glow, texture */
@@ -647,10 +651,10 @@ body {
   --pill: #2B1810; --pill-ink: #FFFBEB; --qr-bg: #FFFFFF;
   background-color: #FFFBEB;
   background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,    #FF9A8B 0%, rgba(255,154,139,0) 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 20%, #FFDAB9 0%, rgba(255,218,185,0) 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 50% 100%, #FFE4B5 0%, rgba(255,228,181,0) 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 80% 80%,  #FFC8A2 0%, rgba(255,200,162,0) 70%);
+    radial-gradient(44.5% 44.5% at 0% 0%,    #FF9A8B 0%, rgba(255,154,139,0) 70%),
+    radial-gradient(37.1% 37.1% at 100% 20%, #FFDAB9 0%, rgba(255,218,185,0) 70%),
+    radial-gradient(44.5% 44.5% at 50% 100%, #FFE4B5 0%, rgba(255,228,181,0) 70%),
+    radial-gradient(29.7% 29.7% at 80% 80%,  #FFC8A2 0%, rgba(255,200,162,0) 70%);
 }
 
 /* 4 — Champagne Gold · warm cream, gold mesh, never yellow */
@@ -692,10 +696,10 @@ body {
   --pill: #06231F; --pill-ink: #F0FDFD; --qr-bg: #FFFFFF;
   background-color: #F0FDFD;
   background-image:
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 0%,   #6EE7B7 0%, rgba(110,231,183,0) 70%),
-    radial-gradient(calc(var(--u) * 500px) circle at 100% 10%,#67E8F9 0%, rgba(103,232,249,0) 70%),
-    radial-gradient(calc(var(--u) * 600px) circle at 0% 90%,  #5EEAD4 0%, rgba(94,234,212,0) 70%),
-    radial-gradient(calc(var(--u) * 400px) circle at 100% 90%,#BAE6FD 0%, rgba(186,230,253,0) 70%);
+    radial-gradient(44.5% 44.5% at 0% 0%,   #6EE7B7 0%, rgba(110,231,183,0) 70%),
+    radial-gradient(37.1% 37.1% at 100% 10%,#67E8F9 0%, rgba(103,232,249,0) 70%),
+    radial-gradient(44.5% 44.5% at 0% 90%,  #5EEAD4 0%, rgba(94,234,212,0) 70%),
+    radial-gradient(29.7% 29.7% at 100% 90%,#BAE6FD 0%, rgba(186,230,253,0) 70%);
 }
 
 .pnl-grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
