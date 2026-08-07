@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1136,8 +1136,73 @@ window.TRADEVA_BLOG = (function () {
     return Promise.resolve(D.FEATURED);
   }
   function loadLatestPosts(max){
-    // query(collection(db,'posts'), orderBy('date','desc'), limit(max))
-    return Promise.resolve(D.LATEST.slice(0, max || D.LATEST.length));
+    /* Live Firestore read. Dynamic import() keeps this working inside the
+       page's classic script block — no type="module" needed anywhere.
+       This version MUST match tradeva-firebase.js: two different SDK
+       copies on one page break instanceof silently. */
+    var FB = 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+    var n = max || 6;
+
+    /* Firestore stores a Timestamp; the renderer writes post.date straight
+       into a datetime="" attribute, so it has to come out as YYYY-MM-DD. */
+    function toISODate(v){
+      var dt = v && typeof v.toDate === 'function' ? v.toDate()
+             : v instanceof Date ? v
+             : (v || v === 0) ? new Date(v) : null;
+      return dt && !isNaN(dt.getTime()) ? dt.toISOString().slice(0, 10) : '';
+    }
+
+    /* buildCover() needs an icon key, not a category name. Resolve it off
+       the categories already in TRADEVA_BLOG so posts carry no icon field. */
+    function iconFor(category){
+      var want = String(category || '').trim().toLowerCase();
+      var hit = (D.CATEGORIES || []).filter(function(c){
+        return c.title.toLowerCase() === want || c.slug === want;
+      })[0];
+      return hit ? hit.icon : 'journal';
+    }
+
+    function estimateMinutes(body){
+      var words = String(body || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length;
+      return Math.max(1, Math.round(words / 200));
+    }
+
+    return Promise.all([
+      import('./tradeva-firebase.js'),
+      import(FB)
+    ]).then(function (mods) {
+      var db = mods[0].db, fs = mods[1];
+      return fs.getDocs(fs.query(
+        fs.collection(db, 'blog_posts'),
+        fs.where('status', '==', 'published'),
+        fs.orderBy('publishedAt', 'desc'),
+        fs.limit(n)
+      ));
+    }).then(function (snap) {
+      return snap.docs.map(function (doc) {
+        var d = doc.data() || {};
+        var slug = d.slug || doc.id;
+        return {
+          slug:        slug,
+          url:         d.url || ('blog-post.html?slug=' + encodeURIComponent(slug)),
+          category:    d.category || 'Trading Journal',
+          icon:        iconFor(d.category),
+          title:       d.title || 'Untitled',
+          excerpt:     d.excerpt || '',
+          author:      d.author || 'Tradeva Team',
+          readingTime: d.readingTime || estimateMinutes(d.body),
+          date:        toISODate(d.publishedAt),
+          image:       d.image || null
+        };
+      });
+    }).catch(function (err) {
+      /* Resolve empty rather than reject: the boot chain is a single
+         Promise.all, so rejecting here would also blank the featured card,
+         the categories and the most-read list. This way only the article
+         grid falls back to its "No articles yet" state. */
+      console.error('[blog] loadLatestPosts failed', err);
+      return [];
+    });
   }
   function loadCategories(){
     // getDocs(collection(db,'blogCategories'))
