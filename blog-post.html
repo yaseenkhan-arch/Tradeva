@@ -705,6 +705,22 @@ button{font-family:inherit}
    selector matches nothing when sections are present. */
 #articleBody > h2{margin-top:var(--s8)}
 #articleBody > h2:first-child{margin-top:0}
+
+/* Article reading rhythm. Scoped to #articleBody so the legal pages' .prose
+   keeps its current values. Density and hierarchy only — family, colour,
+   reading width and horizontal padding are untouched. */
+#articleBody p,
+#articleBody li{line-height:1.58}          /* was 1.6, inherited from body */
+#articleBody p + p{margin-top:14px}        /* was --s2 / 16px */
+#articleBody li{margin-bottom:7px}         /* was 9px */
+#articleBody h3{font-size:18px}            /* was 17px — 16px body left it almost flat */
+
+@media (max-width:600px){
+  #articleBody > h2{margin-top:var(--s6)}  /* 64px of dead space is a lot on a phone */
+  #articleBody p,
+  #articleBody li{line-height:1.54}
+  #articleBody p + p{margin-top:12px}
+}
 .prose h2{margin-top:var(--s6)}
 .prose h2:first-child{margin-top:0}
 .prose ol{margin-top:var(--s2);counter-reset:step}
