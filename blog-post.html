@@ -699,6 +699,12 @@ button{font-family:inherit}
 
 /* Article body extends the shared .prose rules. */
 .prose{margin:0}
+/* Firestore bodies are flat — no <section> wrappers — so the canonical
+   `.prose section+section` rhythm (--s8) never fires and headings fall
+   back to --s6. Restore the original gap on direct children only; this
+   selector matches nothing when sections are present. */
+#articleBody > h2{margin-top:var(--s8)}
+#articleBody > h2:first-child{margin-top:0}
 .prose h2{margin-top:var(--s6)}
 .prose h2:first-child{margin-top:0}
 .prose ol{margin-top:var(--s2);counter-reset:step}
@@ -851,7 +857,6 @@ button{font-family:inherit}
   </header>
 
   <div class="article-cover reveal" id="articleCover"></div>
-  </div>
 
   <!-- ══════════════ BODY + ASIDE ══════════════ -->
   <div class="article-layout">
