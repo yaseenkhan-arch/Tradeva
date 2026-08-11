@@ -832,8 +832,8 @@ button{font-family:inherit}
     <!-- Ranked list: order carries information, so the numbers stay. -->
     <aside class="ranked reveal" aria-labelledby="rankedTitle">
       <div class="ranked-head">
-        <h2 id="rankedTitle">Most read</h2>
-        <span>This month</span>
+        <h2 id="rankedTitle">Editor's picks</h2>
+        <span>Hand-picked</span>
       </div>
       <ul id="mostRead"></ul>
     </aside>
@@ -955,61 +955,14 @@ window.TRADEVA_BLOG = (function () {
   /* Content, shaped exactly like the Firestore documents that replace it. */
 
   var CATEGORIES = [
-    {slug:'trading-journal',    icon:'journal',    title:'Trading Journal',    desc:'How to log a trade so the data actually tells you something later.', count:14},
-    {slug:'trading-psychology', icon:'psychology', title:'Trading Psychology', desc:'Fear, tilt and revenge trading — and what to do in the moment.',       count:11},
-    {slug:'risk-management',    icon:'risk',       title:'Risk Management',    desc:'Position sizing, drawdown limits and surviving a bad month.',         count:9},
-    {slug:'ict-concepts',       icon:'ict',        title:'ICT Concepts',       desc:'Order blocks, fair value gaps and liquidity, explained plainly.',     count:12},
-    {slug:'price-action',       icon:'price',      title:'Price Action',       desc:'Market structure and ranges, read without a single indicator.',       count:10},
-    {slug:'trading-mindset',    icon:'mindset',    title:'Trading Mindset',    desc:'Patience, process and detaching from the result of one trade.',       count:8},
-    {slug:'forex-basics',       icon:'forex',      title:'Forex Basics',       desc:'Pairs, sessions, pips and lot sizes, starting from zero.',            count:13},
-    {slug:'prop-firm-guides',   icon:'prop',       title:'Prop Firm Guides',   desc:'Challenge rules, drawdown maths and how payouts really work.',        count:7}
-  ];
-
-  var FEATURED = {
-    slug:'trading-journal-template-that-works',
-    url:'blog-post.html',
-    category:'Trading Journal', icon:'journal',
-    title:'The Trading Journal Template That Actually Changes Your Results',
-    excerpt:'Most journals are a diary with prices in it. This one is built backwards from the four questions your data has to answer: which setup am I best at, what time of day am I worst at, where does my risk drift, and which rule do I break first.',
-    author:'Tradeva Team', readingTime:11, date:'2026-07-28'
-  };
-
-  var MOST_READ = [
-    {url:'#', title:'How to Journal a Trade in Under 60 Seconds',     category:'Trading Journal',   readingTime:6},
-    {url:'#', title:'The 5 Metrics That Predict a Losing Month',      category:'Trading Analytics', readingTime:9},
-    {url:'#', title:'Detaching From the Outcome of Any Single Trade', category:'Trading Mindset',   readingTime:7}
-  ];
-
-  var LATEST = [
-    {slug:'win-rate-is-lying', url:'#', category:'Trading Analytics', icon:'price',
-     title:'Why Your Win Rate Is Lying to You',
-     excerpt:'A 70% win rate and a shrinking account are not a contradiction. Here is the ratio that explains it, and how to read it off your own trades.',
-     author:'Tradeva Team', readingTime:8, date:'2026-07-21'},
-
-    {slug:'revenge-trading-90-seconds', url:'#', category:'Trading Psychology', icon:'psychology',
-     title:'Revenge Trading: The 90 Seconds After a Loss',
-     excerpt:'Almost every blown account traces back to one impulsive re-entry. What happens in that window, and the two rules that interrupt it.',
-     author:'Tradeva Team', readingTime:7, date:'2026-07-16'},
-
-    {slug:'position-sizing-one-percent', url:'#', category:'Risk Management', icon:'risk',
-     title:'Position Sizing: The 1% Rule, and When It Breaks',
-     excerpt:'Risking 1% per trade is good advice until correlation, weekend gaps or a prop firm drawdown limit enters the picture. Three cases where the maths changes.',
-     author:'Tradeva Team', readingTime:9, date:'2026-07-09'},
-
-    {slug:'order-blocks-fvg-explained', url:'#', category:'ICT Concepts', icon:'ict',
-     title:'Order Blocks and Fair Value Gaps, Without the Hype',
-     excerpt:'Strip away the jargon and both describe the same thing: unfilled orders left behind by a fast move. How to mark them, and how to test whether they work for you.',
-     author:'Tradeva Team', readingTime:12, date:'2026-07-02'},
-
-    {slug:'liquidity-sweeps-15m', url:'#', category:'Price Action', icon:'price',
-     title:'Reading Liquidity Sweeps on the 15-Minute Chart',
-     excerpt:'A sweep only means something with a reaction behind it. Three confirmations that separate a genuine stop run from a range that simply kept going.',
-     author:'Tradeva Team', readingTime:10, date:'2026-06-25'},
-
-    {slug:'prop-firm-drawdown', url:'#', category:'Prop Firm Guides', icon:'prop',
-     title:'Passing a Prop Challenge Without Blowing the Drawdown',
-     excerpt:'Trailing drawdown punishes the exact behaviour that hits a profit target. A daily-loss framework, and the equity maths behind it.',
-     author:'Tradeva Team', readingTime:9, date:'2026-06-18'}
+    {slug:'trading-journal',    icon:'journal',    title:'Trading Journal',    desc:'How to log a trade so the data actually tells you something later.'},
+    {slug:'trading-psychology', icon:'psychology', title:'Trading Psychology', desc:'Fear, tilt and revenge trading — and what to do in the moment.'},
+    {slug:'risk-management',    icon:'risk',       title:'Risk Management',    desc:'Position sizing, drawdown limits and surviving a bad month.'},
+    {slug:'ict-concepts',       icon:'ict',        title:'ICT Concepts',       desc:'Order blocks, fair value gaps and liquidity, explained plainly.'},
+    {slug:'price-action',       icon:'price',      title:'Price Action',       desc:'Market structure and ranges, read without a single indicator.'},
+    {slug:'trading-mindset',    icon:'mindset',    title:'Trading Mindset',    desc:'Patience, process and detaching from the result of one trade.'},
+    {slug:'forex-basics',       icon:'forex',      title:'Forex Basics',       desc:'Pairs, sessions, pips and lot sizes, starting from zero.'},
+    {slug:'prop-firm-guides',   icon:'prop',       title:'Prop Firm Guides',   desc:'Challenge rules, drawdown maths and how payouts really work.'}
   ];
 
   /* ── Helpers ───────────────────────────────────────────────────────── */
@@ -1107,8 +1060,7 @@ window.TRADEVA_BLOG = (function () {
   }
 
   return {
-    ICONS:ICONS, CATEGORIES:CATEGORIES, FEATURED:FEATURED,
-    MOST_READ:MOST_READ, LATEST:LATEST,
+    ICONS:ICONS, CATEGORIES:CATEGORIES,
     esc:esc, formatDate:formatDate, initials:initials, icon:icon,
     buildCover:buildCover, metaRow:metaRow, byline:byline,
     stateBlock:stateBlock, postCard:postCard, initReveal:initReveal
@@ -1129,45 +1081,73 @@ window.TRADEVA_BLOG = (function () {
   var D = window.TRADEVA_BLOG;
 
   /* ── Loaders ───────────────────────────────────────────────────────
-     Replace each body with a Firestore query. Signatures stay put. */
+     ONE Firestore query for every published post, cached as a promise so
+     Latest, Categories, Featured and Editor's Picks all share a single
+     read. Drafts never leave the database: status=="published" is applied
+     in the query itself, not filtered client-side. */
 
-  function loadFeaturedPost(){
-    // query(collection(db,'posts'), where('featured','==',true), limit(1))
-    return Promise.resolve(D.FEATURED);
+  var FB = 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+  var MAX_POSTS = 300;        /* ceiling, so the page can never read an unbounded collection */
+  var publishedCache = null;
+
+  /* Firestore stores a Timestamp; the renderer writes post.date straight
+     into a datetime="" attribute, so it has to come out as YYYY-MM-DD. */
+  function toISODate(v){
+    var dt = v && typeof v.toDate === 'function' ? v.toDate()
+           : v instanceof Date ? v
+           : (v || v === 0) ? new Date(v) : null;
+    return dt && !isNaN(dt.getTime()) ? dt.toISOString().slice(0, 10) : '';
   }
-  function loadLatestPosts(max){
-    /* Live Firestore read. Dynamic import() keeps this working inside the
-       page's classic script block — no type="module" needed anywhere.
-       This version MUST match tradeva-firebase.js: two different SDK
-       copies on one page break instanceof silently. */
-    var FB = 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
-    var n = max || 6;
 
-    /* Firestore stores a Timestamp; the renderer writes post.date straight
-       into a datetime="" attribute, so it has to come out as YYYY-MM-DD. */
-    function toISODate(v){
-      var dt = v && typeof v.toDate === 'function' ? v.toDate()
-             : v instanceof Date ? v
-             : (v || v === 0) ? new Date(v) : null;
-      return dt && !isNaN(dt.getTime()) ? dt.toISOString().slice(0, 10) : '';
-    }
+  /* buildCover() needs an icon key, not a category name. Resolved off the
+     static category list so posts carry no icon field. Matching is on the
+     TITLE, so a doc's `category` must read "Trading Journal", not the slug. */
+  function categoryByTitle(title){
+    var want = String(title || '').trim().toLowerCase();
+    return (D.CATEGORIES || []).filter(function(c){
+      return c.title.toLowerCase() === want || c.slug === want;
+    })[0] || null;
+  }
+  function categoryBySlug(slug){
+    return (D.CATEGORIES || []).filter(function(c){ return c.slug === slug; })[0] || null;
+  }
+  function iconFor(category){
+    var hit = categoryByTitle(category);
+    return hit ? hit.icon : 'journal';
+  }
 
-    /* buildCover() needs an icon key, not a category name. Resolve it off
-       the categories already in TRADEVA_BLOG so posts carry no icon field. */
-    function iconFor(category){
-      var want = String(category || '').trim().toLowerCase();
-      var hit = (D.CATEGORIES || []).filter(function(c){
-        return c.title.toLowerCase() === want || c.slug === want;
-      })[0];
-      return hit ? hit.icon : 'journal';
-    }
+  function estimateMinutes(body){
+    var words = String(body || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length;
+    return Math.max(1, Math.round(words / 200));
+  }
 
-    function estimateMinutes(body){
-      var words = String(body || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length;
-      return Math.max(1, Math.round(words / 200));
-    }
+  /* Firestore document -> the shape every renderer already expects. */
+  function mapPost(doc){
+    var d = doc.data() || {};
+    var slug = d.slug || doc.id;
+    return {
+      slug:        slug,
+      url:         d.url || ('blog-post.html?slug=' + encodeURIComponent(slug)),
+      category:    d.category || 'Trading Journal',
+      icon:        iconFor(d.category),
+      title:       d.title || 'Untitled',
+      excerpt:     d.excerpt || '',
+      author:      d.authorId || 'Tradeva Team',
+      readingTime: d.readingTime || estimateMinutes(d.body),
+      date:        toISODate(d.publishedAt),
+      image:       d.featuredImage || null,
+      featured:    d.featured === true
+    };
+  }
 
-    return Promise.all([
+  /* The single read. Dynamic import() keeps this working inside the page's
+     classic script block — no type="module" needed anywhere. The SDK
+     version MUST match tradeva-firebase.js: two different copies on one
+     page break instanceof silently. */
+  function loadAllPublished(){
+    if (publishedCache) return publishedCache;
+
+    publishedCache = Promise.all([
       import('./tradeva-firebase.js'),
       import(FB)
     ]).then(function (mods) {
@@ -1176,41 +1156,77 @@ window.TRADEVA_BLOG = (function () {
         fs.collection(db, 'blog_posts'),
         fs.where('status', '==', 'published'),
         fs.orderBy('publishedAt', 'desc'),
-        fs.limit(n)
+        fs.limit(MAX_POSTS)
       ));
     }).then(function (snap) {
-      return snap.docs.map(function (doc) {
-        var d = doc.data() || {};
-        var slug = d.slug || doc.id;
-        return {
-          slug:        slug,
-          url:         d.url || ('blog-post.html?slug=' + encodeURIComponent(slug)),
-          category:    d.category || 'Trading Journal',
-          icon:        iconFor(d.category),
-          title:       d.title || 'Untitled',
-          excerpt:     d.excerpt || '',
-          author:      d.author || 'Tradeva Team',
-          readingTime: d.readingTime || estimateMinutes(d.body),
-          date:        toISODate(d.publishedAt),
-          image:       d.image || null
-        };
-      });
+      return snap.docs.map(mapPost);
     }).catch(function (err) {
       /* Resolve empty rather than reject: the boot chain is a single
-         Promise.all, so rejecting here would also blank the featured card,
-         the categories and the most-read list. This way only the article
-         grid falls back to its "No articles yet" state. */
-      console.error('[blog] loadLatestPosts failed', err);
+         Promise.all, so rejecting would blank every section at once. Each
+         renderer falls back to its own empty state instead. */
+      console.error('[blog] loadAllPublished failed', err);
+      publishedCache = null;   /* don't cache a failure — allow a later retry */
       return [];
     });
+
+    return publishedCache;
   }
+
+  /* ?category=<slug> — where the category cards point. */
+  function currentCategorySlug(){
+    try {
+      return new URLSearchParams(window.location.search).get('category') || null;
+    } catch (e) { return null; }
+  }
+
+  function loadFeaturedPost(){
+    return loadAllPublished().then(function (posts) {
+      if (!posts.length) return null;
+      return posts.filter(function(p){ return p.featured; })[0] || posts[0];
+    });
+  }
+
+  /* Newest `max` posts — or every post in one category when the URL asks
+     for one, which is what makes the category cards lead somewhere. */
+  function loadLatestPosts(max){
+    return loadAllPublished().then(function (posts) {
+      var meta = categoryBySlug(currentCategorySlug());
+      if (meta) {
+        return posts.filter(function(p){ return p.category === meta.title; });
+      }
+      return posts.slice(0, max || 6);
+    });
+  }
+
+  /* Static metadata (slug, icon, title, description) stays in the file —
+     none of it lives in Firestore. Only the count is derived. */
   function loadCategories(){
-    // getDocs(collection(db,'blogCategories'))
-    return Promise.resolve(D.CATEGORIES);
+    return loadAllPublished().then(function (posts) {
+      return (D.CATEGORIES || []).map(function (c) {
+        var n = 0;
+        posts.forEach(function(p){ if (p.category === c.title) n++; });
+        return {slug:c.slug, icon:c.icon, title:c.title, desc:c.desc, count:n};
+      });
+    });
   }
+
+  /* Editor's Picks: featured==true first, topped up with the newest posts
+     when fewer than `max` are flagged. No view tracking, no client writes.
+     The post the Featured card is already showing is excluded, so the same
+     article never appears twice on one page. The `shown` expression must
+     stay identical to loadFeaturedPost() above. */
   function loadMostRead(max){
-    // query(collection(db,'posts'), orderBy('views','desc'), limit(max))
-    return Promise.resolve(D.MOST_READ.slice(0, max || 3));
+    var n = max || 3;
+    return loadAllPublished().then(function (posts) {
+      if (!posts.length) return [];
+      var shown = posts.filter(function(p){ return p.featured; })[0] || posts[0];
+      var pool  = posts.filter(function(p){ return p !== shown; });
+      var picks = pool.filter(function(p){ return p.featured; }).slice(0, n);
+      pool.forEach(function(p){
+        if (picks.length < n && picks.indexOf(p) === -1) picks.push(p);
+      });
+      return picks;
+    });
   }
 
   /* ── Renderers ─────────────────────────────────────────────────────── */
@@ -1223,7 +1239,7 @@ window.TRADEVA_BLOG = (function () {
       return;
     }
     grid.innerHTML = list.map(function(c){
-      return '<a class="cat reveal" href="#" data-category="' + D.esc(c.slug) + '">' +
+      return '<a class="cat reveal" href="blog.html?category=' + D.esc(c.slug) + '" data-category="' + D.esc(c.slug) + '">' +
                '<span class="cat-icon">' + D.icon(c.icon) + '</span>' +
                '<h3>' + D.esc(c.title) + '</h3>' +
                '<p>' + D.esc(c.desc) + '</p>' +
