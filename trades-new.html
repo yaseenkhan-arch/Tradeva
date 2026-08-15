@@ -432,6 +432,24 @@ textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
 [data-theme="dark"] .save-btn { background: var(--accent); color: #fff; }
 [data-theme="dark"] .save-btn:hover { background: var(--accent-hover); }
 
+/* A save is several round trips to Mumbai — the trade doc, up to two image
+   uploads, and the awaited summary hooks — so it is never instant. Without a
+   visible busy state the page looks frozen and the button gets clicked again.
+   Same spinner treatment as the delete confirm on trade-detail.html. */
+.save-btn:disabled { cursor: default; opacity: 0.75; }
+.save-btn:disabled:hover { background: var(--text-primary); transform: none; box-shadow: none; }
+[data-theme="dark"] .save-btn:disabled:hover { background: var(--accent); }
+.save-btn.is-busy { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
+.save-btn.is-busy::before {
+  content: ''; width: 15px; height: 15px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.35); border-top-color: currentColor;
+  border-radius: 50%; animation: tvbtnspin 0.7s linear infinite;
+}
+@keyframes tvbtnspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .save-btn.is-busy::before { animation-duration: 2.4s; }
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed; bottom: 24px; left: 50%;
@@ -651,8 +669,8 @@ try {
         <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
       </a>
       <div>
-        <h1 class="page-title">Add New Trade</h1>
-        <p class="page-subtitle">Log a trade execution with full details.</p>
+        <h1 class="page-title" id="pageTitle">Add New Trade</h1>
+        <p class="page-subtitle" id="pageSubtitle">Log a trade execution with full details.</p>
       </div>
     </div>
   </div>
@@ -930,7 +948,7 @@ try {
   </div>
 
   <!-- Save Button -->
-  <button class="save-btn" onclick="saveTrade()">Save Trade</button>
+  <button class="save-btn" id="saveBtn" onclick="saveTrade()"><span id="saveBtnLabel">Save Trade</span></button>
 
  </div><!-- /.page-container -->
 </main>
@@ -962,7 +980,7 @@ try {
 <!-- Toast -->
 <div class="toast" id="toast">
   <div class="toast-icon"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
-  <span>Trade saved successfully!</span>
+  <span id="toastText">Trade saved successfully!</span>
 </div>
 
 <script>
@@ -1074,6 +1092,17 @@ function syncPnlHintOnly() {
   hint.style.color = preview > 0 ? 'var(--green)' : preview < 0 ? 'var(--red)' : 'var(--text-faint)';
 }
 
+/* The three fields whose sign the Outcome dictates.
+
+   This constant was referenced by syncSignedFields() but never declared
+   anywhere in the file, so every call threw a ReferenceError: picking an
+   outcome never repainted the P&L field, the hint never updated, and B/E
+   never zeroed and locked the row. Saved data was always correct — saveTrade()
+   re-applies signForOutcome() itself — so the bug was invisible except in the
+   console. It has to be fixed here because edit mode calls setOutcome() while
+   prefilling, and a B/E trade would otherwise load with its old numbers. */
+const SIGNED_FIELDS = ['f-pnl', 'f-rr', 'f-pips'];
+
 function syncSignedFields() {
   SIGNED_FIELDS.forEach(function (id) {
     const el = document.getElementById(id);
@@ -1128,10 +1157,118 @@ function setRules(r) {
   document.getElementById('btn-rules-no').className  = 'rule-btn' + (r === 'No'  ? ' no-active'  : '');
 }
 
+/* ══════════════════════════════════════════════════════════
+   EDIT MODE
+   trades-new.html            → log a new trade
+   trades-new.html?id=<docId> → edit that trade in place
+
+   Deliberately the same page rather than a second form: one set of fields,
+   one validation path, one sign-normalisation path. Only the write at the end
+   differs (updateTrade instead of createTrade) and the redirect returns to the
+   trade instead of the list.
+══════════════════════════════════════════════════════════ */
+const EDIT_PARAMS     = new URLSearchParams(window.location.search);
+const EDIT_TRADE_ID   = EDIT_PARAMS.get('id') || '';
+const EDIT_ACCOUNT_ID = EDIT_PARAMS.get('account') || '';
+const IS_EDIT         = !!EDIT_TRADE_ID;
+
+/* Screenshots already in Storage. An edit re-uploads only what the user
+   actually replaces, so fixing a typo in the notes never costs an image
+   upload. `clearedImages` records an existing screenshot the user removed. */
+const existingImages = { entry: '', exit: '' };
+const clearedImages  = { entry: false, exit: false };
+
+/* Until Firestore answers the form is empty, and saving an empty form would
+   overwrite a real trade with blanks. Lock the button until the fill lands. */
+if (IS_EDIT) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('saveBtn');
+    const lbl = document.getElementById('saveBtnLabel');
+    if (btn) { btn.disabled = true; btn.classList.add('is-busy'); }
+    if (lbl) lbl.textContent = 'Loading trade\u2026';
+  });
+}
+
+/* Paint a Firestore trade into the form. Called by the loader module at the
+   bottom of the page once the document arrives. */
+window.__tvFillTradeForm = function (trade) {
+  if (!trade) return;
+
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && v !== undefined && v !== null && v !== '') el.value = v;
+  };
+
+  document.getElementById('pageTitle').textContent    = 'Edit Trade';
+  document.getElementById('pageSubtitle').textContent = 'Update this trade execution.';
+  document.title = 'Tradeva \u2014 Edit Trade';
+  const toastText = document.getElementById('toastText');
+  if (toastText) toastText.textContent = 'Trade updated successfully!';
+
+  /* Date: rawDate is the ISO string the date input wants. Fall back to parsing
+     the display date for legacy trades written before rawDate existed. */
+  const dateEl = document.getElementById('f-date');
+  if (trade.rawDate) {
+    dateEl.value = trade.rawDate;
+  } else if (trade.date) {
+    const d = new Date(trade.date);
+    if (!isNaN(d)) dateEl.valueAsDate = d;
+  }
+
+  set('f-pair', trade.pair);
+  setDir(trade.dir === 'Short' ? 'Short' : 'Long');
+
+  /* 0 is this app's "not filled" for prices — parseFloat(...) || 0 on save
+     means a genuine zero was never distinguishable from a blank field. */
+  ['entry', 'exit', 'sl', 'tp'].forEach(k => {
+    if (Number(trade[k])) set('f-' + k, trade[k]);
+  });
+
+  set('f-session', trade.session);
+  set('f-type',    trade.tradeType);
+  set('f-bias',    trade.htfBias);
+  set('f-time',    trade.timeInPos);
+  set('f-tv',      trade.tvLink);
+  const notes = document.getElementById('f-notes');
+  if (notes) notes.value = trade.notes || '';
+
+  /* Numbers before the outcome. setOutcome() runs syncSignedFields() across
+     these three, so they have to be in the DOM first — otherwise a B/E trade
+     loads with its old figures and a Loss loses its minus. */
+  if (trade.pnl  !== undefined && trade.pnl  !== null) document.getElementById('f-pnl').value = trade.pnl;
+  if (Number(trade.rr))   document.getElementById('f-rr').value   = trade.rr;
+  if (Number(trade.pips)) document.getElementById('f-pips').value = trade.pips;
+
+  if (trade.outcome)       setOutcome(trade.outcome);
+  if (trade.rulesFollowed) setRules(trade.rulesFollowed);
+
+  /* Existing screenshots: show them in the preview slot and remember the URL,
+     so an untouched image is left exactly as it is. */
+  [['entry', 'entry-wrap', 'entry-area', 'entry-img', 'entryImg'],
+   ['exit',  'exit-wrap',  'exit-area',  'exit-img',  'exitImg']].forEach(row => {
+    const [key, wrapId, areaId, imgId, field] = row;
+    const url = trade[field];
+    if (!url) return;
+    existingImages[key] = url;
+    document.getElementById(imgId).src = url;
+    document.getElementById(wrapId).style.display = 'block';
+    document.getElementById(areaId).style.display = 'none';
+  });
+
+  /* A trade belongs to exactly one account and its summary counters live on
+     that account's settings/stats doc — moving it would have to decrement one
+     account and increment the other. Lock the selector rather than pretend. */
+  const sel = document.getElementById('f-account');
+  if (sel) { sel.disabled = true; sel.style.opacity = '0.6'; sel.style.cursor = 'not-allowed'; }
+
+  setSaveBusy(false);   // form is populated — unlock the button
+};
+
 /* ── IMAGE PREVIEW ── */
 function previewImg(fileId, wrapId, areaId, imgId) {
   const file = document.getElementById(fileId).files[0];
   if (!file) return;
+  clearedImages[fileId.startsWith('entry') ? 'entry' : 'exit'] = false;
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById(imgId).src = e.target.result;
@@ -1141,6 +1278,11 @@ function previewImg(fileId, wrapId, areaId, imgId) {
   reader.readAsDataURL(file);
 }
 function removeImg(fileId, wrapId, areaId, imgId) {
+  /* In edit mode, removing a screenshot that came from Storage has to be
+     recorded — the file input is already empty, so nothing else would tell
+     the save that the user meant to drop it. */
+  const key = fileId.startsWith('entry') ? 'entry' : 'exit';
+  if (IS_EDIT && existingImages[key]) clearedImages[key] = true;
   document.getElementById(fileId).value = '';
   document.getElementById(imgId).src = '';
   document.getElementById(wrapId).style.display = 'none';
@@ -1212,7 +1354,30 @@ function toBase64(fileId) {
    The actual write is handled by the module script at the bottom of this
    page (it has access to the Firebase SDK). This function collects the
    form values and hands them over. */
+let saveInFlight = false;
+
+/* One place that owns the button's appearance, so the label, the spinner and
+   the disabled flag can never drift apart. */
+function setSaveBusy(busy) {
+  const btn = document.getElementById('saveBtn');
+  const lbl = document.getElementById('saveBtnLabel');
+  if (btn) {
+    btn.disabled = busy;
+    btn.classList.toggle('is-busy', busy);
+  }
+  if (lbl) {
+    lbl.textContent = busy
+      ? (IS_EDIT ? 'Updating\u2026'   : 'Saving\u2026')
+      : (IS_EDIT ? 'Update Trade' : 'Save Trade');
+  }
+}
+
 async function saveTrade() {
+  /* Re-entry guard. A second concurrent write would run the summary hooks
+     twice against one trade, double-counting tradeCount, wins/losses and
+     netPnl until verifySummary() noticed the drift and rebuilt. */
+  if (saveInFlight) return;
+
   const pair = document.getElementById('f-pair').value.trim().toUpperCase();
   const date = document.getElementById('f-date').value;
   if (!pair || !date) {
@@ -1226,12 +1391,8 @@ async function saveTrade() {
     return;
   }
 
-  const saveBtn = document.querySelector('.save-btn');
-  const originalBtnText = saveBtn.textContent;
-  saveBtn.disabled = true;
-  saveBtn.style.opacity = '0.7';
-  saveBtn.style.cursor = 'default';
-  saveBtn.textContent = 'Saving…';
+  saveInFlight = true;
+  setSaveBusy(true);
 
   try {
     const rawPnl   = document.getElementById('f-pnl').value;
@@ -1301,22 +1462,34 @@ async function saveTrade() {
     };
 
     // Hand off to the Firestore module (defined in the module script below)
-    if (typeof window.tvSaveTrade !== 'function') {
-      throw new Error('Save is still initialising. Please wait a moment and try again.');
+    if (IS_EDIT) {
+      if (typeof window.tvUpdateTrade !== 'function') {
+        throw new Error('Save is still initialising. Please wait a moment and try again.');
+      }
+      await window.tvUpdateTrade(accountId, EDIT_TRADE_ID, tradeData, clearedImages);
+    } else {
+      if (typeof window.tvSaveTrade !== 'function') {
+        throw new Error('Save is still initialising. Please wait a moment and try again.');
+      }
+      await window.tvSaveTrade(accountId, tradeData);
     }
-    await window.tvSaveTrade(accountId, tradeData);
 
     const toast = document.getElementById('toast');
     toast.classList.add('show');
-    setTimeout(() => { window.location.href = 'trades.html'; }, 1300);
+    /* The write has already landed by this point — this delay only exists so
+       the toast is readable. It was 1300ms, which is most of the "saving feels
+       slow" complaint; 900ms still reads. */
+    setTimeout(() => {
+      window.location.href = IS_EDIT
+        ? ('trade-detail.html?id=' + encodeURIComponent(EDIT_TRADE_ID))
+        : 'trades.html';
+    }, 900);
 
   } catch (err) {
     console.error('Save trade failed:', err);
     alert(err.message || 'Something went wrong while saving this trade. Please try again.');
-    saveBtn.disabled = false;
-    saveBtn.style.opacity = '';
-    saveBtn.style.cursor = '';
-    saveBtn.textContent = originalBtnText;
+    saveInFlight = false;
+    setSaveBusy(false);
   }
 }
 
@@ -1329,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script type="module">
 import { auth } from "./tradeva-firebase.js";
 import { initAccountSwitcher, listAccounts, resolveSelectedAccount, getSelectedAccountId } from "./tradeva-accounts.js";
-import { createTrade, compressFromInput } from "./tradeva-trades.js";
+import { createTrade, updateTrade, getTrade, compressFromInput } from "./tradeva-trades.js";
 function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return res(); const t=setInterval(()=>{ if(auth.currentUser){ clearInterval(t); res(); } },60); }); }
 
 // Exposed to the page's saveTrade(): compress screenshots, then write to Firestore.
@@ -1339,6 +1512,25 @@ window.tvSaveTrade = async function (accountId, tradeData) {
     exit:  await compressFromInput("exit-file")
   };
   return await createTrade(accountId, tradeData, images);
+};
+
+/* Exposed to the page's saveTrade() in EDIT mode.
+
+   Only a screenshot the user actually replaced is compressed and uploaded —
+   an untouched image is simply absent from `images`, so updateTrade leaves the
+   stored URL alone. `cleared` marks an existing screenshot the user removed;
+   writing an empty string is what makes it disappear from trade-detail.html.
+   (The Storage object itself is left behind — deleting it needs
+   deleteTradeImage() and is worth a follow-up, not a blocking concern.) */
+window.tvUpdateTrade = async function (accountId, tradeId, tradeData, cleared) {
+  const images = {};
+  const entry = await compressFromInput("entry-file");
+  const exit  = await compressFromInput("exit-file");
+  if (entry) images.entry = entry;
+  if (exit)  images.exit  = exit;
+  if (cleared && cleared.entry && !entry) tradeData.entryImg = "";
+  if (cleared && cleared.exit  && !exit)  tradeData.exitImg  = "";
+  return await updateTrade(accountId, tradeId, tradeData, images);
 };
 
 (async () => {
@@ -1371,6 +1563,31 @@ window.tvSaveTrade = async function (accountId, tradeData) {
     sel.innerHTML = accounts.map(a =>
       `<option value="${a.id}"${a.id===currentId?" selected":""}>${(a.name||"Account").replace(/</g,"&lt;")}</option>`
     ).join("");
+  }
+
+  /* ── Edit mode ──
+     The account id rides along in the URL because the trade belongs to the
+     account it was logged under, not to whichever account happens to be
+     selected on this device right now. */
+  const params = new URLSearchParams(location.search);
+  const editId = params.get("id");
+  if (!editId) return;
+
+  const editAcc = params.get("account") || currentId;
+  if (sel && editAcc) sel.value = editAcc;
+
+  try {
+    const trade = await getTrade(editAcc, editId);
+    if (trade) {
+      window.__tvFillTradeForm(trade);
+    } else {
+      alert("That trade could not be found — it may have been deleted.");
+      window.location.href = "trades.html";
+    }
+  } catch (e) {
+    console.error("Loading trade for edit failed:", e);
+    alert("Couldn't load this trade for editing. Please try again.");
+    window.location.href = "trades.html";
   }
 })();
 </script>
