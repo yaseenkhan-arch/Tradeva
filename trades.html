@@ -235,6 +235,28 @@ td:last-child { text-align: right; }
 .view-btn:hover { background: var(--accent-bg); transform: translateX(2px); }
 .view-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
 
+/* Edit sits beside View, muted rather than accent — View stays the primary
+   action on the row, Edit is the one you go looking for. */
+.row-actions { display: inline-flex; align-items: center; gap: 2px; justify-content: flex-end; }
+.edit-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 600; color: var(--text-muted);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 10px; border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.edit-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.edit-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.mtc-edit {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  background: none; border: none; cursor: pointer; color: var(--text-faint);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+.mtc-edit:hover { background: var(--accent-bg); color: var(--accent); }
+.mtc-edit svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* ── Empty State ── */
 .empty-state {
   padding: 60px 24px; text-align: center;
@@ -648,10 +670,16 @@ function renderTrades() {
       <td class="${isLong ? 'td-dir-long' : 'td-dir-short'}">${t.dir}</td>
       <td class="${pos ? 'pnl-pos' : 'pnl-neg'}">${fmtPnl(t.pnl)}</td>
       <td>
-        <button class="view-btn" onclick="event.stopPropagation(); viewTrade('${t.id}')">
-          View
-          <svg viewBox="0 0 13 13"><polyline points="5,2 10,6.5 5,11"/></svg>
-        </button>
+        <div class="row-actions">
+          <button class="edit-btn" title="Edit trade" onclick="event.stopPropagation(); editTrade('${t.id}')">
+            <svg viewBox="0 0 13 13"><path d="M8.7 1.5l2.8 2.8L4.3 11.5H1.5V8.7z"/><line x1="7.4" y1="2.8" x2="10.2" y2="5.6"/></svg>
+            Edit
+          </button>
+          <button class="view-btn" onclick="event.stopPropagation(); viewTrade('${t.id}')">
+            View
+            <svg viewBox="0 0 13 13"><polyline points="5,2 10,6.5 5,11"/></svg>
+          </button>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -670,6 +698,9 @@ function renderTrades() {
       </div>
       <div class="mtc-right">
         <span class="mtc-pnl ${pos ? 'pnl-pos' : 'pnl-neg'}">${fmtPnl(t.pnl)}</span>
+        <button class="mtc-edit" aria-label="Edit trade" onclick="event.stopPropagation(); editTrade('${t.id}')">
+          <svg viewBox="0 0 14 14"><path d="M9.4 1.6l3 3L4.6 12.4H1.6V9.4z"/><line x1="8" y1="3" x2="11" y2="6"/></svg>
+        </button>
         <svg class="mtc-chevron" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13"/></svg>
       </div>
     </div>`;
@@ -679,6 +710,16 @@ function renderTrades() {
 /* ── NAVIGATE TO TRADE DETAIL ── */
 function viewTrade(id) {
   window.location.href = 'trade-detail.html?id=' + encodeURIComponent(id);
+}
+
+/* ── EDIT A TRADE ──
+   trades-new.html is the edit form too — it switches mode on ?id=. The
+   account id is passed alongside so the loader reads the trade from the
+   account it belongs to rather than re-resolving the device's selection. */
+function editTrade(id) {
+  const acc = window.CURRENT_ACCOUNT_ID;
+  window.location.href = 'trades-new.html?id=' + encodeURIComponent(id) +
+    (acc ? '&account=' + encodeURIComponent(acc) : '');
 }
 
 /* ── INIT ── */
@@ -736,6 +777,9 @@ function tvWhenAuthed(){ return new Promise(res=>{ if(auth.currentUser) return r
        This query has no limit — fine at 21 trades, and query COUNT matters
        more than payload here. Past ~1000 trades it needs limit + startAfter
        paging, with the filters still running client-side over what's loaded. */
+    /* The Edit links need the account this list was loaded from. */
+    window.CURRENT_ACCOUNT_ID = acc.id;
+
     subscribeTrades(acc.id, rows => window.__tvSetTrades(rows));
   } catch (e) {
     console.error("Loading trades failed:", e);
