@@ -984,25 +984,67 @@ function shiftPeriod(dir) {
 /* ══════════════════════════════════════════════════════════
    AGGREGATION — TRADES
 ══════════════════════════════════════════════════════════ */
+/* Normalise the stored outcome to exactly 'Win' | 'Loss' | 'BE'.
+
+   Trades are written with outcome 'B/E', but every check on this page was
+   `outcome === 'Win'` / `=== 'Loss'`, so a break-even fell through both and
+   was counted as a trade that existed but had no result — which is why B/E
+   trades never showed up anywhere in a review. Same normaliser the profit
+   calendar and analytics already use; reviews.html was missed when those two
+   were fixed. The pnl-sign fallback is only for legacy trades written before
+   the outcome field existed. */
+function outcomeOf(t) {
+  const raw = String(t.outcome == null ? '' : t.outcome).trim().toUpperCase().replace(/[\s._\-\/]/g, '');
+  if (raw === 'WIN')  return 'Win';
+  if (raw === 'LOSS' || raw === 'LOSE') return 'Loss';
+  if (raw === 'BE' || raw === 'BREAKEVEN') return 'BE';
+  const p = Number(t.pnl) || 0;
+  return p > 0 ? 'Win' : p < 0 ? 'Loss' : 'BE';
+}
+
 function tradeStats(trades) {
   const n = trades.length;
-  const wins = trades.filter(t => (t.outcome === 'Win') || (t.outcome == null && Number(t.pnl) > 0));
-  const losses = trades.filter(t => (t.outcome === 'Loss') || (t.outcome == null && Number(t.pnl) < 0));
+  const wins       = trades.filter(t => outcomeOf(t) === 'Win');
+  const losses     = trades.filter(t => outcomeOf(t) === 'Loss');
+  const breakevens = trades.filter(t => outcomeOf(t) === 'BE');
   const grossWin = wins.reduce((s, t) => s + Math.abs(Number(t.pnl) || 0), 0);
   const grossLoss = losses.reduce((s, t) => s + Math.abs(Number(t.pnl) || 0), 0);
   const netPnl = trades.reduce((s, t) => s + (Number(t.pnl) || 0), 0);
-  const winRate = n ? (wins.length / n) * 100 : 0;
+
+  /* Win rate is measured on DECIDED trades (wins + losses), not on every
+     trade. A break-even is not a loss, and dividing by it understated the
+     figure here while the dashboard, calendar and analytics all divided by
+     decided trades — the same page showed 40% where the dashboard said 50%. */
+  const decided = wins.length + losses.length;
+  const winRate = decided ? (wins.length / decided) * 100 : 0;
   const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0);
-  const rrVals = trades.map(t => Number(t.rr)).filter(v => !isNaN(v) && v !== 0);
-  const avgRR = rrVals.length ? rrVals.reduce((s,v)=>s+v,0) / rrVals.length : null;
-  // Net RR: sum of per-trade RR when available, else derive from win/loss count as R multiples
-  let netRR = null;
-  if (rrVals.length === n && n > 0) netRR = trades.reduce((s,t)=>s+(Number(t.rr)||0),0);
+
+  /* ── R multiples ──
+     A trade counts as "logged" when it carries an rr field at all. A B/E
+     trade stores rr: 0, which is a real result and belongs in the total; only
+     legacy trades written before the field existed are skipped.
+
+     Net RR is the SUM of those values and nothing else. The old code required
+     every trade in the period to have a NON-ZERO rr before it would report a
+     sum, so a single break-even set netRR to null — and the Plan-vs-Actual
+     card then fell back to avgRR × totalTrades, which averaged over only the
+     non-zero trades but multiplied by all of them. That is what turned a real
+     +5.00R week into +8.75R and a +2.00R week into +2.50R: pure extrapolation.
+
+     avgRR is derived from netRR over the same denominator, so avgRR × rrCount
+     always equals netRR and the two can never disagree again. */
+  const rrLogged = trades.filter(t => t.rr !== undefined && t.rr !== null && t.rr !== '' && !isNaN(Number(t.rr)));
+  const rrCount  = rrLogged.length;
+  const netRR = rrCount ? rrLogged.reduce((a, t) => a + (Number(t.rr) || 0), 0) : null;
+  const avgRR = rrCount ? netRR / rrCount : null;
+
   const winnersPnl = wins.map(t => Number(t.pnl) || 0);
   const losersPnl = losses.map(t => Number(t.pnl) || 0);
   const largestWinner = winnersPnl.length ? Math.max(...winnersPnl) : 0;
   const largestLoser  = losersPnl.length ? Math.min(...losersPnl) : 0;
-  return { n, wins: wins.length, losses: losses.length, grossWin, grossLoss, netPnl, winRate, profitFactor, avgRR, netRR, largestWinner, largestLoser };
+  return { n, wins: wins.length, losses: losses.length, breakevens: breakevens.length, decided,
+           grossWin, grossLoss, netPnl, winRate, profitFactor, avgRR, netRR, rrCount,
+           largestWinner, largestLoser };
 }
 
 function fmtMoney(v) {
@@ -1013,16 +1055,17 @@ function fmtMoneyPlain(v) { return '$' + Math.abs(v).toLocaleString('en-US', { m
 function fmtRR(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + 'R'; }
 function fmtPF(v) { return v === Infinity ? '∞' : v.toFixed(2); }
 
-/* Group helper -> { key: {pnl, count, wins} } */
+/* Group helper -> { key: {pnl, count, wins, losses} } */
 function groupBy(trades, keyFn) {
   const map = {};
   trades.forEach(t => {
     const k = keyFn(t);
     if (!k) return;
-    if (!map[k]) map[k] = { pnl: 0, count: 0, wins: 0 };
+    if (!map[k]) map[k] = { pnl: 0, count: 0, wins: 0, losses: 0 };
     map[k].pnl += Number(t.pnl) || 0;
     map[k].count += 1;
-    if (t.outcome === 'Win' || (t.outcome == null && Number(t.pnl) > 0)) map[k].wins += 1;
+    if (outcomeOf(t) === 'Win') map[k].wins += 1;
+    if (outcomeOf(t) === 'Loss') map[k].losses += 1;
   });
   return map;
 }
@@ -1039,10 +1082,17 @@ function bestWorst(map) {
 function renderPerfCards(s) {
   const cards = [
     { label: 'Net RR',        value: s.netRR != null ? fmtRR(s.netRR) : (s.n ? fmtMoney(s.netPnl) : '—'), cls: (s.netRR != null ? s.netRR : s.netPnl) >= 0 ? 'green' : 'red', sub: s.n ? fmtMoney(s.netPnl) + ' net' : 'No trades' },
-    { label: 'Win Rate',      value: s.n ? s.winRate.toFixed(0) + '%' : '—', cls: s.winRate >= 50 ? 'green' : (s.n ? 'amber' : ''), sub: s.n ? s.wins + 'W · ' + s.losses + 'L' : '—' },
+    { label: 'Win Rate',      value: s.decided ? s.winRate.toFixed(0) + '%' : '—', cls: s.winRate >= 50 ? 'green' : (s.decided ? 'amber' : ''),
+      /* Break-evens are shown but excluded from the rate — otherwise the count
+         under the number never adds up to Total Trades. */
+      sub: s.n ? s.wins + 'W · ' + s.losses + 'L' + (s.breakevens ? ' · ' + s.breakevens + ' B/E' : '') : '—' },
     { label: 'Profit Factor', value: s.n ? fmtPF(s.profitFactor) : '—', cls: s.profitFactor >= 1.5 ? 'green' : (s.n ? 'amber' : ''), sub: s.n ? 'Gross ' + fmtMoneyPlain(s.grossWin) + ' / ' + fmtMoneyPlain(s.grossLoss) : '—' },
     { label: 'Total Trades',  value: String(s.n), cls: '', sub: s.n ? 'This period' : 'No trades' },
-    { label: 'Average RR',    value: s.avgRR != null ? s.avgRR.toFixed(2) + 'R' : '—', cls: (s.avgRR||0) >= 2 ? 'green' : '', sub: s.avgRR != null ? 'Per trade' : 'Not logged' },
+    { label: 'Average RR',    value: s.avgRR != null ? s.avgRR.toFixed(2) + 'R' : '—', cls: (s.avgRR||0) >= 2 ? 'green' : '',
+      /* Naming the denominator matters: a trade saved without an R:R stores 0,
+         so it is counted here and pulls the average down. Showing the count
+         makes that visible instead of quietly skewing the number. */
+      sub: s.avgRR != null ? 'Across ' + s.rrCount + (s.rrCount === 1 ? ' trade' : ' trades') : 'Not logged' },
     { label: 'Largest Winner',value: s.largestWinner ? fmtMoney(s.largestWinner) : '—', cls: s.largestWinner ? 'green' : '', sub: s.largestWinner ? 'Best single trade' : '—' },
   ];
   document.getElementById('perfStatCards').innerHTML = cards.map(c => `
@@ -1142,7 +1192,12 @@ function renderPlannerReview(trades, r) {
   }
 
   const s = tradeStats(trades);
-  const actualRR = s.netRR != null ? s.netRR : (s.avgRR != null ? s.avgRR * s.n : null);
+  /* Straight from the summed R multiples. The previous fallback multiplied an
+     average taken over some trades by the count of all of them, which reported
+     R the trader never made. If no trade in the period logged an R:R this is
+     null and the card shows an em dash — an honest blank beats an invented
+     number to compare the plan against. */
+  const actualRR = s.netRR;
   const tradedPairs = [...new Set(trades.map(t => t.pair).filter(Boolean))];
   const plannedPairs = plan.focusMarkets || [];
   const plannedDays = plan.tradingDays || [];
@@ -1472,6 +1527,9 @@ async function saveReview() {
       netPnl: s.netPnl,
       winRate: Math.round(s.winRate),
       totalTrades: s.n,
+      wins: s.wins,
+      losses: s.losses,
+      breakevens: s.breakevens,
       disciplineScore: discScore,
       reflection: {
         well: document.getElementById('f-well').value.trim(),
